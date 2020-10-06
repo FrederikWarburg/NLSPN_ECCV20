@@ -95,7 +95,12 @@ class NLSPNSummary(BaseSummary):
         rgb.mul_(self.img_std.type_as(rgb)).add_(self.img_mean.type_as(rgb))
         rgb = rgb.data.cpu().numpy()
 
-        dep = sample['dep'].detach().data.cpu().numpy()
+        if self.args.dep_src in ['slam', 'sgbm']:
+            dep = sample['dep'].detach().data.cpu().numpy()
+        else:
+            dep0 = sample['dep0'].detach().data.cpu().numpy()
+            dep1 = sample['dep1'].detach().data.cpu().numpy()
+
         gt = sample['gt'].detach().data.cpu().numpy()
         pred = output['pred'].detach().data.cpu().numpy()
 
@@ -109,13 +114,21 @@ class NLSPNSummary(BaseSummary):
             num_summary = self.args.num_summary
 
             rgb = rgb[0:num_summary, :, :, :]
-            dep = dep[0:num_summary, :, :, :]
+            if self.args.dep_src in ['slam', 'sgbm']:
+                dep = dep[0:num_summary, :, :, :]
+            else:
+                dep0 = dep0[0:num_summary, :, :, :]
+                dep1 = dep1[0:num_summary, :, :, :]
             gt = gt[0:num_summary, :, :, :]
             pred = pred[0:num_summary, :, :, :]
             confidence = confidence[0:num_summary, :, :, :]
 
         rgb = np.clip(rgb, a_min=0, a_max=1.0)
-        dep = np.clip(dep, a_min=0, a_max=self.args.max_depth)
+        if self.args.dep_src in ['slam', 'sgbm']:
+            dep = np.clip(dep, a_min=0, a_max=self.args.max_depth)
+        else:
+            dep0 = np.clip(dep, a_min=0, a_max=self.args.max_depth)
+            dep1 = np.clip(dep, a_min=0, a_max=self.args.max_depth)
         gt = np.clip(gt, a_min=0, a_max=self.args.max_depth)
         pred = np.clip(pred, a_min=0, a_max=self.args.max_depth)
         confidence = np.clip(confidence, a_min=0, a_max=1.0)
@@ -124,27 +137,47 @@ class NLSPNSummary(BaseSummary):
 
         for b in range(0, num_summary):
             rgb_tmp = rgb[b, :, :, :]
-            dep_tmp = dep[b, 0, :, :]
+            if self.args.dep_src in ['slam', 'sgbm']:
+                dep_tmp = dep[b, 0, :, :]
+            else:
+                dep_tmp0 = dep0[b, 0, :, :]
+                dep_tmp1 = dep1[b, 0, :, :]
             gt_tmp = gt[b, 0, :, :]
             pred_tmp = pred[b, 0, :, :]
             confidence_tmp = confidence[b, 0, :, :]
 
-            dep_tmp = 255.0 * dep_tmp / self.args.max_depth
+            if self.args.dep_src in ['slam', 'sgbm']:
+                dep_tmp = 255.0 * dep_tmp / self.args.max_depth
+            else:
+                dep_tmp0 = 255.0 * dep_tmp0 / self.args.max_depth
+                dep_tmp1 = 255.0 * dep_tmp1 / self.args.max_depth
             gt_tmp = 255.0 * gt_tmp / self.args.max_depth
             pred_tmp = 255.0 * pred_tmp / self.args.max_depth
             confidence_tmp = 255.0 * confidence_tmp
 
-            dep_tmp = cm(dep_tmp.astype('uint8'))
+            if self.args.dep_src in ['slam', 'sgbm']:
+                dep_tmp = cm(dep_tmp.astype('uint8'))
+            else:
+                dep_tmp0 = cm(dep_tmp0.astype('uint8'))
+                dep_tmp1 = cm(dep_tmp1.astype('uint8'))
             gt_tmp = cm(gt_tmp.astype('uint8'))
             pred_tmp = cm(pred_tmp.astype('uint8'))
             confidence_tmp = cm(confidence_tmp.astype('uint8'))
 
-            dep_tmp = np.transpose(dep_tmp[:, :, :3], (2, 0, 1))
+            if self.args.dep_src in ['slam', 'sgbm']:
+                dep_tmp = np.transpose(dep_tmp[:, :, :3], (2, 0, 1))
+            else:
+                dep_tmp0 = np.transpose(dep_tmp0[:, :, :3], (2, 0, 1))
+                dep_tmp1 = np.transpose(dep_tmp1[:, :, :3], (2, 0, 1))
             gt_tmp = np.transpose(gt_tmp[:, :, :3], (2, 0, 1))
             pred_tmp = np.transpose(pred_tmp[:, :, :3], (2, 0, 1))
             confidence_tmp = np.transpose(confidence_tmp[:, :, :3], (2, 0, 1))
 
-            img = np.concatenate((rgb_tmp, dep_tmp, pred_tmp, gt_tmp,
+            if self.args.dep_src in ['slam', 'sgbm']:
+                img = np.concatenate((rgb_tmp, dep_tmp, pred_tmp, gt_tmp,
+                                  confidence_tmp), axis=1)
+            else:
+                img = np.concatenate((rgb_tmp, dep_tmp0, dep_tmp1, pred_tmp, gt_tmp,
                                   confidence_tmp), axis=1)
 
             list_img.append(img)

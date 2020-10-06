@@ -284,7 +284,7 @@ class TARTANAIR(BaseDataset):
         elif self.args.dep_src == 'sgbm':
             output = {'rgb': rgb, 'dep': depth_sgbm, 'gt': gt, 'K': torch.Tensor(K)}
         elif self.args.dep_src == 'slam+sgbm' or self.args.dep_src == 'sgbm+slam':
-            output = {'rgb': rgb, 'dep': (depth_features, depth_sgbm), 'gt': gt, 'K': torch.Tensor(K)}
+            output = {'rgb': rgb, 'dep0': depth_features, 'dep1': depth_sgbm, 'gt': gt, 'K': torch.Tensor(K)}
         else:
             raise NotImplementedError
 

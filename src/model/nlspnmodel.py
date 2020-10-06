@@ -212,8 +212,15 @@ class NLSPNModel(nn.Module):
         # Encoder
         self.conv1_rgb = conv_bn_relu(3, 48, kernel=3, stride=1, padding=1,
                                       bn=False)
-        self.conv1_dep = conv_bn_relu(1, 16, kernel=3, stride=1, padding=1,
-                                      bn=False)
+        if self.args.dep_src in ['slam', 'sgbm']:
+            self.conv1_dep = conv_bn_relu(1, 16, kernel=3, stride=1, padding=1,
+                                        bn=False)
+        else:
+            self.conv1_dep0 = conv_bn_relu(1, 8, kernel=3, stride=1, padding=1,
+                                bn=False)
+            self.conv1_dep1 = conv_bn_relu(1, 8, kernel=3, stride=1, padding=1,
+                                bn=False)
+
 
         if self.args.network == 'resnet18':
             net = get_resnet18(not self.args.from_scratch)
@@ -311,19 +318,23 @@ class NLSPNModel(nn.Module):
 
     def forward(self, sample):
         rgb = sample['rgb']
-        dep = sample['dep']
+        
 
         # Encoding
         fe1_rgb = self.conv1_rgb(rgb)
 
-        if isinstance(dep, tuple):
-            fe1_dep = self.conv1_dep(dep[0])
-            fe2_dep = self.conv1_dep(dep[1])
-            fe1 = torch.cat((fe1_rgb, fe1_dep, fe2_dep), dim=1)
-        else:
+        if self.args.dep_src in ['slam', 'sgbm']:
+            dep = sample['dep']
             fe1_dep = self.conv1_dep(dep)
             fe1 = torch.cat((fe1_rgb, fe1_dep), dim=1)
-        print("fe1", fe1.shape)
+        else:
+            dep0 = sample['dep0']
+            dep1 = sample['dep1']
+
+            fe1_dep0 = self.conv1_dep0(dep)
+            fe1_dep1 = self.conv1_dep1(dep1)
+            fe1 = torch.cat((fe1_rgb, fe1_dep0, fe1_dep1), dim=1)
+        
         fe2 = self.conv2(fe1)
         fe3 = self.conv3(fe2)
         fe4 = self.conv4(fe3)
