@@ -269,8 +269,8 @@ class TARTANAIR(BaseDataset):
                                   self.sample_list[idx]['depth'])
         path_gt = os.path.join(self.args.dir_data,
                                self.sample_list[idx]['gt'])
-        path_calib = os.path.join(self.args.dir_data,
-                                  self.sample_list[idx]['K'])
+        #path_calib = os.path.join(self.args.dir_data,
+        #                          self.sample_list[idx]['K'])
 
         depth = read_sparse_depth(path_depth, (self.height, self.width))
         gt = read_depth(path_gt)
@@ -279,7 +279,7 @@ class TARTANAIR(BaseDataset):
         depth = Image.fromarray(depth.astype('float32'), mode='F')
         gt = Image.fromarray(gt.astype('float32'), mode='F')
 
-        calib = read_calib_file(path_calib)
+        #calib = read_calib_file()# path_calib)
         f, cx, cy = 0.25, 320, 240
         K = [f, f, cx, cy]
 
