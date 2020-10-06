@@ -69,6 +69,7 @@ def read_sparse_depth(file_name, size):
     # refer to readme file in KITTI dataset
     assert os.path.exists(file_name), "file not found: {}".format(file_name)
     file_depth = np.loadtxt(file_name, delimiter=',')
+    file_depth = file_depth.reshape(-1,4) # [features, params]
     image_depth = np.zeros(size, dtype=np.float32)
     for (x,y,z,sigma) in file_depth:
         image_depth[int(y), int(x)] = min(z, 100)
