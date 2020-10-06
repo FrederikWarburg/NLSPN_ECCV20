@@ -298,8 +298,8 @@ class NLSPNSummary(BaseSummary):
                 if self.args.dep_src in ['slam', 'sgbm']:
                     path_save_dep = '{}/02_dep.png'.format(self.path_output)
                 else:
+                    path_save_dep0 = '{}/02_dep0.png'.format(self.path_output)
                     path_save_dep1 = '{}/02_dep1.png'.format(self.path_output)
-                    path_save_dep2 = '{}/02_dep2.png'.format(self.path_output)
                 path_save_init = '{}/03_pred_init.png'.format(self.path_output)
                 path_save_pred = '{}/05_pred_final.png'.format(self.path_output)
                 path_save_pred_gray = '{}/05_pred_final_gray.png'.format(
