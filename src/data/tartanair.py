@@ -68,9 +68,16 @@ def read_sparse_depth(file_name, size):
     # loads depth map D from 16 bits png file as a numpy array,
     # refer to readme file in KITTI dataset
     assert os.path.exists(file_name), "file not found: {}".format(file_name)
+
+    image_depth = np.zeros(size, dtype=np.float32)
+
+    # check if file is empty
+    if os.stat(file_name).st_size == 0:
+        return image_depth
+
     file_depth = np.loadtxt(file_name, delimiter=',')
     file_depth = file_depth.reshape(-1,4) # [features, params]
-    image_depth = np.zeros(size, dtype=np.float32)
+    
     for (x,y,z,sigma) in file_depth:
         image_depth[int(y), int(x)] = min(z, 100)
 
