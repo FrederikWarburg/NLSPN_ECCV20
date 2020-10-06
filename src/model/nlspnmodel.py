@@ -315,10 +315,15 @@ class NLSPNModel(nn.Module):
 
         # Encoding
         fe1_rgb = self.conv1_rgb(rgb)
-        fe1_dep = self.conv1_dep(dep)
 
-        fe1 = torch.cat((fe1_rgb, fe1_dep), dim=1)
-
+        if isinstance(dep, tuple):
+            fe1_dep = self.conv1_dep(dep[0])
+            fe2_dep = self.conv1_dep(dep[1])
+            fe1 = torch.cat((fe1_rgb, fe1_dep, fe2_dep), dim=1)
+        else:
+            fe1_dep = self.conv1_dep(dep)
+            fe1 = torch.cat((fe1_rgb, fe1_dep), dim=1)
+        print("fe1", fe1.shape)
         fe2 = self.conv2(fe1)
         fe3 = self.conv3(fe2)
         fe4 = self.conv4(fe3)

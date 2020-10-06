@@ -63,13 +63,15 @@ def generate_json():
                 print(list_depth)
                 for name in list_depth:
                     path_rgb = os.path.join(split,seq, cam, 'data', name.replace('.csv','.png'))
-                    path_depth = os.path.join(split, seq, 'depth_sparse0', 'data', name)
+                    path_depth_features = os.path.join(split, seq, 'depth_sparse0', 'data', name)
+                    path_depth_sgbm = os.path.join(split, seq, 'depth_sparse0', 'data', name.replace('.csv', '.npy'))
                     path_gt = os.path.join(split, seq, 'ground_truth/depth0', 'data', name.replace('.csv','.npy'))
                     #path_calib = split + '/' + seq + '/calib_cam_to_cam.txt'
 
                     dict_sample = {
                         'rgb': path_rgb,
-                        'depth': path_depth,
+                        'depth_features': path_depth_features,
+                        'depth_sgbm': path_depth_sgbm,
                         'gt': path_gt,
                         #'K': path_calib
                     }
