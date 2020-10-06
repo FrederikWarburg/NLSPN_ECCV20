@@ -331,7 +331,7 @@ class NLSPNModel(nn.Module):
             dep0 = sample['dep0']
             dep1 = sample['dep1']
 
-            fe1_dep0 = self.conv1_dep0(dep)
+            fe1_dep0 = self.conv1_dep0(dep0)
             fe1_dep1 = self.conv1_dep1(dep1)
             fe1 = torch.cat((fe1_rgb, fe1_dep0, fe1_dep1), dim=1)
         
