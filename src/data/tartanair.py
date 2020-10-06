@@ -48,14 +48,14 @@ Reference : https://github.com/XinJCheng/CSPN/blob/master/nyu_dataset_loader.py
 """
 
 
-def read_depth(file_name):
+def read_depth(file_name, max_ = 30.0):
     # loads depth map D from 16 bits png file as a numpy array,
     # refer to readme file in KITTI dataset
     assert os.path.exists(file_name), "file not found: {}".format(file_name)
     image_depth = np.load(file_name)
 
     # truncate depth
-    image_depth[image_depth > 100] = 100
+    image_depth[image_depth > max_] = max_
 
     # Consider empty depth
     #assert (np.max(image_depth) == 0) or (np.max(image_depth) > 255), \
@@ -64,7 +64,7 @@ def read_depth(file_name):
     #image_depth = image_depth.astype(np.float32) / 256.0
     return image_depth
 
-def read_sparse_depth(file_name, size):
+def read_sparse_depth(file_name, size, max_ = 30.0):
     # loads depth map D from 16 bits png file as a numpy array,
     # refer to readme file in KITTI dataset
     assert os.path.exists(file_name), "file not found: {}".format(file_name)
@@ -79,7 +79,7 @@ def read_sparse_depth(file_name, size):
     file_depth = file_depth.reshape(-1,4) # [features, params]
     
     for (x,y,z,sigma) in file_depth:
-        image_depth[int(y), int(x)] = min(z, 100)
+        image_depth[int(y), int(x)] = min(z, max_)
 
     # Consider empty depth
     #assert (np.max(image_depth) == 0) or (np.max(image_depth) > 255), \
@@ -280,8 +280,8 @@ class TARTANAIR(BaseDataset):
         #path_calib = os.path.join(self.args.dir_data,
         #                          self.sample_list[idx]['K'])
 
-        depth = read_sparse_depth(path_depth, (self.height, self.width))
-        gt = read_depth(path_gt)
+        depth = read_sparse_depth(path_depth, (self.height, self.width), self.args.max_depth)
+        gt = read_depth(path_gt, self.args.max_depth)
 
         rgb = Image.open(path_rgb)
         depth = Image.fromarray(depth.astype('float32'), mode='F')
