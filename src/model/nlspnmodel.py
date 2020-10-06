@@ -167,8 +167,7 @@ class NLSPN(nn.Module):
 
         return feat
 
-    def forward(self, feat_init, guidance, confidence=None, feat_fix=None,
-                rgb=None):
+    def forward(self, feat_init, guidance, confidence=None, feat_fix=None, rgb=None):
         assert self.ch_g == guidance.shape[1]
         assert self.ch_f == feat_init.shape[1]
 
@@ -182,9 +181,24 @@ class NLSPN(nn.Module):
 
         # Propagation
         if self.args.preserve_input:
-            assert feat_init.shape == feat_fix.shape
-            mask_fix = torch.sum(feat_fix > 0.0, dim=1, keepdim=True).detach()
-            mask_fix = (mask_fix > 0.0).type_as(feat_fix)
+
+            if self.args.dep_src in ['slam', 'sgbm']:
+                assert feat_init.shape == feat_fix.shape
+                mask_fix = torch.sum(feat_fix > 0.0, dim=1, keepdim=True).detach()
+                mask_fix = (mask_fix > 0.0).type_as(feat_fix)
+            else:
+                feat_fix0, feat_fix1 = feat_fix
+
+                assert feat_init.shape == feat_fix0.shape
+                assert feat_init.shape == feat_fix1.shape
+
+                mask_fix0 = torch.sum(feat_fix0 > 0.0, dim=1, keepdim=True).detach()
+                mask_fix0 = (mask_fix0 > 0.0).type_as(feat_fix0)                
+
+                mask_fix1 = torch.sum(feat_fix1 > 0.0, dim=1, keepdim=True).detach()
+                mask_fix1 = (mask_fix1 > 0.0).type_as(feat_fix1)        
+
+                mask_fix = mask_fix0 + mask_fix1        
 
         feat_result = feat_init
 
@@ -363,8 +377,12 @@ class NLSPNModel(nn.Module):
             confidence = None
 
         # Diffusion
-        y, y_inter, offset, aff, aff_const = \
-            self.prop_layer(pred_init, guide, confidence, dep, rgb)
+        if self.args.dep_src in ['slam', 'sgbm']:
+            y, y_inter, offset, aff, aff_const = \
+                self.prop_layer(pred_init, guide, confidence, dep, rgb)
+        else:
+            y, y_inter, offset, aff, aff_const = \
+                self.prop_layer(pred_init, guide, confidence, (dep0, dep1), rgb)    
 
         # Remove negative depth
         y = torch.clamp(y, min=0)
