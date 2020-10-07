@@ -32,10 +32,10 @@ def resize_depth(im, scale = 4, GT = True):
 
 def resize_folder(basepath, newpath, scale):
 
-    shutil.copy(basepath + 'calib_cam_to_cam.txt', newpath + 'calib_cam_to_cam.txt')
-    shutil.copy(basepath + 'calib_imu_to_velo.txt', newpath + 'calib_imu_to_velo.txt')
-    shutil.copy(basepath + 'calib_velo_to_cam.txt', newpath + 'calib_velo_to_cam.txt')
-    shutil.copytree(basepath + 'oxts', newpath + 'oxts')
+    shutil.copy(basepath + '/calib_cam_to_cam.txt', newpath + '/calib_cam_to_cam.txt')
+    shutil.copy(basepath + '/calib_imu_to_velo.txt', newpath + '/calib_imu_to_velo.txt')
+    shutil.copy(basepath + '/calib_velo_to_cam.txt', newpath + '/calib_velo_to_cam.txt')
+    shutil.copytree(basepath + '/oxts', newpath + '/oxts')
 
     for p in ['image_02', 'image_03']:
         if not os.path.exists(newpath + p + '/data/'): os.makedirs(newpath + p + '/data/')
@@ -45,20 +45,20 @@ def resize_folder(basepath, newpath, scale):
             im.save(newpath + p + '/data/' + i)
 
     for p in ['image_02', 'image_03']:
-        if not os.path.exists(newpath + 'proj_depth/groundtruth/'+ p): 
-            os.makedirs(newpath + 'proj_depth/groundtruth/'+p)
-        for i in os.listdir(basepath + 'proj_depth/groundtruth/' + p):
-            im = Image.open(basepath + 'proj_depth/groundtruth/'+p+'/' + i)
+        if not os.path.exists(newpath + '/proj_depth/groundtruth/'+ p): 
+            os.makedirs(newpath + '/proj_depth/groundtruth/'+p)
+        for i in os.listdir(basepath + '/proj_depth/groundtruth/' + p):
+            im = Image.open(basepath + '/proj_depth/groundtruth/'+p+'/' + i)
             im = resize_depth(im, 4, True)
-            cv2.imwrite(newpath + 'proj_depth/groundtruth/'+p+'/' + i, im)
+            cv2.imwrite(newpath + '/proj_depth/groundtruth/'+p+'/' + i, im)
 
     for p in ['image_02', 'image_03']:
-        if not os.path.exists(newpath + 'proj_depth/velodyne_raw/' + p): 
-            os.makedirs(newpath + 'proj_depth/velodyne_raw/' + p)
-        for i in os.listdir(basepath + 'proj_depth/velodyne_raw/' + p):
-            im = Image.open(basepath + 'proj_depth/velodyne_raw/' + p + '/' + i)
+        if not os.path.exists(newpath + '/proj_depth/velodyne_raw/' + p): 
+            os.makedirs(newpath + '/proj_depth/velodyne_raw/' + p)
+        for i in os.listdir(basepath + '/proj_depth/velodyne_raw/' + p):
+            im = Image.open(basepath + '/proj_depth/velodyne_raw/' + p + '/' + i)
             im = resize_depth(im, 4, False)
-            cv2.imwrite(newpath + 'proj_depth/velodyne_raw/' + p + '/' + i, im)
+            cv2.imwrite(newpath + '/proj_depth/velodyne_raw/' + p + '/' + i, im)
 
 
 if __name__ == "__main__":
