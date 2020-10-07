@@ -2,9 +2,8 @@ import os
 import random
 
 import argparse
-import json
 import numpy as np
-import pandas as pd
+
 
 def resize_depth(im, scale = 4, GT = True):
 
