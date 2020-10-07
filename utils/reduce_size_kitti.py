@@ -30,11 +30,6 @@ def resize_depth(im, scale = 4, GT = True):
     return newim
 
 
-basepath = "/home/warburg/Desktop/2011_09_28_drive_0146_sync/"
-newpath = "/home/warburg/Desktop/2011_09_28_drive_0146_sync_reduced/"
-shutil.rmtree(newpath)
-
-
 def resize_folder(basepath, newpath, scale):
 
     shutil.copy(basepath + 'calib_cam_to_cam.txt', newpath + 'calib_cam_to_cam.txt')
