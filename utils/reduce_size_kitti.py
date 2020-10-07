@@ -85,7 +85,7 @@ if __name__ == "__main__":
             src = os.path.join(args.path_root, split, folder)
             dst = os.path.join(args.path_out, split, folder)
 
-            if not os.path.exists(args.path_out): 
+            if not os.path.exists(dst): 
                 os.makedirs(dst)
             
             resize_folder(src, dst, args.scale)
