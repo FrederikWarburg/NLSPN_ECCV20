@@ -38,11 +38,11 @@ def resize_folder(basepath, newpath, scale):
     shutil.copytree(basepath + '/oxts', newpath + '/oxts')
 
     for p in ['image_02', 'image_03']:
-        if not os.path.exists(newpath + p + '/data/'): os.makedirs(newpath + p + '/data/')
+        if not os.path.exists(newpath  + '/' + p + '/data/'): os.makedirs(newpath  + '/' + p + '/data/')
         for i in os.listdir(basepath + p +'/data'):
-            im = Image.open(basepath + p + '/data/' + i)
+            im = Image.open(basepath  + '/' + p + '/data/' + i)
             im.thumbnail((93, 306), Image.ANTIALIAS)
-            im.save(newpath + p + '/data/' + i)
+            im.save(newpath  + '/' + p + '/data/' + i)
 
     for p in ['image_02', 'image_03']:
         if not os.path.exists(newpath + '/proj_depth/groundtruth/'+ p): 
