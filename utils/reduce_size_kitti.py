@@ -74,7 +74,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    shutil.rmtree(args.path_out)
+    if os.path.exists(args.path_out):
+        shutil.rmtree(args.path_out)
 
     for split in ['train','val','test']:
         for folder in os.listdir(os.path.join(args.path_root,split)):
