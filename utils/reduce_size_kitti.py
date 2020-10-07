@@ -3,7 +3,7 @@ import random
 
 import argparse
 import numpy as np
-
+import shutil
 
 def resize_depth(im, scale = 4, GT = True):
 
