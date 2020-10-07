@@ -81,6 +81,7 @@ if __name__ == "__main__":
 
     for split in ['train','val','test']:
         for folder in os.listdir(os.path.join(args.path_root,split)):
+            print("==> ", folder)
             src = os.path.join(args.path_root, split, folder)
             dst = os.path.join(args.path_out, split, folder)
 
