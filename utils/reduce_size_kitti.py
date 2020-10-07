@@ -4,6 +4,8 @@ import random
 import argparse
 import numpy as np
 import shutil
+from PIL import Image
+import cv2
 
 def resize_depth(im, scale = 4, GT = True):
 
