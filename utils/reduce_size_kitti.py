@@ -39,7 +39,7 @@ def resize_folder(basepath, newpath, scale):
 
     for p in ['image_02', 'image_03']:
         if not os.path.exists(newpath  + '/' + p + '/data/'): os.makedirs(newpath  + '/' + p + '/data/')
-        for i in os.listdir(basepath + p +'/data'):
+        for i in os.listdir(basepath + '/' +  p +'/data'):
             im = Image.open(basepath  + '/' + p + '/data/' + i)
             im.thumbnail((93, 306), Image.ANTIALIAS)
             im.save(newpath  + '/' + p + '/data/' + i)
