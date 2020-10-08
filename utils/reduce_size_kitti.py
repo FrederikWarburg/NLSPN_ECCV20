@@ -90,7 +90,9 @@ if __name__ == "__main__":
             
             resize_folder(src, dst, args.scale)
     """
-
+    if os.path.exists(args.path_out, 'depth_selection')): 
+        shutil.rmtree(os.path.join(args.path_out, 'depth_selection'))
+    
     os.makedirs(os.path.join(args.path_out, 'depth_selection', 'val_selection_cropped', 'image'))
     os.makedirs(os.path.join(args.path_out, 'depth_selection', 'val_selection_cropped', 'groundtruth_depth'))
     os.makedirs(os.path.join(args.path_out, 'depth_selection', 'val_selection_cropped', 'velodyne_raw'))
@@ -113,6 +115,7 @@ if __name__ == "__main__":
         im = Image.open(os.path.join(args.path_root, 'depth_selection', 'val_selection_cropped', 'velodyne_raw', i))
         im = resize_depth(im, 4, False)
         cv2.imwrite(os.path.join(args.path_out, 'depth_selection', 'val_selection_cropped', 'velodyne_raw', i), im)
+
 
     os.makedirs(os.path.join(args.path_out, 'depth_selection', 'test_depth_completion_anonymous', 'image'))
     os.makedirs(os.path.join(args.path_out, 'depth_selection', 'test_depth_completion_anonymous', 'groundtruth_depth'))
