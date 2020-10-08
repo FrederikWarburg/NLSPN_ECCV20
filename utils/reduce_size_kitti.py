@@ -33,19 +33,19 @@ def resize_depth(im, scale = 4, GT = True):
 
 
 def resize_folder(basepath, newpath, scale):
-
+    """
     shutil.copy(basepath + '/calib_cam_to_cam.txt', newpath + '/calib_cam_to_cam.txt')
     shutil.copy(basepath + '/calib_imu_to_velo.txt', newpath + '/calib_imu_to_velo.txt')
     shutil.copy(basepath + '/calib_velo_to_cam.txt', newpath + '/calib_velo_to_cam.txt')
     shutil.copytree(basepath + '/oxts', newpath + '/oxts')
-
+    """
     for p in ['image_02', 'image_03']:
         if not os.path.exists(newpath  + '/' + p + '/data/'): os.makedirs(newpath  + '/' + p + '/data/')
         for i in os.listdir(basepath + '/' +  p +'/data'):
             im = Image.open(basepath  + '/' + p + '/data/' + i)
-            im.thumbnail((93, 306), Image.ANTIALIAS)
+            im.thumbnail((306, 93), Image.ANTIALIAS)
             im.save(newpath  + '/' + p + '/data/' + i)
-
+    """
     for p in ['image_02', 'image_03']:
         if not os.path.exists(newpath + '/proj_depth/groundtruth/'+ p): 
             os.makedirs(newpath + '/proj_depth/groundtruth/'+p)
@@ -61,7 +61,7 @@ def resize_folder(basepath, newpath, scale):
             im = Image.open(basepath + '/proj_depth/velodyne_raw/' + p + '/' + i)
             im = resize_depth(im, 4, False)
             cv2.imwrite(newpath + '/proj_depth/velodyne_raw/' + p + '/' + i, im)
-
+    """
 
 if __name__ == "__main__":
     
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     """
     if os.path.exists(args.path_out):
         shutil.rmtree(args.path_out)
-
+    """
     for split in ['train','val']:
         for folder in os.listdir(os.path.join(args.path_root,split)):
             print("==> ", folder)
@@ -89,6 +89,7 @@ if __name__ == "__main__":
                 os.makedirs(dst)
             
             resize_folder(src, dst, args.scale)
+    
     """
     if os.path.exists(os.path.join(args.path_out, 'depth_selection')): 
         shutil.rmtree(os.path.join(args.path_out, 'depth_selection'))
@@ -100,12 +101,12 @@ if __name__ == "__main__":
     src = os.path.join(args.path_root, 'depth_selection', 'val_selection_cropped', 'intrinsics')
     dst = os.path.join(args.path_out, 'depth_selection', 'val_selection_cropped', 'intrinsics')
     shutil.copytree(src, dst)
-
+    """
     for i in os.listdir(os.path.join(args.path_root, 'depth_selection', 'val_selection_cropped', 'image')):
         im = Image.open(os.path.join(args.path_root, 'depth_selection', 'val_selection_cropped', 'image', i))
-        im.thumbnail((93, 306), Image.ANTIALIAS)
+        im.thumbnail((306, 93), Image.ANTIALIAS)
         im.save(os.path.join(args.path_out, 'depth_selection', 'val_selection_cropped', 'image', i))
-
+    """
     for i in os.listdir(os.path.join(args.path_root, 'depth_selection', 'val_selection_cropped', 'groundtruth_depth')):
         im = Image.open(os.path.join(args.path_root, 'depth_selection', 'val_selection_cropped', 'groundtruth_depth', i))
         im = resize_depth(im, 4, True)
@@ -124,13 +125,14 @@ if __name__ == "__main__":
     src = os.path.join(args.path_root, 'depth_selection', 'test_depth_completion_anonymous', 'intrinsics')
     dst = os.path.join(args.path_out, 'depth_selection', 'test_depth_completion_anonymous', 'intrinsics')
     shutil.copytree(src, dst)
-
+    """
     for i in os.listdir(os.path.join(args.path_root, 'depth_selection', 'test_depth_completion_anonymous', 'image')):
         im = Image.open(os.path.join(args.path_root, 'depth_selection', 'test_depth_completion_anonymous', 'image', i))
-        im.thumbnail((93, 306), Image.ANTIALIAS)
+        im.thumbnail((306,93), Image.ANTIALIAS)
         im.save(os.path.join(args.path_out, 'depth_selection', 'test_depth_completion_anonymous', 'image', i))
-
+    """
     for i in os.listdir(os.path.join(args.path_root, 'depth_selection', 'test_depth_completion_anonymous', 'velodyne_raw')):
         im = Image.open(os.path.join(args.path_root, 'depth_selection', 'test_depth_completion_anonymous', 'velodyne_raw', i))
         im = resize_depth(im, 4, False)
         cv2.imwrite(os.path.join(args.path_out, 'depth_selection', 'test_depth_completion_anonymous', 'velodyne_raw', i), im)
+    """
