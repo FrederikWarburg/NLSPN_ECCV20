@@ -43,17 +43,20 @@ def check_sizes(basepath, newpath, scale):
             h,w = im.size
             hb, wb = int(np.ceil(h / scale)), int(np.ceil(w / scale))
             im.thumbnail((hb, wb), Image.ANTIALIAS)
+            im.save(newpath  + '/' + p + '/data/' + i)
             
             w1, h1 = im.size
             im = Image.open(basepath + '/proj_depth/groundtruth/'+p+'/' + i)
             wb, hb = im.size
             im = resize_depth(im, 4, True)
+            cv2.imwrite(newpath + '/proj_depth/groundtruth/'+p+'/' + i, im)
 
             h2, w2 = im.shape
 
             im = Image.open(basepath + '/proj_depth/velodyne_raw/' + p + '/' + i)
             wc, hc = im.size
             im = resize_depth(im, 4, False)
+            cv2.imwrite(newpath + '/proj_depth/groundtruth/'+p+'/' + i, im)
   
             h3, w3 = im.shape
 
