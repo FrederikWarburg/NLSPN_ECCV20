@@ -35,21 +35,24 @@ def check_sizes(basepath, newpath, scale):
 
     for p in ['image_02', 'image_03']:
         for i in os.listdir(basepath + '/' +  p +'/data'):
+            if not os.path.exists(basepath + '/proj_depth/groundtruth/'+p+'/' + i): continue
+            if not os.path.exists(basepath + '/proj_depth/velodyne_raw/' + p + '/' + i): continue
+            
             im = Image.open(basepath  + '/' + p + '/data/' + i)
             wa, ha = im.size
             h,w = im.size
             hb, wb = int(np.ceil(h / scale)), int(np.ceil(w / scale))
             im.thumbnail((hb, wb), Image.ANTIALIAS)
-
+            
             w1, h1 = im.size
             im = Image.open(basepath + '/proj_depth/groundtruth/'+p+'/' + i)
-            hb, wb = im.shape
+            wb, hb = im.size
             im = resize_depth(im, 4, True)
 
             h2, w2 = im.shape
 
             im = Image.open(basepath + '/proj_depth/velodyne_raw/' + p + '/' + i)
-            hc, wc = im.shape
+            wc, hc = im.size
             im = resize_depth(im, 4, False)
   
             h3, w3 = im.shape

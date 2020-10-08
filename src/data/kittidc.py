@@ -177,7 +177,7 @@ class KITTIDC(BaseDataset):
 
             # Crop
             width, height = rgb.size
-
+            print(width, height, self.height, self.width)
             assert self.height <= height and self.width <= width, \
                 "patch size is larger than the input size"
 
@@ -295,7 +295,7 @@ class KITTIDC(BaseDataset):
         w1, h1 = rgb.size
         w2, h2 = depth.size
         w3, h3 = gt.size
-
+        print(w1,w2,w3,h1,h2,h3)
         assert w1 == w2 and w1 == w3 and h1 == h2 and h1 == h3
 
         return rgb, depth, gt, K
