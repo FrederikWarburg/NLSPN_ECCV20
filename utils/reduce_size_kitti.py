@@ -90,7 +90,7 @@ if __name__ == "__main__":
             
             resize_folder(src, dst, args.scale)
     """
-    if os.path.exists(args.path_out, 'depth_selection')): 
+    if os.path.exists(os.path.join(args.path_out, 'depth_selection')): 
         shutil.rmtree(os.path.join(args.path_out, 'depth_selection'))
     
     os.makedirs(os.path.join(args.path_out, 'depth_selection', 'val_selection_cropped', 'image'))
