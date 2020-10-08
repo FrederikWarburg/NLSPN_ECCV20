@@ -97,8 +97,8 @@ if __name__ == "__main__":
     os.makedirs(os.path.join(args.path_out, 'depth_selection', 'val_selection_cropped', 'groundtruth_depth'))
     os.makedirs(os.path.join(args.path_out, 'depth_selection', 'val_selection_cropped', 'velodyne_raw'))
 
-    src = os.path.join(args.path_root, 'depth_selection', 'val_selection_cropped', 'intrinsic')
-    dst = os.path.join(args.path_out, 'depth_selection', 'val_selection_cropped', 'intrinsic')
+    src = os.path.join(args.path_root, 'depth_selection', 'val_selection_cropped', 'intrinsics')
+    dst = os.path.join(args.path_out, 'depth_selection', 'val_selection_cropped', 'intrinsics')
     shutil.copytree(src, dst)
 
     for i in os.listdir(os.path.join(args.path_root, 'depth_selection', 'val_selection_cropped', 'image')):
@@ -121,8 +121,8 @@ if __name__ == "__main__":
     os.makedirs(os.path.join(args.path_out, 'depth_selection', 'test_depth_completion_anonymous', 'groundtruth_depth'))
     os.makedirs(os.path.join(args.path_out, 'depth_selection', 'test_depth_completion_anonymous', 'velodyne_raw'))
 
-    src = os.path.join(args.path_root, 'depth_selection', 'test_depth_completion_anonymous', 'intrinsic')
-    dst = os.path.join(args.path_out, 'depth_selection', 'test_depth_completion_anonymous', 'intrinsic')
+    src = os.path.join(args.path_root, 'depth_selection', 'test_depth_completion_anonymous', 'intrinsics')
+    dst = os.path.join(args.path_out, 'depth_selection', 'test_depth_completion_anonymous', 'intrinsics')
     shutil.copytree(src, dst)
 
     for i in os.listdir(os.path.join(args.path_root, 'depth_selection', 'test_depth_completion_anonymous', 'image')):
