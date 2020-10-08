@@ -56,7 +56,7 @@ def check_sizes(basepath, newpath, scale):
             im = Image.open(basepath + '/proj_depth/velodyne_raw/' + p + '/' + i)
             wc, hc = im.size
             im = resize_depth(im, 4, False)
-            cv2.imwrite(newpath + '/proj_depth/groundtruth/'+p+'/' + i, im)
+            cv2.imwrite(newpath + '/proj_depth/velodyne_raw/'+p+'/' + i, im)
   
             h3, w3 = im.shape
 
