@@ -42,7 +42,7 @@ def check_sizes(basepath, newpath, scale):
             wa, ha = im.size
             h,w = im.size
             hb, wb = int(np.ceil(h / scale)), int(np.ceil(w / scale))
-            im.thumbnail((hb, wb), Image.ANTIALIAS)
+            im = im.resize((hb, wb), Image.ANTIALIAS)
             im.save(newpath  + '/' + p + '/data/' + i)
             
             w1, h1 = im.size
