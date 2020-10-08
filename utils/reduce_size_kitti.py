@@ -43,7 +43,9 @@ def resize_folder(basepath, newpath, scale):
         if not os.path.exists(newpath  + '/' + p + '/data/'): os.makedirs(newpath  + '/' + p + '/data/')
         for i in os.listdir(basepath + '/' +  p +'/data'):
             im = Image.open(basepath  + '/' + p + '/data/' + i)
-            im.thumbnail((306, 93), Image.ANTIALIAS)
+            h,w = im.size
+            hb, wb = int(np.ceil(h / scale)), int(np.ceil(w / scale))
+            im.thumbnail((hb, wb), Image.ANTIALIAS)
             im.save(newpath  + '/' + p + '/data/' + i)
     """
     for p in ['image_02', 'image_03']:
@@ -104,7 +106,9 @@ if __name__ == "__main__":
     """
     for i in os.listdir(os.path.join(args.path_root, 'depth_selection', 'val_selection_cropped', 'image')):
         im = Image.open(os.path.join(args.path_root, 'depth_selection', 'val_selection_cropped', 'image', i))
-        im.thumbnail((306, 93), Image.ANTIALIAS)
+        h,w = im.size
+        hb, wb = int(np.ceil(h / scale)), int(np.ceil(w / scale))
+        im.thumbnail((hb, wb), Image.ANTIALIAS)
         im.save(os.path.join(args.path_out, 'depth_selection', 'val_selection_cropped', 'image', i))
     """
     for i in os.listdir(os.path.join(args.path_root, 'depth_selection', 'val_selection_cropped', 'groundtruth_depth')):
@@ -128,7 +132,9 @@ if __name__ == "__main__":
     """
     for i in os.listdir(os.path.join(args.path_root, 'depth_selection', 'test_depth_completion_anonymous', 'image')):
         im = Image.open(os.path.join(args.path_root, 'depth_selection', 'test_depth_completion_anonymous', 'image', i))
-        im.thumbnail((306,93), Image.ANTIALIAS)
+        h,w = im.size
+        hb, wb = int(np.ceil(h / scale)), int(np.ceil(w / scale))
+        im.thumbnail((hb, wb), Image.ANTIALIAS)
         im.save(os.path.join(args.path_out, 'depth_selection', 'test_depth_completion_anonymous', 'image', i))
     """
     for i in os.listdir(os.path.join(args.path_root, 'depth_selection', 'test_depth_completion_anonymous', 'velodyne_raw')):
