@@ -73,13 +73,13 @@ if __name__ == "__main__":
                         help="Path to reduce KITTI dataset")
     parser.add_argument('--scale', type=float, required=False,
                         default=4, help='The scale for reducing the size')
-
     args = parser.parse_args()
 
+    """
     if os.path.exists(args.path_out):
         shutil.rmtree(args.path_out)
 
-    for split in ['train','val','test']:
+    for split in ['train','val']:
         for folder in os.listdir(os.path.join(args.path_root,split)):
             print("==> ", folder)
             src = os.path.join(args.path_root, split, folder)
@@ -89,3 +89,46 @@ if __name__ == "__main__":
                 os.makedirs(dst)
             
             resize_folder(src, dst, args.scale)
+    """
+    
+    src = os.path.join(args.basepath, 'depth_selection', 'val_selection_cropped', 'intrinsic')
+    dst = os.path.join(args.newpath, 'depth_selection', 'val_selection_cropped', 'intrinsic')
+    shutil.copytree(src, dst)
+
+    os.makedirs(os.path.join(args.newpath, 'depth_selection', 'val_selection_cropped', 'image'))
+    os.makedirs(os.path.join(args.newpath, 'depth_selection', 'val_selection_cropped', 'groundtruth_depth'))
+    os.makedirs(os.path.join(args.newpath, 'depth_selection', 'val_selection_cropped', 'velodyne_raw'))
+
+    for i in os.listdir(os.path.join(args.basepath, 'depth_selection', 'val_selection_cropped', 'image')):
+        im = Image.open(os.path.join(args.basepath, 'depth_selection', 'val_selection_cropped', 'image', i))
+        im.thumbnail((93, 306), Image.ANTIALIAS)
+        im.save(os.path.join(args.newpath, 'depth_selection', 'val_selection_cropped', 'image', i))
+
+    for i in os.listdir(os.path.join(args.basepath, 'depth_selection', 'val_selection_cropped', 'groundtruth_depth')):
+        im = Image.open(os.path.join(args.basepath, 'depth_selection', 'val_selection_cropped', 'groundtruth_depth', i))
+        im = resize_depth(im, 4, True)
+        cv2.imwrite(os.path.join(args.newpath, 'depth_selection', 'val_selection_cropped', 'groundtruth_depth', i), im)
+
+    for i in os.listdir(os.path.join(args.basepath, 'depth_selection', 'val_selection_cropped', 'velodyne_raw')):
+        im = Image.open(os.path.join(args.basepath, 'depth_selection', 'val_selection_cropped', 'velodyne_raw', i))
+        im = resize_depth(im, 4, False)
+        cv2.imwrite(os.path.join(args.newpath, 'depth_selection', 'val_selection_cropped', 'velodyne_raw', i), im)
+
+
+    src = os.path.join(args.basepath, 'depth_selection', 'test_depth_completion_anonymous', 'intrinsic')
+    dst = os.path.join(args.newpath, 'depth_selection', 'test_depth_completion_anonymous', 'intrinsic')
+    shutil.copytree(src, dst)
+
+    os.makedirs(os.path.join(args.newpath, 'depth_selection', 'test_depth_completion_anonymous', 'image'))
+    os.makedirs(os.path.join(args.newpath, 'depth_selection', 'test_depth_completion_anonymous', 'groundtruth_depth'))
+    os.makedirs(os.path.join(args.newpath, 'depth_selection', 'test_depth_completion_anonymous', 'velodyne_raw'))
+
+    for i in os.listdir(os.path.join(args.basepath, 'depth_selection', 'test_depth_completion_anonymous', 'image')):
+        im = Image.open(os.path.join(args.basepath, 'depth_selection', 'test_depth_completion_anonymous', 'image', i))
+        im.thumbnail((93, 306), Image.ANTIALIAS)
+        im.save(os.path.join(args.newpath, 'depth_selection', 'test_depth_completion_anonymous', 'image', i))
+
+    for i in os.listdir(os.path.join(args.basepath, 'depth_selection', 'test_depth_completion_anonymous', 'velodyne_raw')):
+        im = Image.open(os.path.join(args.basepath, 'depth_selection', 'test_depth_completion_anonymous', 'velodyne_raw', i))
+        im = resize_depth(im, 4, False)
+        cv2.imwrite(os.path.join(args.newpath, 'depth_selection', 'test_depth_completion_anonymous', 'velodyne_raw', i), im)
