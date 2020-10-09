@@ -124,7 +124,7 @@ class KITTIDC(BaseDataset):
 
     def __getitem__(self, idx):
         rgb, depth, gt, K = self._load_data(idx)
-        print("rgb1", rgb.size, depth.size)
+        
         if self.augment and self.mode == 'train':
             # Top crop if needed
             if self.args.top_crop > 0:
@@ -138,7 +138,7 @@ class KITTIDC(BaseDataset):
                 K[3] = K[3] - self.args.top_crop
 
             width, height = rgb.size
-            print("rgb2", rgb.size)
+            
             _scale = np.random.uniform(1.0, 1.5)
             scale = np.int(height * _scale)
             degree = np.random.uniform(-5.0, 5.0)
@@ -177,7 +177,7 @@ class KITTIDC(BaseDataset):
 
             # Crop
             width, height = rgb.size
-            print(width, height, self.height, self.width)
+            
             assert self.height <= height and self.width <= width, \
                 "patch size is larger than the input size"
 
@@ -296,8 +296,6 @@ class KITTIDC(BaseDataset):
         w2, h2 = depth.size
         w3, h3 = gt.size
 
-        print(path_depth, path_rgb, path_gt)
-        print(w1,w2,w3,h1,h2,h3)
         assert w1 == w2 and w1 == w3 and h1 == h2 and h1 == h3
 
         return rgb, depth, gt, K

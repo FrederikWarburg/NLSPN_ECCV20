@@ -56,7 +56,7 @@ def write_calib_file(filepath, data):
     with open(filepath, 'w') as f:
         for key in data:
             value = [str(v) for v in data[key]]
-            line = "{}: ".format(key) + " ".join(value) 
+            line = "{}: ".format(key) + " ".join(value) + "\n"
             f.writelines(line)
 
     return 
@@ -68,11 +68,11 @@ def resize_folder(basepath, newpath, scale):
     cam_to_cam['P_rect_02'] = cam_to_cam['P_rect_02'] * 1/float(scale)
     cam_to_cam['P_rect_03'] = cam_to_cam['P_rect_03'] * 1/float(scale)
     write_calib_file(newpath + '/calib_cam_to_cam.txt', cam_to_cam)
-
+    """
     shutil.copy(basepath + '/calib_imu_to_velo.txt', newpath + '/calib_imu_to_velo.txt')
     shutil.copy(basepath + '/calib_velo_to_cam.txt', newpath + '/calib_velo_to_cam.txt')
     shutil.copytree(basepath + '/oxts', newpath + '/oxts')
-    """
+    
     for p in ['image_02', 'image_03']:
         if not os.path.exists(newpath  + '/' + p + '/data/'): os.makedirs(newpath  + '/' + p + '/data/')
         for i in os.listdir(basepath + '/' +  p +'/data'):
@@ -138,9 +138,9 @@ if __name__ == "__main__":
     src = os.path.join(args.path_root, 'depth_selection', 'val_selection_cropped', 'intrinsics')
     dst = os.path.join(args.path_out, 'depth_selection', 'val_selection_cropped', 'intrinsics')
     for i in os.listdir(src):
-        data = np.loadtxt(os.path.join(src, i), delimiter=' ')
+        data = np.loadtxt(os.path.join(src, i))
         data[:6] = data[:6] / float(args.scale)
-        np.savetxt(os.path.join(dst,i), data, delimiter=' ')
+        np.savetxt(os.path.join(dst,i), data)
     """
     for i in os.listdir(os.path.join(args.path_root, 'depth_selection', 'val_selection_cropped', 'image')):
         im = Image.open(os.path.join(args.path_root, 'depth_selection', 'val_selection_cropped', 'image', i))
@@ -167,9 +167,9 @@ if __name__ == "__main__":
     src = os.path.join(args.path_root, 'depth_selection', 'val_selection_cropped', 'intrinsics')
     dst = os.path.join(args.path_out, 'depth_selection', 'val_selection_cropped', 'intrinsics')
     for i in os.listdir(src):
-        data = np.loadtxt(os.path.join(src, i), delimiter=' ')
+        data = np.loadtxt(os.path.join(src, i))
         data[:6] = data[:6] / float(args.scale)
-        np.savetxt(os.path.join(dst,i), data, delimiter=' ')
+        np.savetxt(os.path.join(dst,i), data)
     """
     for i in os.listdir(os.path.join(args.path_root, 'depth_selection', 'test_depth_completion_anonymous', 'image')):
         im = Image.open(os.path.join(args.path_root, 'depth_selection', 'test_depth_completion_anonymous', 'image', i))
