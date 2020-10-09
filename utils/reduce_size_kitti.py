@@ -134,11 +134,14 @@ if __name__ == "__main__":
     os.makedirs(os.path.join(args.path_out, 'depth_selection', 'val_selection_cropped', 'image'))
     os.makedirs(os.path.join(args.path_out, 'depth_selection', 'val_selection_cropped', 'groundtruth_depth'))
     os.makedirs(os.path.join(args.path_out, 'depth_selection', 'val_selection_cropped', 'velodyne_raw'))
-
+    """
     src = os.path.join(args.path_root, 'depth_selection', 'val_selection_cropped', 'intrinsics')
     dst = os.path.join(args.path_out, 'depth_selection', 'val_selection_cropped', 'intrinsics')
-    shutil.copytree(src, dst)
-    
+    for i in os.listdir(src):
+        data = np.loadtxt(os.path.join(src, i), delimiter=' ')
+        data[:6] = data[:6] / float(args.scale)
+        np.savetxt(os.path.join(dst,i), data, delimiter=' ')
+    """
     for i in os.listdir(os.path.join(args.path_root, 'depth_selection', 'val_selection_cropped', 'image')):
         im = Image.open(os.path.join(args.path_root, 'depth_selection', 'val_selection_cropped', 'image', i))
         h,w = im.size
@@ -160,10 +163,13 @@ if __name__ == "__main__":
     os.makedirs(os.path.join(args.path_out, 'depth_selection', 'test_depth_completion_anonymous', 'image'))
     os.makedirs(os.path.join(args.path_out, 'depth_selection', 'test_depth_completion_anonymous', 'groundtruth_depth'))
     os.makedirs(os.path.join(args.path_out, 'depth_selection', 'test_depth_completion_anonymous', 'velodyne_raw'))
-
-    src = os.path.join(args.path_root, 'depth_selection', 'test_depth_completion_anonymous', 'intrinsics')
-    dst = os.path.join(args.path_out, 'depth_selection', 'test_depth_completion_anonymous', 'intrinsics')
-    shutil.copytree(src, dst)
+    """
+    src = os.path.join(args.path_root, 'depth_selection', 'val_selection_cropped', 'intrinsics')
+    dst = os.path.join(args.path_out, 'depth_selection', 'val_selection_cropped', 'intrinsics')
+    for i in os.listdir(src):
+        data = np.loadtxt(os.path.join(src, i), delimiter=' ')
+        data[:6] = data[:6] / float(args.scale)
+        np.savetxt(os.path.join(dst,i), data, delimiter=' ')
     """
     for i in os.listdir(os.path.join(args.path_root, 'depth_selection', 'test_depth_completion_anonymous', 'image')):
         im = Image.open(os.path.join(args.path_root, 'depth_selection', 'test_depth_completion_anonymous', 'image', i))
@@ -171,7 +177,7 @@ if __name__ == "__main__":
         hb, wb = int(np.ceil(h / args.scale)), int(np.ceil(w / args.scale))
         im = im.resize((hb, wb), Image.ANTIALIAS)
         im.save(os.path.join(args.path_out, 'depth_selection', 'test_depth_completion_anonymous', 'image', i))
-    """
+    
     for i in os.listdir(os.path.join(args.path_root, 'depth_selection', 'test_depth_completion_anonymous', 'velodyne_raw')):
         im = Image.open(os.path.join(args.path_root, 'depth_selection', 'test_depth_completion_anonymous', 'velodyne_raw', i))
         im = resize_depth(im, 4, False)
