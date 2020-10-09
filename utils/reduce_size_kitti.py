@@ -31,10 +31,44 @@ def resize_depth(im, scale = 4, GT = True):
     
     return newim
 
+# Reference : https://github.com/utiasSTARS/pykitti/blob/master/pykitti/utils.py
+def read_calib_file(filepath):
+    """Read in a calibration file and parse into a dictionary."""
+    data = {}
+
+    with open(filepath, 'r') as f:
+        for line in f.readlines():
+            key, value = line.split(':', 1)
+            # The only non-float values in these files are dates, which
+            # we don't care about anyway
+            try:
+                data[key] = np.array([float(x) for x in value.split()])
+            except ValueError:
+                pass
+
+    return data
+
+
+# Reference : https://github.com/utiasSTARS/pykitti/blob/master/pykitti/utils.py
+def write_calib_file(filepath, data):
+    """Write in a calibration file and parse into a dictionary."""
+
+    with open(filepath, 'w') as f:
+        for key in data:
+            value = [str(v) for v in data[key]]
+            line = "{}: ".format(key) + " ".join(value) 
+            f.writelines(line)
+
+    return 
+
 
 def resize_folder(basepath, newpath, scale):
-    """
-    shutil.copy(basepath + '/calib_cam_to_cam.txt', newpath + '/calib_cam_to_cam.txt')
+    
+    cam_to_cam = read_calib_file(basepath + '/calib_cam_to_cam.txt')
+    cam_to_cam['P_rect_02'] = cam_to_cam['P_rect_02'] * 1/float(scale)
+    cam_to_cam['P_rect_03'] = cam_to_cam['P_rect_03'] * 1/float(scale)
+    write_calib_file(newpath + '/calib_cam_to_cam.txt', cam_to_cam)
+
     shutil.copy(basepath + '/calib_imu_to_velo.txt', newpath + '/calib_imu_to_velo.txt')
     shutil.copy(basepath + '/calib_velo_to_cam.txt', newpath + '/calib_velo_to_cam.txt')
     shutil.copytree(basepath + '/oxts', newpath + '/oxts')
@@ -46,10 +80,9 @@ def resize_folder(basepath, newpath, scale):
             im = Image.open(basepath  + '/' + p + '/data/' + i)
             h,w = im.size
             hb, wb = int(np.ceil(h / scale)), int(np.ceil(w / scale))
-            print(h,w,hb,wb)
-            im.thumbnail((hb, wb), Image.ANTIALIAS)
+            im = im.resize((hb, wb), Image.ANTIALIAS)
             im.save(newpath  + '/' + p + '/data/' + i)
-    """
+    
     for p in ['image_02', 'image_03']:
         if not os.path.exists(newpath + '/proj_depth/groundtruth/'+ p): 
             os.makedirs(newpath + '/proj_depth/groundtruth/'+p)
@@ -82,7 +115,7 @@ if __name__ == "__main__":
     """
     if os.path.exists(args.path_out):
         shutil.rmtree(args.path_out)
-    
+    """
     for split in ['train','val']:
         for folder in os.listdir(os.path.join(args.path_root,split)):
             print("==> ", folder)
@@ -93,26 +126,29 @@ if __name__ == "__main__":
                 os.makedirs(dst)
             
             resize_folder(src, dst, args.scale)
-    
-    
+
+    """
     if os.path.exists(os.path.join(args.path_out, 'depth_selection')): 
         shutil.rmtree(os.path.join(args.path_out, 'depth_selection'))
     
     os.makedirs(os.path.join(args.path_out, 'depth_selection', 'val_selection_cropped', 'image'))
     os.makedirs(os.path.join(args.path_out, 'depth_selection', 'val_selection_cropped', 'groundtruth_depth'))
     os.makedirs(os.path.join(args.path_out, 'depth_selection', 'val_selection_cropped', 'velodyne_raw'))
-
+    """
     src = os.path.join(args.path_root, 'depth_selection', 'val_selection_cropped', 'intrinsics')
     dst = os.path.join(args.path_out, 'depth_selection', 'val_selection_cropped', 'intrinsics')
-    shutil.copytree(src, dst)
+    for i in os.listdir(src):
+        data = np.loadtxt(os.path.join(src, i), delimiter=' ')
+        data[:6] = data[:6] / float(args.scale)
+        np.savetxt(os.path.join(dst,i), data, delimiter=' ')
     """
     for i in os.listdir(os.path.join(args.path_root, 'depth_selection', 'val_selection_cropped', 'image')):
         im = Image.open(os.path.join(args.path_root, 'depth_selection', 'val_selection_cropped', 'image', i))
         h,w = im.size
         hb, wb = int(np.ceil(h / args.scale)), int(np.ceil(w / args.scale))
-        im.thumbnail((hb, wb), Image.ANTIALIAS)
+        im = im.resize((hb, wb), Image.ANTIALIAS)
         im.save(os.path.join(args.path_out, 'depth_selection', 'val_selection_cropped', 'image', i))
-    """
+    
     for i in os.listdir(os.path.join(args.path_root, 'depth_selection', 'val_selection_cropped', 'groundtruth_depth')):
         im = Image.open(os.path.join(args.path_root, 'depth_selection', 'val_selection_cropped', 'groundtruth_depth', i))
         im = resize_depth(im, 4, True)
@@ -127,18 +163,21 @@ if __name__ == "__main__":
     os.makedirs(os.path.join(args.path_out, 'depth_selection', 'test_depth_completion_anonymous', 'image'))
     os.makedirs(os.path.join(args.path_out, 'depth_selection', 'test_depth_completion_anonymous', 'groundtruth_depth'))
     os.makedirs(os.path.join(args.path_out, 'depth_selection', 'test_depth_completion_anonymous', 'velodyne_raw'))
-
-    src = os.path.join(args.path_root, 'depth_selection', 'test_depth_completion_anonymous', 'intrinsics')
-    dst = os.path.join(args.path_out, 'depth_selection', 'test_depth_completion_anonymous', 'intrinsics')
-    shutil.copytree(src, dst)
+    """
+    src = os.path.join(args.path_root, 'depth_selection', 'val_selection_cropped', 'intrinsics')
+    dst = os.path.join(args.path_out, 'depth_selection', 'val_selection_cropped', 'intrinsics')
+    for i in os.listdir(src):
+        data = np.loadtxt(os.path.join(src, i), delimiter=' ')
+        data[:6] = data[:6] / float(args.scale)
+        np.savetxt(os.path.join(dst,i), data, delimiter=' ')
     """
     for i in os.listdir(os.path.join(args.path_root, 'depth_selection', 'test_depth_completion_anonymous', 'image')):
         im = Image.open(os.path.join(args.path_root, 'depth_selection', 'test_depth_completion_anonymous', 'image', i))
         h,w = im.size
         hb, wb = int(np.ceil(h / args.scale)), int(np.ceil(w / args.scale))
-        im.thumbnail((hb, wb), Image.ANTIALIAS)
+        im = im.resize((hb, wb), Image.ANTIALIAS)
         im.save(os.path.join(args.path_out, 'depth_selection', 'test_depth_completion_anonymous', 'image', i))
-    """
+    
     for i in os.listdir(os.path.join(args.path_root, 'depth_selection', 'test_depth_completion_anonymous', 'velodyne_raw')):
         im = Image.open(os.path.join(args.path_root, 'depth_selection', 'test_depth_completion_anonymous', 'velodyne_raw', i))
         im = resize_depth(im, 4, False)
