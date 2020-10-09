@@ -42,7 +42,9 @@ def check_sizes(basepath, newpath, scale):
             wa, ha = im.size
             h,w = im.size
             hb, wb = int(np.ceil(h / scale)), int(np.ceil(w / scale))
-            im.thumbnail((hb, wb), Image.ANTIALIAS)
+            
+            im = im.resize((hb, wb), Image.ANTIALIAS)
+            
             im.save(newpath  + '/' + p + '/data/' + i)
             
             w1, h1 = im.size
@@ -83,6 +85,8 @@ if __name__ == "__main__":
     for split in ['train','val']:
         for folder in os.listdir(os.path.join(args.path_root,split)):
             print("==> ", folder)
+
+            #if folder != "2011_10_03_drive_0034_sync": continue
             src = os.path.join(args.path_root, split, folder)
             dst = os.path.join(args.path_out, split, folder)
 
