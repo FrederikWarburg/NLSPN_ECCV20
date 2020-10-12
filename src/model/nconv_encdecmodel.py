@@ -43,9 +43,10 @@ class NCONV_ENCDECModel(nn.Module):
 
                
             
-    def forward(self, sample ):  
+    def forward(self, sample):  
         # unpack sample
         x0_rgb = sample['rgb']
+        x0_d = sample['dep']
 
         # Depth Network
         output = self.d_net(sample)
