@@ -187,7 +187,8 @@ class NLSPNSummary(BaseSummary):
 
         self.add_image(self.mode + '/images', img_total, global_step)
 
-        self.add_scalar('Etc/gamma', output['gamma'], global_step)
+        if self.args.model == 'nlsp':
+            self.add_scalar('Etc/gamma', output['gamma'], global_step)
 
         self.flush()
 
@@ -215,12 +216,13 @@ class NLSPNSummary(BaseSummary):
                 pred.save(path_save_pred)
             else:
                 # Parse data
-                guidance = output['guidance'].data.cpu().numpy()
-                offset = output['offset'].data.cpu().numpy()
-                aff = output['aff'].data.cpu().numpy()
-                gamma = output['gamma'].data.cpu().numpy()
-                feat_init = output['pred_init']
-                list_feat = output['pred_inter']
+                if self.args.model == 'nlsp':
+                    guidance = output['guidance'].data.cpu().numpy()
+                    offset = output['offset'].data.cpu().numpy()
+                    aff = output['aff'].data.cpu().numpy()
+                    gamma = output['gamma'].data.cpu().numpy()
+                    feat_init = output['pred_init']
+                    list_feat = output['pred_inter']
 
                 rgb = sample['rgb'].detach()
                 if self.args.dep_src in ['slam', 'sgbm']:
@@ -276,19 +278,21 @@ class NLSPNSummary(BaseSummary):
                 pred_gray = Image.fromarray(pred_gray)
                 gt = Image.fromarray(gt[:, :, :3], 'RGB')
 
-                feat_init = feat_init[0, 0, :, :].data.cpu().numpy()
-                feat_init = feat_init / self.args.max_depth
-                feat_init = (255.0*cm(feat_init)).astype('uint8')
-                feat_init = Image.fromarray(feat_init[:, :, :3], 'RGB')
+                if self.args.model == 'nlsp':
 
-                for k in range(0, len(list_feat)):
-                    feat_inter = list_feat[k]
-                    feat_inter = feat_inter[0, 0, :, :].data.cpu().numpy()
-                    feat_inter = feat_inter / self.args.max_depth
-                    feat_inter = (255.0*cm(feat_inter)).astype('uint8')
-                    feat_inter = Image.fromarray(feat_inter[:, :, :3], 'RGB')
+                    feat_init = feat_init[0, 0, :, :].data.cpu().numpy()
+                    feat_init = feat_init / self.args.max_depth
+                    feat_init = (255.0*cm(feat_init)).astype('uint8')
+                    feat_init = Image.fromarray(feat_init[:, :, :3], 'RGB')
 
-                    list_feat[k] = feat_inter
+                    for k in range(0, len(list_feat)):
+                        feat_inter = list_feat[k]
+                        feat_inter = feat_inter[0, 0, :, :].data.cpu().numpy()
+                        feat_inter = feat_inter / self.args.max_depth
+                        feat_inter = (255.0*cm(feat_inter)).astype('uint8')
+                        feat_inter = Image.fromarray(feat_inter[:, :, :3], 'RGB')
+
+                        list_feat[k] = feat_inter
 
                 self.path_output = '{}/{}/epoch{:04d}/{:08d}'.format(
                     self.log_dir, self.mode, epoch, idx)
@@ -300,6 +304,7 @@ class NLSPNSummary(BaseSummary):
                 else:
                     path_save_dep0 = '{}/02_dep0.png'.format(self.path_output)
                     path_save_dep1 = '{}/02_dep1.png'.format(self.path_output)
+
                 path_save_init = '{}/03_pred_init.png'.format(self.path_output)
                 path_save_pred = '{}/05_pred_final.png'.format(self.path_output)
                 path_save_pred_gray = '{}/05_pred_final_gray.png'.format(
@@ -314,15 +319,18 @@ class NLSPNSummary(BaseSummary):
                     dep1.save(path_save_dep1)
                 pred.save(path_save_pred)
                 pred_gray.save(path_save_pred_gray)
-                feat_init.save(path_save_init)
                 gt.save(path_save_gt)
 
-                for k in range(0, len(list_feat)):
-                    path_save_inter = '{}/04_pred_prop_{:02d}.png'.format(
-                        self.path_output, k)
-                    list_feat[k].save(path_save_inter)
+                if self.args.model == 'nlsp':
 
-                np.save('{}/guidance.npy'.format(self.path_output), guidance)
-                np.save('{}/offset.npy'.format(self.path_output), offset)
-                np.save('{}/aff.npy'.format(self.path_output), aff)
-                np.save('{}/gamma.npy'.format(self.path_output), gamma)
+                    feat_init.save(path_save_init)
+
+                    for k in range(0, len(list_feat)):
+                        path_save_inter = '{}/04_pred_prop_{:02d}.png'.format(
+                            self.path_output, k)
+                        list_feat[k].save(path_save_inter)
+
+                    np.save('{}/guidance.npy'.format(self.path_output), guidance)
+                    np.save('{}/offset.npy'.format(self.path_output), offset)
+                    np.save('{}/aff.npy'.format(self.path_output), aff)
+                    np.save('{}/gamma.npy'.format(self.path_output), gamma)

@@ -123,7 +123,7 @@ class KITTIDC(BaseDataset):
         return len(self.sample_list)
 
     def __getitem__(self, idx):
-        rgb, depth, gt, K = self._load_data(idx)
+        rgb, depth, gt, confidence, K = self._load_data(idx)
         
         if self.augment and self.mode == 'train':
             # Top crop if needed
@@ -132,6 +132,8 @@ class KITTIDC(BaseDataset):
                 rgb = TF.crop(rgb, self.args.top_crop, 0,
                               height - self.args.top_crop, width)
                 depth = TF.crop(depth, self.args.top_crop, 0,
+                                height - self.args.top_crop, width)
+                confidence = TF.crop(confidence, self.args.top_crop, 0,
                                 height - self.args.top_crop, width)
                 gt = TF.crop(gt, self.args.top_crop, 0,
                              height - self.args.top_crop, width)
@@ -148,12 +150,14 @@ class KITTIDC(BaseDataset):
             if flip > 0.5:
                 rgb = TF.hflip(rgb)
                 depth = TF.hflip(depth)
+                confidence = TF.hflip(confidence)
                 gt = TF.hflip(gt)
                 K[2] = width - K[2]
 
             # Rotation
             rgb = TF.rotate(rgb, angle=degree, resample=Image.BICUBIC)
             depth = TF.rotate(depth, angle=degree, resample=Image.NEAREST)
+            confidence = TF.rotate(confidence, angle=degree, resample=Image.NEAREST)
             gt = TF.rotate(gt, angle=degree, resample=Image.NEAREST)
 
             # Color jitter
@@ -168,6 +172,7 @@ class KITTIDC(BaseDataset):
             # Resize
             rgb = TF.resize(rgb, scale, Image.BICUBIC)
             depth = TF.resize(depth, scale, Image.NEAREST)
+            confidence = TF.resize(confidence, scale, Image.NEAREST)
             gt = TF.resize(gt, scale, Image.NEAREST)
 
             K[0] = K[0] * _scale
@@ -186,6 +191,7 @@ class KITTIDC(BaseDataset):
 
             rgb = TF.crop(rgb, h_start, w_start, self.height, self.width)
             depth = TF.crop(depth, h_start, w_start, self.height, self.width)
+            confidence = TF.crop(confidence, h_start, w_start, self.height, self.width)
             gt = TF.crop(gt, h_start, w_start, self.height, self.width)
 
             K[2] = K[2] - w_start
@@ -198,6 +204,9 @@ class KITTIDC(BaseDataset):
             depth = TF.to_tensor(np.array(depth))
             depth = depth / _scale
 
+            confidence = TF.to_tensor(np.array(confidence))
+            confidence = confidence / _scale
+
             gt = TF.to_tensor(np.array(gt))
             gt = gt / _scale
         elif self.mode in ['train', 'val']:
@@ -207,6 +216,8 @@ class KITTIDC(BaseDataset):
                 rgb = TF.crop(rgb, self.args.top_crop, 0,
                               height - self.args.top_crop, width)
                 depth = TF.crop(depth, self.args.top_crop, 0,
+                                height - self.args.top_crop, width)
+                confidence = TF.crop(confidence, self.args.top_crop, 0,
                                 height - self.args.top_crop, width)
                 gt = TF.crop(gt, self.args.top_crop, 0,
                              height - self.args.top_crop, width)
@@ -223,6 +234,7 @@ class KITTIDC(BaseDataset):
 
             rgb = TF.crop(rgb, h_start, w_start, self.height, self.width)
             depth = TF.crop(depth, h_start, w_start, self.height, self.width)
+            confidence = TF.crop(confidence, h_start, w_start, self.height, self.width)
             gt = TF.crop(gt, h_start, w_start, self.height, self.width)
 
             K[2] = K[2] - w_start
@@ -233,6 +245,7 @@ class KITTIDC(BaseDataset):
                                (0.229, 0.224, 0.225), inplace=True)
 
             depth = TF.to_tensor(np.array(depth))
+            confidence = TF.to_tensor(np.array(confidence))
 
             gt = TF.to_tensor(np.array(gt))
         else:
@@ -241,6 +254,8 @@ class KITTIDC(BaseDataset):
                 rgb = TF.crop(rgb, self.args.top_crop, 0,
                               height - self.args.top_crop, width)
                 depth = TF.crop(depth, self.args.top_crop, 0,
+                                height - self.args.top_crop, width)
+                confidence = TF.crop(confidence, self.args.top_crop, 0,
                                 height - self.args.top_crop, width)
                 gt = TF.crop(gt, self.args.top_crop, 0,
                              height - self.args.top_crop, width)
@@ -251,13 +266,13 @@ class KITTIDC(BaseDataset):
                                (0.229, 0.224, 0.225), inplace=True)
 
             depth = TF.to_tensor(np.array(depth))
-
+            confidence = TF.to_tensor(np.array(confidence))
             gt = TF.to_tensor(np.array(gt))
 
         if self.args.num_sample > 0:
-            depth = self.get_sparse_depth(depth, self.args.num_sample)
+            depth, confidence = self.get_sparse_depth(depth, confidence, self.args.num_sample)
 
-        output = {'rgb': rgb, 'dep': depth, 'gt': gt, 'K': torch.Tensor(K)}
+        output = {'rgb': rgb, 'dep': depth, 'confidence': confidence, 'gt': gt, 'K': torch.Tensor(K)}
 
         return output
 
@@ -298,9 +313,13 @@ class KITTIDC(BaseDataset):
 
         assert w1 == w2 and w1 == w3 and h1 == h2 and h1 == h3
 
-        return rgb, depth, gt, K
+        # for now lets just create a binary confidence map
+        confidence = np.zeros_like(depth)
+        confidence[np.where(depth > 0)] = 1.0
 
-    def get_sparse_depth(self, dep, num_sample):
+        return rgb, depth, gt, confidence, K
+
+    def get_sparse_depth(self, dep, confidence, num_sample):
         channel, height, width = dep.shape
 
         assert channel == 1
@@ -317,5 +336,6 @@ class KITTIDC(BaseDataset):
         mask = mask.view((channel, height, width))
 
         dep_sp = dep * mask.type_as(dep)
+        confidence = confidence * mask.type_as(dep)
 
-        return dep_sp
+        return dep_sp, confidence
