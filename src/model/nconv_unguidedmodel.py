@@ -12,7 +12,7 @@ from .nconv import NConv2d
 
 class NCONV_UNGUIDEDModel(nn.Module):
 
-    def __init__(self, pos_fn=None, num_channels=2):
+    def __init__(self, pos_fn='softplus', num_channels=2):
         super().__init__() 
         
         self.pos_fn = pos_fn
