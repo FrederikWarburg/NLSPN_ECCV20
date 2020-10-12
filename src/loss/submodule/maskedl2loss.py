@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 
 class MaskedL2Loss(nn.Module):
-    def __init__(self):
+    def __init__(self, args):
         super().__init__()
 
     def forward(self, pred, target):

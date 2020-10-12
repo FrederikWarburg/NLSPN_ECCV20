@@ -6,7 +6,7 @@ import torch.nn.functional as F
 
 class ConfDecayLoss(nn.Module):
     
-    def __init__(self):
+    def __init__(self, args):
         super().__init__()
                       
     def forward(self, pred, target, cout, epoch_num):           

@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 # The proposed probabilistic loss for pNCNN
 class MaskedProbLoss(nn.Module):
-    def __init__(self):
+    def __init__(self, args):
         super().__init__()
 
     def forward(self, means, targets, cout):
