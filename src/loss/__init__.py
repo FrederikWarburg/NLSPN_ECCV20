@@ -23,7 +23,7 @@ import torch.nn as nn
 
 
 def get(args):
-    loss_name = args.model_name + 'Loss'
+    loss_name = 'Loss'
     module_name = 'loss.' + loss_name.lower()
     module = import_module(module_name)
 
