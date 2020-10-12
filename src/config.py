@@ -128,6 +128,11 @@ parser.add_argument('--no_conf',
                     action='store_false',
                     dest='conf_prop',
                     help='no confidence for propagation')
+parser.add_argument('--input_conf',
+                    type=str,
+                    required=True,
+                    choices=['learned', 'input'],
+                    help='where the confidence is learned for nconv and pconc')
 
 
 # Training

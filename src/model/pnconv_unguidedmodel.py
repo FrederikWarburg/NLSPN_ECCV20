@@ -11,7 +11,9 @@ class PNCONV_UNGUIDEDModel(nn.Module):
         self.__name__ = 'pncnn'
         self.args = args
 
-        self.conf_estimator = UNetSP(1, 1)
+        if self.args.input_conf == 'learned':
+            self.conf_estimator = UNet(1, 1)
+        
         self.nconv = NConvUNet(1, 1)
         self.var_estimator = UNetSP(1, 1)
 
@@ -19,7 +21,11 @@ class PNCONV_UNGUIDEDModel(nn.Module):
 
         x0 = sample['dep']  # Use only depth
         
-        c0 = self.conf_estimator(x0)
+        if self.args.input_conf == 'learned':
+            c0 = self.conf_estimator(x0)
+        else:
+            c0 = sample['confidence']
+
         xout, cout = self.nconv(x0, c0)
         cout = self.var_estimator(cout)
         
