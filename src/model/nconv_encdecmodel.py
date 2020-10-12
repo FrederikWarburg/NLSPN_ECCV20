@@ -81,7 +81,7 @@ class NCONV_ENCDECModel(nn.Module):
         x9u = F.interpolate(x9, x0_d.size()[2:], mode='nearest')
         xout = F.leaky_relu(self.conv10(torch.cat((x9u, x0_d),1)), 0.2)
         
-        output = {'dep' : xout, 'confidence': cout_d}
+        output = {'pred' : xout, 'confidence': cout_d}
 
         return output
        

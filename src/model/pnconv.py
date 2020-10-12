@@ -18,13 +18,13 @@ class NConvUNet(nn.Module):
         super().__init__()
         self.__name__ = 'NConvUNet'
 
-        self.nconv1 = NConv2d(in_ch, in_ch * num_channels, (5, 5), pos_fn, 'k', padding=2)
-        self.nconv2 = NConv2d(in_ch * num_channels, in_ch * num_channels, (5, 5), pos_fn, 'k', padding=2)
-        self.nconv3 = NConv2d(in_ch * num_channels, in_ch * num_channels, (5, 5), pos_fn, 'k', padding=2)
+        self.nconv1 = NConv2d(in_ch, in_ch * num_channels, (5, 5), pos_fn, 'k', padding=(2,2))
+        self.nconv2 = NConv2d(in_ch * num_channels, in_ch * num_channels, (5, 5), pos_fn, 'k', padding=(2,2))
+        self.nconv3 = NConv2d(in_ch * num_channels, in_ch * num_channels, (5, 5), pos_fn, 'k', padding=(2,2))
 
-        self.nconv4 = NConv2d(2 * in_ch * num_channels, in_ch * num_channels, (3, 3), pos_fn, 'k', padding=1)
-        self.nconv5 = NConv2d(2 * in_ch * num_channels, in_ch * num_channels, (3, 3), pos_fn, 'k', padding=1)
-        self.nconv6 = NConv2d(2 * in_ch * num_channels, in_ch * num_channels, (3, 3), pos_fn, 'k', padding=1)
+        self.nconv4 = NConv2d(2 * in_ch * num_channels, in_ch * num_channels, (3, 3), pos_fn, 'k', padding=(1,1))
+        self.nconv5 = NConv2d(2 * in_ch * num_channels, in_ch * num_channels, (3, 3), pos_fn, 'k', padding=(1,1))
+        self.nconv6 = NConv2d(2 * in_ch * num_channels, in_ch * num_channels, (3, 3), pos_fn, 'k', padding=(1,1))
 
         self.nconv7 = NConv2d(in_ch * num_channels, out_ch, (1, 1), pos_fn, 'k')
 
