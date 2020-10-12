@@ -86,7 +86,7 @@ class NCONV_STREAMModel(nn.Module):
         output = self.d_net(sample)
 
         # unpack output
-        xout_d = output['dep']
+        xout_d = output['pred']
         cout_d = output['confidence']
         
         xout_d = self.d(xout_d)

@@ -51,7 +51,7 @@ class NCONV_ENCDECModel(nn.Module):
         output = self.d_net(sample)
 
         # unpack output
-        xout_d = output['dep']
+        xout_d = output['pred']
         cout_d = output['confidence']
 
         # U-Net
