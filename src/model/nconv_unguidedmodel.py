@@ -17,13 +17,13 @@ class NCONV_UNGUIDEDModel(nn.Module):
         
         self.pos_fn = pos_fn
 
-        self.nconv1 = NConv2d(1, num_channels, (5,5), pos_fn, 'p', padding=2)
-        self.nconv2 = NConv2d(num_channels, num_channels, (5,5), pos_fn, 'p', padding=2)
-        self.nconv3 = NConv2d(num_channels, num_channels, (5,5), pos_fn, 'p', padding=2)
+        self.nconv1 = NConv2d(1, num_channels, (5,5), pos_fn, 'p', padding=(2,2))
+        self.nconv2 = NConv2d(num_channels, num_channels, (5,5), pos_fn, 'p', padding=(2,2))
+        self.nconv3 = NConv2d(num_channels, num_channels, (5,5), pos_fn, 'p', padding=(2,2))
         
-        self.nconv4 = NConv2d(2*num_channels, num_channels, (3,3), pos_fn, 'p', padding=1)
-        self.nconv5 = NConv2d(2*num_channels, num_channels, (3,3), pos_fn, 'p', padding=1)
-        self.nconv6 = NConv2d(2*num_channels, num_channels, (3,3), pos_fn, 'p', padding=1)
+        self.nconv4 = NConv2d(2*num_channels, num_channels, (3,3), pos_fn, 'p', padding=(1,1))
+        self.nconv5 = NConv2d(2*num_channels, num_channels, (3,3), pos_fn, 'p', padding=(1,1))
+        self.nconv6 = NConv2d(2*num_channels, num_channels, (3,3), pos_fn, 'p', padding=(1,1))
         
         self.nconv7 = NConv2d(num_channels, 1, (1,1), pos_fn, 'k')
         
