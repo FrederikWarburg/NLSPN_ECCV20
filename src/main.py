@@ -270,6 +270,9 @@ def train(gpu, args):
 
             torch.save(state, '{}/model_{:05d}.pt'.format(args.save_dir, epoch))
 
+        # update loss function epoch counter
+        loss.epoch_num += 1
+
         # Val
         torch.set_grad_enabled(False)
         net.eval()
