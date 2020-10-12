@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
 
-from .pnconv.unet import UNetSP
-from .pnconv.nconv import NConvUNet
+from .pnconv import UNetSP
+from .pnconv import NConvUNet
 
 
 class CNN(nn.Module):
