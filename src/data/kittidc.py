@@ -298,6 +298,7 @@ class KITTIDC(BaseDataset):
 
         rgb = Image.open(path_rgb)
         depth = Image.fromarray(depth, mode='F')
+        confidence = Image.fromarray(confidence, mode='F')
         gt = Image.fromarray(gt, mode='F')
 
         if self.mode in ['train', 'val']:
