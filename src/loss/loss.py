@@ -39,15 +39,15 @@ class Loss(BaseLoss):
             pred = output['pred']
             gt = sample['gt']
 
-            if loss_type in ['L1', 'L2', 'maskedl1', 'maskedl2', 'maskedsmoothl1']:
+            if loss_type.lower() in ['l1', 'l2', 'maskedl1', 'maskedl2', 'maskedsmoothl1']:
                 loss_tmp = loss_func(pred, gt)
-            elif loss_type in ['confloss', 'maskedprobexp','maskedprob']:
+            elif loss_type.lower() in ['confloss', 'maskedprobexp','maskedprob']:
                 cout = sample['confidence']
                 loss_tmp = loss_func(pred, gt, cout)
-            elif loss_type in ['confdecay', 'confdecaymse']:
+            elif loss_type.lower() in ['confdecay', 'confdecaymse']:
                 cout = sample['confidence']
                 loss_tmp = loss_func(pred, gt, cout, self.epoch_num)
-            elif loss_type in ['inputoutput']:
+            elif loss_type.lower() in ['inputoutput']:
                 inputs = sample['dep']
                 loss_tmp = loss_func(pred, gt, inputs)
             else:
