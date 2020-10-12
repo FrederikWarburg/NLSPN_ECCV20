@@ -19,7 +19,7 @@ import torch
 
 class Loss(BaseLoss):
     def __init__(self, args):
-        super(NLSPNLoss, self).__init__(args)
+        super(Loss, self).__init__(args)
 
         self.loss_name = []
 
