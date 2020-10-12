@@ -12,11 +12,14 @@ from .nconv_unguidedmodel import NCONV_UNGUIDEDModel
 
 class NCONV_ENCDECModel(nn.Module):
 
-    def __init__(self, pos_fn=None):
+    def __init__(self, args):
         super().__init__() 
         
+        self.args = args
+        self.pos_fn=None
+
         # Import the unguided network
-        self.d_net = NCONV_UNGUIDEDModel()
+        self.d_net = NCONV_UNGUIDEDModel(args)
         
         # U-Net
         self.conv1 = Conv2d(5, 80, (3,3), 2, 1, bias=True)

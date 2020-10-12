@@ -11,11 +11,14 @@ from .nconv_unguidedmodel import NCONV_UNGUIDEDModel
 
 class NCONV_STREAMModel(nn.Module):
 
-    def __init__(self, pos_fn=None):
+    def __init__(self, args):
         super().__init__() 
         
+        self.args = args
+        self.pos_fn=None
+
         # Import the unguided network
-        self.d_net = NCONV_UNGUIDEDModel()
+        self.d_net = NCONV_UNGUIDEDModel(args)
                 
         self.d = nn.Sequential(
           nn.Conv2d(1,16,3,1,1),

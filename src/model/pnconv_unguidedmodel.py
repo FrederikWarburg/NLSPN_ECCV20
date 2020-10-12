@@ -7,8 +7,9 @@ from .pnconv import NConvUNet
 
 class PNCONV_UNGUIDEDModel(nn.Module):
     def __init__(self):
-        super().__init__() 
+        super().__init__(args) 
         self.__name__ = 'pncnn'
+        self.args = args
 
         self.conf_estimator = UNetSP(1, 1)
         self.nconv = NConvUNet(1, 1)
