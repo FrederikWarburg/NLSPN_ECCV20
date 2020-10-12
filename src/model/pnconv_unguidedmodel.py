@@ -5,7 +5,7 @@ from .pnconv import UNetSP
 from .pnconv import NConvUNet
 
 
-class CNN(nn.Module):
+class PNCONV_UNGUIDEDModel(nn.Module):
     def __init__(self):
         super().__init__() 
         self.__name__ = 'pncnn'
