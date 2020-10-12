@@ -17,9 +17,9 @@ import torch
 from . import BaseMetric
 
 
-class NLSPNMetric(BaseMetric):
+class Metric(BaseMetric):
     def __init__(self, args):
-        super(NLSPNMetric, self).__init__(args)
+        super(Metric, self).__init__(args)
 
         self.args = args
         self.t_valid = 0.0001

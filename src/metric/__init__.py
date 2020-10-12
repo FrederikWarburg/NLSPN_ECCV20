@@ -20,7 +20,7 @@ from importlib import import_module
 
 
 def get(args):
-    metric_name = args.model_name + 'Metric'
+    metric_name = 'Metric'
     module_name = 'metric.' + metric_name.lower()
     module = import_module(module_name)
 
