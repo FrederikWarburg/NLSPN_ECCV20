@@ -23,13 +23,13 @@ from PIL import Image
 cm = plt.get_cmap('plasma')
 
 
-class NLSPNSummary(BaseSummary):
+class Summary(BaseSummary):
     def __init__(self, log_dir, mode, args, loss_name, metric_name):
         assert mode in ['train', 'val', 'test'], \
             "mode should be one of ['train', 'val', 'test'] " \
             "but got {}".format(mode)
 
-        super(NLSPNSummary, self).__init__(log_dir, mode, args)
+        super(Summary, self).__init__(log_dir, mode, args)
 
         self.log_dir = log_dir
         self.mode = mode
@@ -187,7 +187,7 @@ class NLSPNSummary(BaseSummary):
 
         self.add_image(self.mode + '/images', img_total, global_step)
 
-        if self.args.model == 'nlsp':
+        if self.args.model == 'nlspn':
             self.add_scalar('Etc/gamma', output['gamma'], global_step)
 
         self.flush()
@@ -216,7 +216,7 @@ class NLSPNSummary(BaseSummary):
                 pred.save(path_save_pred)
             else:
                 # Parse data
-                if self.args.model == 'nlsp':
+                if self.args.model == 'nlspn':
                     guidance = output['guidance'].data.cpu().numpy()
                     offset = output['offset'].data.cpu().numpy()
                     aff = output['aff'].data.cpu().numpy()
@@ -278,7 +278,7 @@ class NLSPNSummary(BaseSummary):
                 pred_gray = Image.fromarray(pred_gray)
                 gt = Image.fromarray(gt[:, :, :3], 'RGB')
 
-                if self.args.model == 'nlsp':
+                if self.args.model == 'nlspn':
 
                     feat_init = feat_init[0, 0, :, :].data.cpu().numpy()
                     feat_init = feat_init / self.args.max_depth
@@ -321,7 +321,7 @@ class NLSPNSummary(BaseSummary):
                 pred_gray.save(path_save_pred_gray)
                 gt.save(path_save_gt)
 
-                if self.args.model == 'nlsp':
+                if self.args.model == 'nlspn':
 
                     feat_init.save(path_save_init)
 

@@ -24,7 +24,7 @@ import numpy as np
 
 
 def get(args):
-    summary_name = args.model_name + 'Summary'
+    summary_name = 'Summary'
     module_name = 'summary.' + summary_name.lower()
     module = import_module(module_name)
 
