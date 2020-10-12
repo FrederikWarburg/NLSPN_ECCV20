@@ -22,6 +22,7 @@ class Loss(BaseLoss):
         super(Loss, self).__init__(args)
 
         self.loss_name = []
+        self.epoch_num = 1
 
         for k, _ in self.loss_dict.items():
             self.loss_name.append(k)
@@ -38,8 +39,17 @@ class Loss(BaseLoss):
             pred = output['pred']
             gt = sample['gt']
 
-            if loss_type in ['L1', 'L2', 'confdecay', 'confdecaymse', 'confloss', 'inputoutput', 'mse', 'rmse', 'smoothl1']:
+            if loss_type in ['L1', 'L2', 'maskedl1', 'maskedl2', 'maskedsmoothl1']:
                 loss_tmp = loss_func(pred, gt)
+            elif loss_type in ['confloss', 'maskedprobexp','maskedprob']:
+                cout = sample['confidence']
+                loss_tmp = loss_func(pred, gt, cout)
+            elif loss_type in ['confdecay', 'confdecaymse']:
+                cout = sample['confidence']
+                loss_tmp = loss_func(pred, gt, cout, self.epoch_num)
+            elif loss_type in ['inputoutput']:
+                inputs = sample['dep']
+                loss_tmp = loss_func(pred, gt, inputs)
             else:
                 raise NotImplementedError
 
