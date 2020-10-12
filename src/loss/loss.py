@@ -17,7 +17,7 @@ from . import BaseLoss
 import torch
 
 
-class NLSPNLoss(BaseLoss):
+class Loss(BaseLoss):
     def __init__(self, args):
         super(NLSPNLoss, self).__init__(args)
 
