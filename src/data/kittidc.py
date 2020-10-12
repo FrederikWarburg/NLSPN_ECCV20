@@ -289,9 +289,16 @@ class KITTIDC(BaseDataset):
         depth = read_depth(path_depth)
         gt = read_depth(path_gt)
 
+        depth = depth.astype('float32')
+        gt = gt.astype('float32')
+
+        # for now lets just create a binary confidence map
+        confidence = np.zeros_like(depth)
+        confidence[np.where(depth > 0)] = 1.0
+
         rgb = Image.open(path_rgb)
-        depth = Image.fromarray(depth.astype('float32'), mode='F')
-        gt = Image.fromarray(gt.astype('float32'), mode='F')
+        depth = Image.fromarray(depth, mode='F')
+        gt = Image.fromarray(gt, mode='F')
 
         if self.mode in ['train', 'val']:
             calib = read_calib_file(path_calib)
@@ -313,9 +320,7 @@ class KITTIDC(BaseDataset):
 
         assert w1 == w2 and w1 == w3 and h1 == h2 and h1 == h3
 
-        # for now lets just create a binary confidence map
-        confidence = np.zeros_like(depth)
-        confidence[np.where(depth > 0)] = 1.0
+
 
         return rgb, depth, gt, confidence, K
 
