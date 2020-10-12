@@ -96,6 +96,6 @@ class NCONV_UNGUIDEDModel(nn.Module):
         
         xout, cout = self.nconv7(xout, cout)
         
-        output = {'dep': xout, 'confidence': cout}
+        output = {'pred': xout, 'confidence': cout}
 
         return output
