@@ -187,7 +187,7 @@ class Summary(BaseSummary):
 
         self.add_image(self.mode + '/images', img_total, global_step)
 
-        if self.args.model == 'nlspn':
+        if self.args.model_name.lower() == 'nlspn':
             self.add_scalar('Etc/gamma', output['gamma'], global_step)
 
         self.flush()
@@ -216,7 +216,7 @@ class Summary(BaseSummary):
                 pred.save(path_save_pred)
             else:
                 # Parse data
-                if self.args.model == 'nlspn':
+                if self.args.model_name.lower() == 'nlspn':
                     guidance = output['guidance'].data.cpu().numpy()
                     offset = output['offset'].data.cpu().numpy()
                     aff = output['aff'].data.cpu().numpy()
@@ -278,7 +278,7 @@ class Summary(BaseSummary):
                 pred_gray = Image.fromarray(pred_gray)
                 gt = Image.fromarray(gt[:, :, :3], 'RGB')
 
-                if self.args.model == 'nlspn':
+                if self.args.model_name.lower() == 'nlspn':
 
                     feat_init = feat_init[0, 0, :, :].data.cpu().numpy()
                     feat_init = feat_init / self.args.max_depth
@@ -321,7 +321,7 @@ class Summary(BaseSummary):
                 pred_gray.save(path_save_pred_gray)
                 gt.save(path_save_gt)
 
-                if self.args.model == 'nlspn':
+                if self.args.model_name.lower() == 'nlspn':
 
                     feat_init.save(path_save_init)
 
