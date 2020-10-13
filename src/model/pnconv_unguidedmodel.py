@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 from .pnconv import UNetSP
-from .pnconv import NConvUNet
+from .nconv import NConvUNet
 
 
 class PNCONV_UNGUIDEDModel(nn.Module):
