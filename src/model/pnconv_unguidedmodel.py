@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 
 from .pnconv import UNetSP
+from .pnconv import UNet
 from .nconv import NConvUNet
 
 
