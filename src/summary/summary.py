@@ -133,6 +133,8 @@ class Summary(BaseSummary):
         pred = np.clip(pred, a_min=0, a_max=self.args.max_depth)
         confidence = np.clip(confidence, a_min=0, a_max=1.0)
 
+        abs_err = abs(gt - pred)
+
         list_img = []
 
         for b in range(0, num_summary):
@@ -145,6 +147,7 @@ class Summary(BaseSummary):
             gt_tmp = gt[b, 0, :, :]
             pred_tmp = pred[b, 0, :, :]
             confidence_tmp = confidence[b, 0, :, :]
+            abs_err_tmp = abs_err[b, 0, :, :]
 
             if self.args.dep_src in ['slam', 'sgbm']:
                 dep_tmp = 255.0 * dep_tmp / self.args.max_depth
@@ -154,6 +157,7 @@ class Summary(BaseSummary):
             gt_tmp = 255.0 * gt_tmp / self.args.max_depth
             pred_tmp = 255.0 * pred_tmp / self.args.max_depth
             confidence_tmp = 255.0 * confidence_tmp
+            abs_err = 255.0 * abs_err / self.args.max_depth
 
             if self.args.dep_src in ['slam', 'sgbm']:
                 dep_tmp = cm(dep_tmp.astype('uint8'))
@@ -163,6 +167,7 @@ class Summary(BaseSummary):
             gt_tmp = cm(gt_tmp.astype('uint8'))
             pred_tmp = cm(pred_tmp.astype('uint8'))
             confidence_tmp = cm(confidence_tmp.astype('uint8'))
+            abs_err_tmp = cm(abs_err.astype('uint8'))
 
             if self.args.dep_src in ['slam', 'sgbm']:
                 dep_tmp = np.transpose(dep_tmp[:, :, :3], (2, 0, 1))
@@ -172,13 +177,14 @@ class Summary(BaseSummary):
             gt_tmp = np.transpose(gt_tmp[:, :, :3], (2, 0, 1))
             pred_tmp = np.transpose(pred_tmp[:, :, :3], (2, 0, 1))
             confidence_tmp = np.transpose(confidence_tmp[:, :, :3], (2, 0, 1))
+            abs_err_tmp = np.transpose(abs_err_tmp[:, :, :3], (2, 0, 1))
 
             if self.args.dep_src in ['slam', 'sgbm']:
                 img = np.concatenate((rgb_tmp, dep_tmp, pred_tmp, gt_tmp,
-                                  confidence_tmp), axis=1)
+                                  confidence_tmp, abs_err_tmp), axis=1)
             else:
                 img = np.concatenate((rgb_tmp, dep_tmp0, dep_tmp1, pred_tmp, gt_tmp,
-                                  confidence_tmp), axis=1)
+                                  confidence_tmp, abs_err_tmp), axis=1)
 
             list_img.append(img)
 
@@ -258,6 +264,9 @@ class Summary(BaseSummary):
                 pred_gray = pred
                 gt = gt / self.args.max_depth
 
+                #calculate abs error
+                abs_err = abs(gt - pred)
+
                 rgb = np.clip(rgb, 0, 256).astype('uint8')
                 if self.args.dep_src in ['slam', 'sgbm']:
                     dep = (255.0*cm(dep)).astype('uint8')
@@ -267,6 +276,7 @@ class Summary(BaseSummary):
                 pred = (255.0*cm(pred)).astype('uint8')
                 pred_gray = (255.0*pred_gray).astype('uint8')
                 gt = (255.0*cm(gt)).astype('uint8')
+                abs_err = (255.0*cm(abs_err)).astype('uint8')
 
                 rgb = Image.fromarray(rgb, 'RGB')
                 if self.args.dep_src in ['slam', 'sgbm']:
@@ -277,6 +287,7 @@ class Summary(BaseSummary):
                 pred = Image.fromarray(pred[:, :, :3], 'RGB')
                 pred_gray = Image.fromarray(pred_gray)
                 gt = Image.fromarray(gt[:, :, :3], 'RGB')
+                abs_err = Image.fromarray(abs_err[:, :, :3], 'RGB')
 
                 if self.args.model_name.lower() == 'nlspn':
 
@@ -307,9 +318,9 @@ class Summary(BaseSummary):
 
                 path_save_init = '{}/03_pred_init.png'.format(self.path_output)
                 path_save_pred = '{}/05_pred_final.png'.format(self.path_output)
-                path_save_pred_gray = '{}/05_pred_final_gray.png'.format(
-                    self.path_output)
+                path_save_pred_gray = '{}/05_pred_final_gray.png'.format(self.path_output)
                 path_save_gt = '{}/06_gt.png'.format(self.path_output)
+                path_save_abs_error = '{}/07_abs_error.png'.format(self.path_output)
 
                 rgb.save(path_save_rgb)
                 if self.args.dep_src in ['slam', 'sgbm']:
@@ -320,6 +331,7 @@ class Summary(BaseSummary):
                 pred.save(path_save_pred)
                 pred_gray.save(path_save_pred_gray)
                 gt.save(path_save_gt)
+                abs_err.save(path_save_abs_error)
 
                 if self.args.model_name.lower() == 'nlspn':
 

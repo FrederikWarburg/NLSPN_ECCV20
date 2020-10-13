@@ -405,6 +405,10 @@ def test(args):
     print('Elapsed time : {} sec, '
           'Average processing time : {} sec'.format(t_total, t_avg))
 
+    with open(os.path.join(args.save_dir, 'test', 'test_time.txt'), 'w+') as f:
+        f.write('Elapsed time : {} sec, '
+                'Average processing time : {} sec'.format(t_total, t_avg))
+
 
 def main(args):
     if not args.test_only:
