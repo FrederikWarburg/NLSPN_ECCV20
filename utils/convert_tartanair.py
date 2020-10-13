@@ -132,6 +132,8 @@ def computeFeatureDepth(matches, kp1, kp2):
 
         y1 = kp1[match.queryIdx].pt[1]
         
+        if (x2 -x1) <= 1: continue
+        
         Z = (FOCAL_LENGTH * BASELINE) / (x2 -x1)
         X = x1 / FOCAL_LENGTH * Z
         Y = y1 / FOCAL_LENGTH * Z
