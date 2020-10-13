@@ -134,6 +134,7 @@ class Summary(BaseSummary):
         confidence = np.clip(confidence, a_min=0, a_max=1.0)
 
         abs_err = abs(gt - pred)
+        abs_err[gt == 0] = 0
 
         list_img = []
 
@@ -266,6 +267,7 @@ class Summary(BaseSummary):
 
                 #calculate abs error
                 abs_err = abs(gt - pred)
+                abs_err[gt == 0] = 0
 
                 rgb = np.clip(rgb, 0, 256).astype('uint8')
                 if self.args.dep_src in ['slam', 'sgbm']:
