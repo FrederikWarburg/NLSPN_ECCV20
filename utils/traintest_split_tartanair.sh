@@ -48,15 +48,15 @@ mkdir -p $OUTPUT/test
 
 for folder in ${TRAIN[@]}
 do
-    cp -r $INPUT/$folder $OUTPUT/train/$folder
+    mv -r $INPUT/$folder $OUTPUT/train/$folder
 done
 
 for folder in ${VAL[@]}
 do
-    cp -r $INPUT/$folder $OUTPUT/val/$folder
+    mv -r $INPUT/$folder $OUTPUT/val/$folder
 done
 
 for folder in ${TEST[@]}
 do
-    cp -r $INPUT/$folder $OUTPUT/test/$folder
+    mv -r $INPUT/$folder $OUTPUT/test/$folder
 done
