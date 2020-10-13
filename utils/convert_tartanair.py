@@ -293,49 +293,50 @@ def main():
     akaze = cv2.AKAZE_create()
 
     for split in ['train', 'val', 'test']:
-        for seqpath in os.listdir(join(args.input, split)):
-            if not os.path.isdir(join(args.input, split, seqpath)): continue
-            if seqpath == '.ipynb_checkpoints': continue
+        for env in os.listdir(os.path.join(args.input, split)):
+            for seqpath in os.listdir(join(args.input, split, env, 'Easy')):
+                if not os.path.isdir(join(args.input, split, env, 'Easy', seqpath)): continue
+                if seqpath == '.ipynb_checkpoints': continue
 
-            dirs = create_euroc_filestruct(join(args.output, split, seqpath))
+                dirs = create_euroc_filestruct(join(args.output, split, env, 'Easy', seqpath))
 
-            for im in tqdm(sorted(os.listdir(join(args.input, split, seqpath, 'image_right'))), desc="Converting {}".format(seqpath)):
-                im = im.replace('_right.png','')
+                for im in tqdm(sorted(os.listdir(join(args.input, split, env, 'Easy', seqpath, 'image_right'))), desc="Converting {}".format(seqpath)):
+                    im = im.replace('_right.png','')
 
-                # load stereo data (RGB, depth, pose)
-                imR = np.asarray(Image.open(join(args.input, split,seqpath, 'image_right', im + '_right.png')))
-                imL = np.asarray(Image.open(join(args.input, split,seqpath, 'image_left', im + '_left.png')))
+                    # load stereo data (RGB, depth, pose)
+                    imR = np.asarray(Image.open(join(args.input, split, env, 'Easy',seqpath, 'image_right', im + '_right.png')))
+                    imL = np.asarray(Image.open(join(args.input, split, env, 'Easy',seqpath, 'image_left', im + '_left.png')))
 
-                # estimate feature based sparse depth
-                est_features_and_uncertainties = computeDepthAndUncertaintyFromFeatures(imR, imL, akaze, args.error) 
+                    # estimate feature based sparse depth
+                    est_features_and_uncertainties = computeDepthAndUncertaintyFromFeatures(imR, imL, akaze, args.error) 
 
-                # save estimated features and uncertainties
-                fname = join(dirs[2], im + '.csv')
-                np.savetxt(fname, est_features_and_uncertainties, delimiter = ',')
+                    # save estimated features and uncertainties
+                    fname = join(dirs[2], im + '.csv')
+                    np.savetxt(fname, est_features_and_uncertainties, delimiter = ',')
 
-                # estimate SGBM based semi-dense depth
-                est_depth_SGBM, est_uncertainties_SGBM = computeDepthSGBM(imR, imL)
+                    # estimate SGBM based semi-dense depth
+                    est_depth_SGBM, est_uncertainties_SGBM = computeDepthSGBM(imR, imL)
 
-                # save estimated depth map and uncertainties based on SGBM
-                np.save(join(dirs[3], im + '_depth.npy'), est_depth_SGBM)
-                np.save(join(dirs[3], im + '_uncertainty.npy'), est_uncertainties_SGBM)
+                    # save estimated depth map and uncertainties based on SGBM
+                    np.save(join(dirs[3], im + '_depth.npy'), est_depth_SGBM)
+                    np.save(join(dirs[3], im + '_uncertainty.npy'), est_uncertainties_SGBM)
 
-                # copy images
+                    # copy images
+                    for i, cam in enumerate(['right', 'left']):
+                        src = join(args.input, split, env, 'Easy', seqpath, 'image_' + cam, im + '_' + cam + '.png')
+                        dst = join(dirs[0][i], im + '.png')
+                        shutil.copy(src, dst)
+
+                    # copy depth images
+                    for i, cam in enumerate(['right', 'left']):
+                        src = join(args.input, split, env, 'Easy', seqpath, 'depth_' + cam, im + '_' + cam + '_depth.npy')
+                        dst = join(dirs[1][i], im + '.npy')
+                        shutil.copy(src, dst)
+
+                # copy pose
                 for i, cam in enumerate(['right', 'left']):
-                    src = join(args.input, split, seqpath, 'image_' + cam, im + '_' + cam + '.png')
-                    dst = join(dirs[0][i], im + '.png')
-                    shutil.copy(src, dst)
-
-                # copy depth images
-                for i, cam in enumerate(['right', 'left']):
-                    src = join(args.input, split, seqpath, 'depth_' + cam, im + '_' + cam + '_depth.npy')
-                    dst = join(dirs[1][i], im + '.npy')
-                    shutil.copy(src, dst)
-
-            # copy pose
-            for i, cam in enumerate(['right', 'left']):
-                poses = np.loadtxt(join(args.input, split, seqpath, 'pose_' + cam + '.txt'))
-                np.savetxt(join(dirs[4][i], 'data.csv'), poses, delimiter = ',')
+                    poses = np.loadtxt(join(args.input, split, env, 'Easy', seqpath, 'pose_' + cam + '.txt'))
+                    np.savetxt(join(dirs[4][i], 'data.csv'), poses, delimiter = ',')
 
 if __name__ == "__main__":
     main()
