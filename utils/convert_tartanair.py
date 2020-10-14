@@ -59,7 +59,7 @@ def create_euroc_filestruct(
         shutil.rmtree(toplevel_dir)
         os.makedirs(toplevel_dir)
 
-    cam_dirs, depth_dirs, poses = [], [], []
+    cam_dirs, depth_dirs, poses, seg_dirs = [], [], [], []
     for i in range(num_cams):
         # image directories
         fname = join(toplevel_dir, "cam{}".format(i), "data")
@@ -70,6 +70,11 @@ def create_euroc_filestruct(
         fname = join(toplevel_dir, "ground_truth", "depth{}".format(i), "data")
         os.makedirs(fname)
         depth_dirs.append(fname)
+
+        # segmentation
+        fname = join(toplevel_dir, "ground_truth", "seg{}".format(i), "data")
+        os.makedirs(fname)
+        seg_dirs.append(fname)
 
         # pose
         fname = join(toplevel_dir, "ground_truth", "pose{}".format(i))
@@ -84,7 +89,7 @@ def create_euroc_filestruct(
     depth_SGBM = join(toplevel_dir, "depth_SGBM0", "data")
     os.makedirs(depth_SGBM)
 
-    return cam_dirs, depth_dirs, depth_sparse, depth_SGBM, poses
+    return cam_dirs, depth_dirs, depth_sparse, depth_SGBM, poses, seg_dirs
 
 
 def matchFeatures(kp1, des1, kp2, des2):
@@ -339,7 +344,7 @@ def main():
                     # copy segmentations images
                     for i, cam in enumerate(['right', 'left']):
                         src = join(args.input, split, env, 'Easy', seqpath, 'seg_' + cam, im + '_' + cam + '_seg.npy')
-                        dst = join(dirs[1][i], im + '.npy')
+                        dst = join(dirs[5][i], im + '.npy')
                         shutil.copy(src, dst)
 
                 # copy pose
