@@ -150,6 +150,19 @@ class TARTANAIR(BaseDataset):
                              height - self.args.top_crop, width)
                 K[3] = K[3] - self.args.top_crop
 
+            # Left crop if needed
+            if self.args.left_crop > 0:
+                width, height = rgb.size
+                rgb = TF.crop(rgb, 0, self.args.left_crop, height, width - self.args.top_crop)
+                if depth_features is not None:
+                    depth_features = TF.crop(depth_features, 0, self.args.left_crop, height, width - self.args.top_crop)
+                    confidence_features = TF.crop(confidence_features, 0, self.args.left_crop, height, width - self.args.top_crop)
+                if depth_sgbm is not None:
+                    depth_sgbm = TF.crop(depth_sgbm, 0, self.args.left_crop, height, width - self.args.top_crop)
+                    confidence_sgbm = TF.crop(confidence_sgbm, 0, self.args.left_crop, height, width - self.args.top_crop)
+                gt = TF.crop(gt, 0, self.args.left_crop, height, width - self.args.top_crop)
+                K[4] = K[4] - self.args.left_crop
+
             width, height = rgb.size
 
             _scale = np.random.uniform(1.0, 1.5)
@@ -262,6 +275,19 @@ class TARTANAIR(BaseDataset):
                 gt = TF.crop(gt, self.args.top_crop, 0,
                              height - self.args.top_crop, width)
                 K[3] = K[3] - self.args.top_crop
+
+            # Left crop if needed
+            if self.args.left_crop > 0:
+                width, height = rgb.size
+                rgb = TF.crop(rgb, 0, self.args.left_crop, height, width - self.args.top_crop)
+                if depth_features is not None:
+                    depth_features = TF.crop(depth_features, 0, self.args.left_crop, height, width - self.args.top_crop)
+                    confidence_features = TF.crop(confidence_features, 0, self.args.left_crop, height, width - self.args.top_crop)
+                if depth_sgbm is not None:
+                    depth_sgbm = TF.crop(depth_sgbm, 0, self.args.left_crop, height, width - self.args.top_crop)
+                    confidence_sgbm = TF.crop(confidence_sgbm, 0, self.args.left_crop, height, width - self.args.top_crop)
+                gt = TF.crop(gt, 0, self.args.left_crop, height, width - self.args.top_crop)
+                K[4] = K[4] - self.args.left_crop
 
             # Crop
             width, height = rgb.size

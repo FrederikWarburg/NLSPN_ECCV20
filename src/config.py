@@ -52,6 +52,11 @@ parser.add_argument('--top_crop',
                     default=0,
                     # default=100,
                     help='top crop size for KITTI dataset')
+parser.add_argument('--left_crop',
+                    type=int,
+                    default=0,
+                    # default=100,
+                    help='top crop size for SGBM')
 parser.add_argument('--dep_src',
                     type=str,
                     default='slam+sgbm',
