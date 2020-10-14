@@ -353,7 +353,7 @@ class TARTANAIR(BaseDataset):
                                     self.sample_list[idx]['depth_features'])
 
             depth_features, confidence_features = read_sparse_depth(path_depth_features, (self.height, self.width))
-            
+
             depth_features = Image.fromarray(depth_features.astype('float32'), mode='F')
             confidence_features = Image.fromarray(confidence_features.astype('float32'), mode='F')
 
@@ -399,7 +399,7 @@ class TARTANAIR(BaseDataset):
 
             assert w1 == w2 and w1 == w3 and h1 == h2 and h1 == h3
 
-            return rgb, depth_features, confidence_features, gt, K
+            return rgb, depth_features, confidence_features, None, None, gt, K
 
         elif 'sgbm' == self.dep_src:
 
@@ -409,7 +409,7 @@ class TARTANAIR(BaseDataset):
 
             assert w1 == w2 and w1 == w3 and h1 == h2 and h1 == h3
 
-            return rgb, depth_sgbm, confidence_sgbm, gt, K
+            return rgb, , None, None, depth_sgbm, confidence_sgbm, gt, K
 
     def get_sparse_depth(self, dep, num_sample):
         channel, height, width = dep.shape
