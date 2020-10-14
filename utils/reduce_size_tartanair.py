@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
                     for im_idx in os.listdir(os.path.join(src, 'image_' + cam)):
 
-                        name = os.path.join('image_' + cam, im_idx + "_" + cam + ".png")
+                        name = os.path.join('image_' + cam, im_idx)
                         print(os.path.join(src, name))
                         im = cv2.imread(os.path.join(src, name))
                         H,W,C = im.shape
@@ -41,7 +41,7 @@ if __name__ == "__main__":
                     os.makedirs(os.path.join(dst, 'seg_' + cam))
 
                     for im_idx in os.listdir(os.path.join(src, 'seg_' + cam)):
-                        name = os.path.join('seg_' + cam, im_idx + "_" + cam + ".png")
+                        name = os.path.join('seg_' + cam, im_idx)
                         print(os.path.join(src, name))
                         im = cv2.imread(os.path.join(src, name))
                         H,W,C = im.shape
@@ -54,7 +54,7 @@ if __name__ == "__main__":
                     os.makedirs(os.path.join(dst, 'depth_' + cam))
 
                     for im_idx in os.listdir(os.path.join(src, 'depth_' + cam)):
-                        name = os.path.join('depth_' + cam, im_idx + "_" + cam + ".png")
+                        name = os.path.join('depth_' + cam, im_idx)
                         print(os.path.join(src, name))
                         im = cv2.imread(os.path.join(src, name))
                         H,W,C = im.shape
