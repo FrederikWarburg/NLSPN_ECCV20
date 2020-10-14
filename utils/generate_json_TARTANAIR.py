@@ -64,14 +64,14 @@ def generate_json():
                 for cam in ['cam0']:
                     list_depth = os.listdir(os.path.join(path_base,seq,'depth_sparse0/data'))
                     list_depth.sort()
-                    print(list_depth)
+                    
                     for name in list_depth:
-                        path_rgb = os.path.join(split,seq, cam, 'data', name.replace('.csv','.png'))
-                        path_depth_features = os.path.join(split, seq, 'depth_sparse0', 'data', name)
-                        path_depth_sgbm = os.path.join(split, seq, 'depth_SGBM0', 'data', name.replace('.csv', '_depth.npy'))
-                        path_confidence_sgbm = os.path.join(split, seq, 'depth_SGBM0', 'data', name.replace('.csv', '_uncertainty.npy'))
-                        path_gt = os.path.join(split, seq, 'ground_truth/depth0', 'data', name.replace('.csv','.npy'))
-                        path_seg = os.path.join(split, seq, 'ground_truth/seg0', 'data', name.replace('.csv','.npy'))
+                        path_rgb = os.path.join(split, env, 'Easy', seq, cam, 'data', name.replace('.csv','.png'))
+                        path_depth_features = os.path.join(split, env, 'Easy', seq, 'depth_sparse0', 'data', name)
+                        path_depth_sgbm = os.path.join(split, env, 'Easy', seq, 'depth_SGBM0', 'data', name.replace('.csv', '_depth.npy'))
+                        path_confidence_sgbm = os.path.join(split, env, 'Easy', seq, 'depth_SGBM0', 'data', name.replace('.csv', '_uncertainty.npy'))
+                        path_gt = os.path.join(split, env, 'Easy', seq, 'ground_truth/depth0', 'data', name.replace('.csv','.npy'))
+                        path_seg = os.path.join(split, env, 'Easy', seq, 'ground_truth/seg0', 'data', name.replace('.csv','.npy'))
                         #path_calib = split + '/' + seq + '/calib_cam_to_cam.txt'
 
                         dict_sample = {
