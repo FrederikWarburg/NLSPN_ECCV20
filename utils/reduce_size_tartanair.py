@@ -63,4 +63,4 @@ if __name__ == "__main__":
                         np.save(os.path.join(dst, name), im)
 
                 shutil.copy(os.path.join(src, 'pose_left.txt'),os.path.join(dst, 'pose_left.txt'))
-                shutil.copy(os.path.join(src, 'pose_right.txt'),os.path.join(dst, 'pose_left.txt'))
+                shutil.copy(os.path.join(src, 'pose_right.txt'),os.path.join(dst, 'pose_right.txt'))
