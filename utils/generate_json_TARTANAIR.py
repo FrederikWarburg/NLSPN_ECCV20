@@ -48,52 +48,56 @@ def generate_json():
     # For train/val splits
     dict_json = {}
     for split in ['train', 'val', 'test']:
-        path_base = args.path_root + '/' + split
-
-        list_seq = os.listdir(path_base)
-        list_seq.sort()
+        path_split = os.path.join(args.path_root, split)
 
         list_pairs = []
-        for seq in list_seq:
-            cnt_seq = 0
+        for env in os.listdir(path_split):
 
-            for cam in ['cam0']:
-                list_depth = os.listdir(os.path.join(path_base,seq,'depth_sparse0/data'))
-                list_depth.sort()
-                print(list_depth)
-                for name in list_depth:
-                    path_rgb = os.path.join(split,seq, cam, 'data', name.replace('.csv','.png'))
-                    path_depth_features = os.path.join(split, seq, 'depth_sparse0', 'data', name)
-                    path_depth_sgbm = os.path.join(split, seq, 'depth_SGBM0', 'data', name.replace('.csv', '_depth.npy'))
-                    path_confidence_sgbm = os.path.join(split, seq, 'depth_SGBM0', 'data', name.replace('.csv', '_uncertainty.npy'))
-                    path_gt = os.path.join(split, seq, 'ground_truth/depth0', 'data', name.replace('.csv','.npy'))
-                    path_seg = os.path.join(split, seq, 'ground_truth/seg0', 'data', name.replace('.csv','.npy'))
-                    #path_calib = split + '/' + seq + '/calib_cam_to_cam.txt'
+            path_base = os.path.join(path_split, env, 'Easy')
 
-                    dict_sample = {
-                        'rgb': path_rgb,
-                        'depth_features': path_depth_features,
-                        'depth_sgbm': path_depth_sgbm,
-                        'confidence_sgbm' : path_confidence_sgbm,
-                        'gt': path_gt,
-                        'seq': path_seg,
-                        #'K': path_calib
-                    }
+            list_seq = os.listdir(path_base)
+            list_seq.sort() 
 
-                    flag_valid = True
-                    for val in dict_sample.values():
-                        flag_valid &= os.path.exists(args.path_root + '/' + val)
+            for seq in list_seq:
+                cnt_seq = 0
+
+                for cam in ['cam0']:
+                    list_depth = os.listdir(os.path.join(path_base,seq,'depth_sparse0/data'))
+                    list_depth.sort()
+                    print(list_depth)
+                    for name in list_depth:
+                        path_rgb = os.path.join(split,seq, cam, 'data', name.replace('.csv','.png'))
+                        path_depth_features = os.path.join(split, seq, 'depth_sparse0', 'data', name)
+                        path_depth_sgbm = os.path.join(split, seq, 'depth_SGBM0', 'data', name.replace('.csv', '_depth.npy'))
+                        path_confidence_sgbm = os.path.join(split, seq, 'depth_SGBM0', 'data', name.replace('.csv', '_uncertainty.npy'))
+                        path_gt = os.path.join(split, seq, 'ground_truth/depth0', 'data', name.replace('.csv','.npy'))
+                        path_seg = os.path.join(split, seq, 'ground_truth/seg0', 'data', name.replace('.csv','.npy'))
+                        #path_calib = split + '/' + seq + '/calib_cam_to_cam.txt'
+
+                        dict_sample = {
+                            'rgb': path_rgb,
+                            'depth_features': path_depth_features,
+                            'depth_sgbm': path_depth_sgbm,
+                            'confidence_sgbm' : path_confidence_sgbm,
+                            'gt': path_gt,
+                            'seq': path_seg,
+                            #'K': path_calib
+                        }
+
+                        flag_valid = True
+                        for val in dict_sample.values():
+                            flag_valid &= os.path.exists(args.path_root + '/' + val)
+
+                            if not flag_valid:
+                                print(args.path_root + '/' + val)
+                                break
 
                         if not flag_valid:
-                            print(args.path_root + '/' + val)
-                            break
+                            continue
+                        list_pairs.append(dict_sample)
+                        cnt_seq += 1
 
-                    if not flag_valid:
-                        continue
-                    list_pairs.append(dict_sample)
-                    cnt_seq += 1
-
-            print("{} : {} samples".format(seq, cnt_seq))
+                print("{} : {} samples".format(seq, cnt_seq))
 
         dict_json[split] = list_pairs
         print("{} split : Total {} samples".format(split, len(list_pairs)))
