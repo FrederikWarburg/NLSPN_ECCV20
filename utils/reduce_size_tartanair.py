@@ -20,10 +20,13 @@ if __name__ == "__main__":
         for env in os.listdir(os.path.join(args.path_root, split)):
             for seq in os.listdir(os.path.join(args.path_root, split, env, 'Easy')):
 
-                src = os.path.join(args.path_root, split, env, 'Easy')
-                dst = os.path.join(args.path_out, split, env, 'Easy')
+                src = os.path.join(args.path_root, split, env, 'Easy', seq)
+                dst = os.path.join(args.path_out, split, env, 'Easy', seq)
 
                 for cam in ['right','left']:
+
+                    os.makedirs(os.path.join(src, 'image_' + cam))
+
                     for im_idx in os.listdir(os.path.join(src, 'image_' + cam)):
                         name = os.path.join('image_' + cam, im_idx + "_" + cam + ".png")
                         
@@ -33,6 +36,9 @@ if __name__ == "__main__":
                         cv2.imwrite(os.path.join(dst, name))
 
                 for cam in ['right','left']:
+
+                    os.makedirs(os.path.join(src, 'seg_' + cam))
+
                     for im_idx in os.listdir(os.path.join(src, 'seg_' + cam)):
                         name = os.path.join('seg_' + cam, im_idx + "_" + cam + ".png")
                         
@@ -43,6 +49,9 @@ if __name__ == "__main__":
 
 
                 for cam in ['right','left']:
+
+                    os.makedirs(os.path.join(src, 'depth_' + cam))
+
                     for im_idx in os.listdir(os.path.join(src, 'depth_' + cam)):
                         name = os.path.join('depth_' + cam, im_idx + "_" + cam + ".png")
                         
