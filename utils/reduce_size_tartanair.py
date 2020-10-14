@@ -25,7 +25,7 @@ if __name__ == "__main__":
 
                 for cam in ['right','left']:
 
-                    os.makedirs(os.path.join(src, 'image_' + cam))
+                    os.makedirs(os.path.join(dst, 'image_' + cam))
 
                     for im_idx in os.listdir(os.path.join(src, 'image_' + cam)):
                         name = os.path.join('image_' + cam, im_idx + "_" + cam + ".png")
@@ -37,7 +37,7 @@ if __name__ == "__main__":
 
                 for cam in ['right','left']:
 
-                    os.makedirs(os.path.join(src, 'seg_' + cam))
+                    os.makedirs(os.path.join(dst, 'seg_' + cam))
 
                     for im_idx in os.listdir(os.path.join(src, 'seg_' + cam)):
                         name = os.path.join('seg_' + cam, im_idx + "_" + cam + ".png")
@@ -50,7 +50,7 @@ if __name__ == "__main__":
 
                 for cam in ['right','left']:
 
-                    os.makedirs(os.path.join(src, 'depth_' + cam))
+                    os.makedirs(os.path.join(dst, 'depth_' + cam))
 
                     for im_idx in os.listdir(os.path.join(src, 'depth_' + cam)):
                         name = os.path.join('depth_' + cam, im_idx + "_" + cam + ".png")
