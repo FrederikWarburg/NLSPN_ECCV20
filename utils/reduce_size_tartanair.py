@@ -33,7 +33,7 @@ if __name__ == "__main__":
                         print(os.path.join(src, name))
                         im = cv2.imread(os.path.join(src, name))
                         H,W,C = im.shape
-                        cv2.resize(im, dsize=(W,H), interpolation=cv2.INTER_CUBIC)
+                        cv2.resize(im, dsize=(W//2,H//2), interpolation=cv2.INTER_CUBIC)
                         cv2.imwrite(os.path.join(dst, name), im)
 
                 for cam in ['right','left']:
@@ -44,8 +44,8 @@ if __name__ == "__main__":
                         name = os.path.join('seg_' + cam, im_idx)
                         print(os.path.join(src, name))
                         im = np.load(os.path.join(src, name))
-                        H,W,C = im.shape
-                        cv2.resize(im, dsize=(W,H), interpolation=cv2.INTER_NEAREST)
+                        H,W = im.shape
+                        cv2.resize(im, dsize=(W//2,H//2), interpolation=cv2.INTER_NEAREST)
                         np.save(os.path.join(dst, name), im)
 
 
@@ -57,6 +57,6 @@ if __name__ == "__main__":
                         name = os.path.join('depth_' + cam, im_idx)
                         print(os.path.join(src, name))
                         im = np.load(os.path.join(src, name))
-                        H,W,C = im.shape
-                        cv2.resize(im, dsize=(W,H), interpolation=cv2.INTER_LINEAR)
+                        H,W = im.shape
+                        cv2.resize(im, dsize=(W//2,H//2), interpolation=cv2.INTER_LINEAR)
                         np.save(os.path.join(dst, name), im)
