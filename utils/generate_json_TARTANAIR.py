@@ -80,7 +80,7 @@ def generate_json():
                             'depth_sgbm': path_depth_sgbm,
                             'confidence_sgbm' : path_confidence_sgbm,
                             'gt': path_gt,
-                            'seq': path_seg,
+                            'seg': path_seg,
                             #'K': path_calib
                         }
 
