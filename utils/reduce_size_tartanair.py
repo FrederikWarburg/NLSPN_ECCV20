@@ -60,3 +60,6 @@ if __name__ == "__main__":
                         H,W = im.shape
                         cv2.resize(im, dsize=(W//2,H//2), interpolation=cv2.INTER_LINEAR)
                         np.save(os.path.join(dst, name), im)
+
+                shutil.copy(os.path.join(src, 'pose_left.txt'))
+                shutil.copy(os.path.join(src, 'pose_right.txt'))
