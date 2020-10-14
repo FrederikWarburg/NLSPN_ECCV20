@@ -409,7 +409,7 @@ class TARTANAIR(BaseDataset):
 
             assert w1 == w2 and w1 == w3 and h1 == h2 and h1 == h3
 
-            return rgb, , None, None, depth_sgbm, confidence_sgbm, gt, K
+            return rgb, None, None, depth_sgbm, confidence_sgbm, gt, K
 
     def get_sparse_depth(self, dep, num_sample):
         channel, height, width = dep.shape
