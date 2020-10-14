@@ -65,14 +65,18 @@ def generate_json():
                     path_rgb = os.path.join(split,seq, cam, 'data', name.replace('.csv','.png'))
                     path_depth_features = os.path.join(split, seq, 'depth_sparse0', 'data', name)
                     path_depth_sgbm = os.path.join(split, seq, 'depth_SGBM0', 'data', name.replace('.csv', '_depth.npy'))
+                    path_confidence_sgbm = os.path.join(split, seq, 'depth_SGBM0', 'data', name.replace('.csv', '_uncertainty.npy'))
                     path_gt = os.path.join(split, seq, 'ground_truth/depth0', 'data', name.replace('.csv','.npy'))
+                    path_seg = os.path.join(split, seq, 'ground_truth/seg0', 'data', name.replace('.csv','.npy'))
                     #path_calib = split + '/' + seq + '/calib_cam_to_cam.txt'
 
                     dict_sample = {
                         'rgb': path_rgb,
                         'depth_features': path_depth_features,
                         'depth_sgbm': path_depth_sgbm,
+                        'confidence_sgbm' : path_confidence_sgbm,
                         'gt': path_gt,
+                        'seq': path_seg,
                         #'K': path_calib
                     }
 
