@@ -34,7 +34,7 @@ if __name__ == "__main__":
                         im = cv2.imread(os.path.join(src, name))
                         H,W,C = im.shape
                         cv2.resize(im, dsize=(W,H), interpolation=cv2.INTER_CUBIC)
-                        cv2.imwrite(os.path.join(dst, name))
+                        cv2.imwrite(os.path.join(dst, name), im)
 
                 for cam in ['right','left']:
 
@@ -43,10 +43,10 @@ if __name__ == "__main__":
                     for im_idx in os.listdir(os.path.join(src, 'seg_' + cam)):
                         name = os.path.join('seg_' + cam, im_idx)
                         print(os.path.join(src, name))
-                        im = cv2.imread(os.path.join(src, name))
+                        im = np.load(os.path.join(src, name))
                         H,W,C = im.shape
                         cv2.resize(im, dsize=(W,H), interpolation=cv2.INTER_NEAREST)
-                        cv2.imwrite(os.path.join(dst, name))
+                        np.save(os.path.join(dst, name), im)
 
 
                 for cam in ['right','left']:
@@ -56,7 +56,7 @@ if __name__ == "__main__":
                     for im_idx in os.listdir(os.path.join(src, 'depth_' + cam)):
                         name = os.path.join('depth_' + cam, im_idx)
                         print(os.path.join(src, name))
-                        im = cv2.imread(os.path.join(src, name))
+                        im = np.load(os.path.join(src, name))
                         H,W,C = im.shape
                         cv2.resize(im, dsize=(W,H), interpolation=cv2.INTER_LINEAR)
-                        cv2.imwrite(os.path.join(dst, name))
+                        np.save(os.path.join(dst, name), im)
