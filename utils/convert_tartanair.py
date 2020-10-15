@@ -220,7 +220,11 @@ def computeDepthAndUncertaintyFromFeatures(imR, imL, detector, measurementError)
     sigmas = computeMeasurementUncertainty(points3D, measurementError)
 
     # concatenate in one matrix
-    features_and_uncertainties = np.concatenate([points2_5D, sigmas.reshape(-1,1)], axis =1) 
+    try:
+        features_and_uncertainties = np.concatenate([points2_5D, sigmas.reshape(-1,1)], axis =1) 
+    except:
+        print(points2_5D.shape, sigmas.reshape(-1,1))
+        return np.asarray([[]])
     
     return features_and_uncertainties
 
