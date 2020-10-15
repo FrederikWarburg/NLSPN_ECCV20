@@ -108,12 +108,16 @@ class NConv2d(_ConvNd):
             EnforcePos.apply(self, 'weight', pos_fn)
         
     def forward(self, data, conf):
+        print()
+        print(data.shape, conf.shape)
         # Normalized Convolution
         denom = F.conv2d(conf, self.weight, None, self.stride,
                         self.padding, self.dilation, self.groups)        
         nomin = F.conv2d(data*conf, self.weight, None, self.stride,
                         self.padding, self.dilation, self.groups)        
         nconv = nomin / (denom+self.eps)
+
+        print(nconv.shape, nomin.shape, denom.shape)
 
         # Add bias
         b = self.bias
@@ -135,6 +139,9 @@ class NConv2d(_ConvNd):
         cout = cout / s
         cout = cout.view(sz)
         
+        print(cout.shape, k.shape)
+        print()
+
         return nconv, cout
     
     def enforce_pos(self):
