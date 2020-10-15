@@ -141,7 +141,7 @@ class NConv2d(_ConvNd):
         
         print(cout.shape, k.shape)
         print()
-
+        exit()
         return nconv, cout
     
     def enforce_pos(self):
