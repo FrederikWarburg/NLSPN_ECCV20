@@ -130,7 +130,7 @@ class NConv2d(_ConvNd):
         
         k = self.weight
         k_sz = k.size()
-        print(k_sz)
+        
         k = k.view(k_sz[0], -1)
         s = torch.sum(k, dim=-1, keepdim=True)        
 

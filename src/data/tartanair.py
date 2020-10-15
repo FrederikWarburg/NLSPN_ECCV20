@@ -161,7 +161,7 @@ class TARTANAIR(BaseDataset):
                     depth_sgbm = TF.crop(depth_sgbm, 0, self.args.left_crop, height, width - self.args.left_crop)
                     confidence_sgbm = TF.crop(confidence_sgbm, 0, self.args.left_crop, height, width - self.args.left_crop)
                 gt = TF.crop(gt, 0, self.args.left_crop, height, width - self.args.left_crop)
-                K[2] = K[2] + self.args.left_crop
+                K[2] = K[2] - self.args.left_crop
 
             width, height = rgb.size
 
@@ -287,7 +287,7 @@ class TARTANAIR(BaseDataset):
                     depth_sgbm = TF.crop(depth_sgbm, 0, self.args.left_crop, height, width - self.args.left_crop)
                     confidence_sgbm = TF.crop(confidence_sgbm, 0, self.args.left_crop, height, width - self.args.left_crop)
                 gt = TF.crop(gt, 0, self.args.left_crop, height, width - self.args.left_crop)
-                K[2] = K[2] + self.args.left_crop
+                K[2] = K[2] - self.args.left_crop
 
             # Crop
             width, height = rgb.size
@@ -353,7 +353,7 @@ class TARTANAIR(BaseDataset):
                     depth_sgbm = TF.crop(depth_sgbm, 0, self.args.left_crop, height, width - self.args.left_crop)
                     confidence_sgbm = TF.crop(confidence_sgbm, 0, self.args.left_crop, height, width - self.args.left_crop)
                 gt = TF.crop(gt, 0, self.args.left_crop, height, width - self.args.left_crop)
-                K[2] = K[2] + self.args.left_crop
+                K[2] = K[2] - self.args.left_crop
 
             width, height = rgb.size
 
