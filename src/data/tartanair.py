@@ -418,8 +418,15 @@ class TARTANAIR(BaseDataset):
 
         rgb = Image.open(path_rgb)
 
-        f, cx, cy = 0.25, 320, 240
-        K = [f, f, cx, cy]
+        w1, h1 = rgb.size
+        if w1 == 640 and h1 == 480:
+            f, cx, cy = 0.25, 320, 240
+            K = [f, f, cx, cy]
+        elif w1 == 320 and h1 == 240:
+            f, cx, cy = 0.125, 160, 120
+            K = [f, f, cx, cy]
+        else:
+            raise NotImplementedError 
 
         if 'slam' in self.dep_src and 'sgbm' in self.dep_src:
 
