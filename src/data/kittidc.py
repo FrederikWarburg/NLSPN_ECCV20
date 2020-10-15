@@ -320,9 +320,8 @@ class KITTIDC(BaseDataset):
         w3, h3 = gt.size
 
         assert w1 == w2 and w1 == w3 and h1 == h2 and h1 == h3
-
-
-
+        print("K", K, w1,w2)
+        exit()
         return rgb, depth, gt, confidence, K
 
     def get_sparse_depth(self, dep, confidence, num_sample):

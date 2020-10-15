@@ -153,14 +153,14 @@ class TARTANAIR(BaseDataset):
             # Left crop if needed
             if self.args.left_crop > 0:
                 width, height = rgb.size
-                rgb = TF.crop(rgb, 0, self.args.left_crop, height, width - self.args.top_crop)
+                rgb = TF.crop(rgb, 0, self.args.left_crop, height, width - self.args.left_crop)
                 if depth_features is not None:
-                    depth_features = TF.crop(depth_features, 0, self.args.left_crop, height, width - self.args.top_crop)
-                    confidence_features = TF.crop(confidence_features, 0, self.args.left_crop, height, width - self.args.top_crop)
+                    depth_features = TF.crop(depth_features, 0, self.args.left_crop, height, width - self.args.left_crop)
+                    confidence_features = TF.crop(confidence_features, 0, self.args.left_crop, height, width - self.args.left_crop)
                 if depth_sgbm is not None:
-                    depth_sgbm = TF.crop(depth_sgbm, 0, self.args.left_crop, height, width - self.args.top_crop)
-                    confidence_sgbm = TF.crop(confidence_sgbm, 0, self.args.left_crop, height, width - self.args.top_crop)
-                gt = TF.crop(gt, 0, self.args.left_crop, height, width - self.args.top_crop)
+                    depth_sgbm = TF.crop(depth_sgbm, 0, self.args.left_crop, height, width - self.args.left_crop)
+                    confidence_sgbm = TF.crop(confidence_sgbm, 0, self.args.left_crop, height, width - self.args.left_crop)
+                gt = TF.crop(gt, 0, self.args.left_crop, height, width - self.args.left_crop)
                 K[2] = K[2] + self.args.left_crop
 
             width, height = rgb.size
@@ -279,14 +279,14 @@ class TARTANAIR(BaseDataset):
             # Left crop if needed
             if self.args.left_crop > 0:
                 width, height = rgb.size
-                rgb = TF.crop(rgb, 0, self.args.left_crop, height, width - self.args.top_crop)
+                rgb = TF.crop(rgb, 0, self.args.left_crop, height, width - self.args.left_crop)
                 if depth_features is not None:
-                    depth_features = TF.crop(depth_features, 0, self.args.left_crop, height, width - self.args.top_crop)
-                    confidence_features = TF.crop(confidence_features, 0, self.args.left_crop, height, width - self.args.top_crop)
+                    depth_features = TF.crop(depth_features, 0, self.args.left_crop, height, width - self.args.left_crop)
+                    confidence_features = TF.crop(confidence_features, 0, self.args.left_crop, height, width - self.args.left_crop)
                 if depth_sgbm is not None:
-                    depth_sgbm = TF.crop(depth_sgbm, 0, self.args.left_crop, height, width - self.args.top_crop)
-                    confidence_sgbm = TF.crop(confidence_sgbm, 0, self.args.left_crop, height, width - self.args.top_crop)
-                gt = TF.crop(gt, 0, self.args.left_crop, height, width - self.args.top_crop)
+                    depth_sgbm = TF.crop(depth_sgbm, 0, self.args.left_crop, height, width - self.args.left_crop)
+                    confidence_sgbm = TF.crop(confidence_sgbm, 0, self.args.left_crop, height, width - self.args.left_crop)
+                gt = TF.crop(gt, 0, self.args.left_crop, height, width - self.args.left_crop)
                 K[2] = K[2] + self.args.left_crop
 
             # Crop
@@ -341,6 +341,21 @@ class TARTANAIR(BaseDataset):
                 gt = TF.crop(gt, self.args.top_crop, 0,
                              height - self.args.top_crop, width)
                 K[3] = K[3] - self.args.top_crop
+
+            # Left crop if needed
+            if self.args.left_crop > 0 and self.args.test_crop:
+                width, height = rgb.size
+                rgb = TF.crop(rgb, 0, self.args.left_crop, height, width - self.args.left_crop)
+                if depth_features is not None:
+                    depth_features = TF.crop(depth_features, 0, self.args.left_crop, height, width - self.args.left_crop)
+                    confidence_features = TF.crop(confidence_features, 0, self.args.left_crop, height, width - self.args.left_crop)
+                if depth_sgbm is not None:
+                    depth_sgbm = TF.crop(depth_sgbm, 0, self.args.left_crop, height, width - self.args.left_crop)
+                    confidence_sgbm = TF.crop(confidence_sgbm, 0, self.args.left_crop, height, width - self.args.left_crop)
+                gt = TF.crop(gt, 0, self.args.left_crop, height, width - self.args.left_crop)
+                K[2] = K[2] + self.args.left_crop
+
+            width, height = rgb.size
 
             rgb = TF.to_tensor(rgb)
             rgb = TF.normalize(rgb, (0.485, 0.456, 0.406),
