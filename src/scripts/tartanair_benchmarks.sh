@@ -43,7 +43,7 @@ python main.py --dir_data $DATAPATH \
                 --max_depth $MAXDEPTH \
                 --num_sample $NUM_SAMPLE \
                 --top_crop $TOPCROP \
-                --left_crop $LEFTCROP
+                --left_crop $LEFTCROP \
                 --test_crop \
                 --save $SAVE \
                 --dep_src $DEPSRC \
@@ -77,7 +77,7 @@ python main.py --dir_data $DATAPATH \
                 --max_depth $MAXDEPTH \
                 --num_sample $NUM_SAMPLE \
                 --top_crop $TOPCROP \
-                --left_crop $LEFTCROP
+                --left_crop $LEFTCROP \
                 --test_crop \
                 --save $SAVE \
                 --dep_src $DEPSRC \
@@ -111,7 +111,7 @@ python main.py --dir_data $DATAPATH \
                 --max_depth $MAXDEPTH \
                 --num_sample $NUM_SAMPLE \
                 --top_crop $TOPCROP \
-                --left_crop $LEFTCROP
+                --left_crop $LEFTCROP \
                 --test_crop \
                 --save $SAVE \
                 --dep_src $DEPSRC \
@@ -145,7 +145,7 @@ python main.py --dir_data $DATAPATH \
                 --max_depth $MAXDEPTH \
                 --num_sample $NUM_SAMPLE \
                 --top_crop $TOPCROP \
-                --left_crop $LEFTCROP
+                --left_crop $LEFTCROP \
                 --test_crop \
                 --save $SAVE \
                 --dep_src $DEPSRC \
@@ -180,7 +180,7 @@ python main.py --dir_data $DATAPATH \
                 --max_depth $MAXDEPTH \
                 --num_sample $NUM_SAMPLE \
                 --top_crop $TOPCROP \
-                --left_crop $LEFTCROP
+                --left_crop $LEFTCROP \
                 --test_crop \
                 --save $SAVE \
                 --dep_src $DEPSRC \
