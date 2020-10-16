@@ -76,6 +76,7 @@ def read_sparse_depth(file_name, size):
     file_depth = file_depth.reshape(-1,4) # [features, params]
     
     for (x,y,z,sigma) in file_depth:
+        print(x,y,z,size)
         image_depth[int(y), int(x)] = z
 
     # Consider empty depth
@@ -392,8 +393,8 @@ class TARTANAIR(BaseDataset):
         if 'slam' in self.dep_src: 
             path_depth_features = os.path.join(self.args.dir_data,
                                     self.sample_list[idx]['depth_features'])
-
-            depth_features, confidence_features = read_sparse_depth(path_depth_features, (self.width, self.height))
+            
+            depth_features, confidence_features = read_sparse_depth(path_depth_features, (self.height, self.width))
 
             depth_features = Image.fromarray(depth_features.astype('float32'), mode='F')
             confidence_features = Image.fromarray(confidence_features.astype('float32'), mode='F')
