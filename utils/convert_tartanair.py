@@ -304,7 +304,7 @@ def main():
     akaze = cv2.AKAZE_create()
 
     for split in ['train', 'val', 'test']:
-        for env in os.listdir(os.path.join(args.input, split)):
+        for env in ['hospital']: #os.listdir(os.path.join(args.input, split)):
             for seqpath in os.listdir(join(args.input, split, env, 'Easy')):
                 if not os.path.isdir(join(args.input, split, env, 'Easy', seqpath)): continue
                 if seqpath == '.ipynb_checkpoints': continue

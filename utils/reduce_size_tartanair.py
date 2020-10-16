@@ -18,7 +18,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     for split in ['train','test','val']:
-        for env in os.listdir(os.path.join(args.path_root, split)):
+        for env in ['office', 'carwelding']: #os.listdir(os.path.join(args.path_root, split)):
             for seq in os.listdir(os.path.join(args.path_root, split, env, 'Easy')):
 
                 src = os.path.join(args.path_root, split, env, 'Easy', seq)
@@ -34,7 +34,7 @@ if __name__ == "__main__":
                         print(os.path.join(src, name))
                         im = cv2.imread(os.path.join(src, name))
                         H,W,C = im.shape
-                        cv2.resize(im, dsize=(W//2,H//2), interpolation=cv2.INTER_CUBIC)
+                        im = cv2.resize(im, dsize=(W//2,H//2), interpolation=cv2.INTER_CUBIC)
                         cv2.imwrite(os.path.join(dst, name), im)
 
                 for cam in ['right','left']:
@@ -46,7 +46,7 @@ if __name__ == "__main__":
                         print(os.path.join(src, name))
                         im = np.load(os.path.join(src, name))
                         H,W = im.shape
-                        cv2.resize(im, dsize=(W//2,H//2), interpolation=cv2.INTER_NEAREST)
+                        im = cv2.resize(im, dsize=(W//2,H//2), interpolation=cv2.INTER_NEAREST)
                         np.save(os.path.join(dst, name), im)
 
 
@@ -59,7 +59,7 @@ if __name__ == "__main__":
                         print(os.path.join(src, name))
                         im = np.load(os.path.join(src, name))
                         H,W = im.shape
-                        cv2.resize(im, dsize=(W//2,H//2), interpolation=cv2.INTER_LINEAR)
+                        im = cv2.resize(im, dsize=(W//2,H//2), interpolation=cv2.INTER_LINEAR)
                         np.save(os.path.join(dst, name), im)
 
                 shutil.copy(os.path.join(src, 'pose_left.txt'),os.path.join(dst, 'pose_left.txt'))
