@@ -5,7 +5,7 @@
 # GENERAL
 ###############
 
-DATAPATH="/media/slamcore/frederik/TartanairIndoorReduced"
+DATAPATH="/media/slamcore/frederik/TartanAirIndoorEurocFormatReduced"
 DATANAME="TARTANAIR"
 JSONPATH="../data_json/tartanair_reduced.json"
 
@@ -13,10 +13,10 @@ DEPSRC="slam"
 MAXDEPTH=15.0
 NUM_SAMPLE=0
 
-LEFTCROP=110
+LEFTCROP=55
 TOPCROP=0
-PATCH_HEIGHT=65
-PATHC_WIDTH=300
+PATCH_HEIGHT=240
+PATHC_WIDTH=265
 
 ###############
 # NLSPN
