@@ -19,7 +19,7 @@ PATCH_HEIGHT=240
 PATHC_WIDTH=265
 
 EPOCHS=1
-BATCH_SIZE=50
+BATCH_SIZE=10
 
 ###############
 # NLSPN
@@ -30,7 +30,7 @@ SAVE="NLSPN_TartanairReduced"
 MODELNAME='NLSPN'
 INPUTCONF='input'
 DEVICE="0"
-PORT=30001
+PORT=30000
 
 python main.py --dir_data $DATAPATH \
                 --data_name $DATANAME \
@@ -94,7 +94,7 @@ SAVE="NCONV_STREAM_TartanairReduced"
 MODELNAME='NCONV_STREAM'
 INPUTCONF='input'
 DEVICE="0"
-PORT=30001
+PORT=30002
 
 python main.py --dir_data $DATAPATH \
                 --data_name $DATANAME \
@@ -126,7 +126,7 @@ SAVE="NCONV_UNGUIDED_TartanairReduced"
 MODELNAME='NCONV_UNGUIDED'
 INPUTCONF='input'
 DEVICE="0"
-PORT=30001
+PORT=30003
 
 python main.py --dir_data $DATAPATH \
                 --data_name $DATANAME \
@@ -159,7 +159,7 @@ SAVE="PNCONV_UNGUIDED_TartanairReduced"
 MODELNAME='PNCONV_UNGUIDED'
 INPUTCONF='learned'
 DEVICE="0"
-PORT=30001
+PORT=30004
 
 python main.py --dir_data $DATAPATH \
                 --data_name $DATANAME \
