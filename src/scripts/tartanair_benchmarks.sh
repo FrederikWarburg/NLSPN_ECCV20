@@ -32,24 +32,24 @@ DEVICE="0"
 PORT=30001
 
 python main.py --dir_data $DATAPATH \
-                --data_name $DATANAME \ 
-                --split_json $JSONPATH \ 
-                --patch_height $PATCH_HEIGHT \ 
+                --data_name $DATANAME \
+                --split_json $JSONPATH \
+                --patch_height $PATCH_HEIGHT \
                 --patch_width $PATHC_WIDTH \
-                --gpus $DEVICE \ 
-                --loss $LOSS \ 
+                --gpus $DEVICE \
+                --loss $LOSS \
                 --epochs $EPOCHS \
-                --batch_size $BATCH_SIZE \ 
-                --max_depth $MAXDEPTH \ 
-                --num_sample $NUM_SAMPLE \ 
-                --top_crop $TOPCROP \ 
+                --batch_size $BATCH_SIZE \
+                --max_depth $MAXDEPTH \
+                --num_sample $NUM_SAMPLE \
+                --top_crop $TOPCROP \
                 --left_crop $LEFTCROP
-                --test_crop \ 
-                --save $SAVE \ 
-                --dep_src $DEPSRC \ 
-                --augment True \ 
-                --model_name $MODELNAME \ 
-                --port $PORT \  
+                --test_crop \
+                --save $SAVE \
+                --dep_src $DEPSRC \
+                --augment True \
+                --model_name $MODELNAME \
+                --port $PORT \
                 --input_conf $INPUTCONF
 
 ###############
@@ -66,24 +66,24 @@ DEVICE="0"
 PORT=30001
 
 python main.py --dir_data $DATAPATH \
-                --data_name $DATANAME \ 
-                --split_json $JSONPATH \ 
-                --patch_height $PATCH_HEIGHT \ 
+                --data_name $DATANAME \
+                --split_json $JSONPATH \
+                --patch_height $PATCH_HEIGHT \
                 --patch_width $PATHC_WIDTH \
-                --gpus $DEVICE \ 
-                --loss $LOSS \ 
+                --gpus $DEVICE \
+                --loss $LOSS \
                 --epochs $EPOCHS \
-                --batch_size $BATCH_SIZE \ 
-                --max_depth $MAXDEPTH \ 
-                --num_sample $NUM_SAMPLE \ 
-                --top_crop $TOPCROP \ 
+                --batch_size $BATCH_SIZE \
+                --max_depth $MAXDEPTH \
+                --num_sample $NUM_SAMPLE \
+                --top_crop $TOPCROP \
                 --left_crop $LEFTCROP
-                --test_crop \ 
-                --save $SAVE \ 
-                --dep_src $DEPSRC \ 
-                --augment True \ 
-                --model_name $MODELNAME \ 
-                --port $PORT \  
+                --test_crop \
+                --save $SAVE \
+                --dep_src $DEPSRC \
+                --augment True \
+                --model_name $MODELNAME \
+                --port $PORT \
                 --input_conf $INPUTCONF
 
 ###############
@@ -100,24 +100,24 @@ DEVICE="0"
 PORT=30001
 
 python main.py --dir_data $DATAPATH \
-                --data_name $DATANAME \ 
-                --split_json $JSONPATH \ 
-                --patch_height $PATCH_HEIGHT \ 
+                --data_name $DATANAME \
+                --split_json $JSONPATH \
+                --patch_height $PATCH_HEIGHT \
                 --patch_width $PATHC_WIDTH \
-                --gpus $DEVICE \ 
-                --loss $LOSS \ 
+                --gpus $DEVICE \
+                --loss $LOSS \
                 --epochs $EPOCHS \
-                --batch_size $BATCH_SIZE \ 
-                --max_depth $MAXDEPTH \ 
-                --num_sample $NUM_SAMPLE \ 
-                --top_crop $TOPCROP \ 
+                --batch_size $BATCH_SIZE \
+                --max_depth $MAXDEPTH \
+                --num_sample $NUM_SAMPLE \
+                --top_crop $TOPCROP \
                 --left_crop $LEFTCROP
-                --test_crop \ 
-                --save $SAVE \ 
-                --dep_src $DEPSRC \ 
-                --augment True \ 
-                --model_name $MODELNAME \ 
-                --port $PORT \  
+                --test_crop \
+                --save $SAVE \
+                --dep_src $DEPSRC \
+                --augment True \
+                --model_name $MODELNAME \
+                --port $PORT \
                 --input_conf $INPUTCONF
 
 ###############
@@ -134,24 +134,24 @@ DEVICE="0"
 PORT=30001
 
 python main.py --dir_data $DATAPATH \
-                --data_name $DATANAME \ 
-                --split_json $JSONPATH \ 
-                --patch_height $PATCH_HEIGHT \ 
+                --data_name $DATANAME \
+                --split_json $JSONPATH \
+                --patch_height $PATCH_HEIGHT \
                 --patch_width $PATHC_WIDTH \
-                --gpus $DEVICE \ 
-                --loss $LOSS \ 
+                --gpus $DEVICE \
+                --loss $LOSS \
                 --epochs $EPOCHS \
-                --batch_size $BATCH_SIZE \ 
-                --max_depth $MAXDEPTH \ 
-                --num_sample $NUM_SAMPLE \ 
-                --top_crop $TOPCROP \ 
+                --batch_size $BATCH_SIZE \
+                --max_depth $MAXDEPTH \
+                --num_sample $NUM_SAMPLE \
+                --top_crop $TOPCROP \
                 --left_crop $LEFTCROP
-                --test_crop \ 
-                --save $SAVE \ 
-                --dep_src $DEPSRC \ 
-                --augment True \ 
-                --model_name $MODELNAME \ 
-                --port $PORT \  
+                --test_crop \
+                --save $SAVE \
+                --dep_src $DEPSRC \
+                --augment True \
+                --model_name $MODELNAME \
+                --port $PORT \
                 --input_conf $INPUTCONF
 
 
@@ -169,22 +169,22 @@ DEVICE="0"
 PORT=30001
 
 python main.py --dir_data $DATAPATH \
-                --data_name $DATANAME \ 
-                --split_json $JSONPATH \ 
-                --patch_height $PATCH_HEIGHT \ 
+                --data_name $DATANAME \
+                --split_json $JSONPATH \
+                --patch_height $PATCH_HEIGHT \
                 --patch_width $PATHC_WIDTH \
-                --gpus $DEVICE \ 
-                --loss $LOSS \ 
+                --gpus $DEVICE \
+                --loss $LOSS \
                 --epochs $EPOCHS \
-                --batch_size $BATCH_SIZE \ 
-                --max_depth $MAXDEPTH \ 
-                --num_sample $NUM_SAMPLE \ 
-                --top_crop $TOPCROP \ 
+                --batch_size $BATCH_SIZE \
+                --max_depth $MAXDEPTH \
+                --num_sample $NUM_SAMPLE \
+                --top_crop $TOPCROP \
                 --left_crop $LEFTCROP
-                --test_crop \ 
-                --save $SAVE \ 
-                --dep_src $DEPSRC \ 
-                --augment True \ 
-                --model_name $MODELNAME \ 
-                --port $PORT \  
+                --test_crop \
+                --save $SAVE \
+                --dep_src $DEPSRC \
+                --augment True \
+                --model_name $MODELNAME \
+                --port $PORT \
                 --input_conf $INPUTCONF
