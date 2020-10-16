@@ -333,12 +333,13 @@ class NLSPNModel(nn.Module):
     def forward(self, sample):
         rgb = sample['rgb']
         
-
+        print(rgb.shape)
         # Encoding
         fe1_rgb = self.conv1_rgb(rgb)
 
         if self.args.dep_src in ['slam', 'sgbm']:
             dep = sample['dep']
+            print(dep.shape)
             fe1_dep = self.conv1_dep(dep)
             fe1 = torch.cat((fe1_rgb, fe1_dep), dim=1)
         else:

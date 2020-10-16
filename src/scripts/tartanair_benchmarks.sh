@@ -18,8 +18,8 @@ TOPCROP=0
 PATCH_HEIGHT=240
 PATHC_WIDTH=265
 
-EPOCHS=1
-BATCH_SIZE=10
+EPOCHS=60
+BATCH_SIZE=50
 
 ###############
 # NLSPN
@@ -154,7 +154,7 @@ python main.py --dir_data $DATAPATH \
 # PNCONV UNGUIDED
 ###############
 
-LOSS="1.0*ProbExp"
+LOSS="1.0*MaskedProbExp"
 SAVE="PNCONV_UNGUIDED_TartanairReduced"
 MODELNAME='PNCONV_UNGUIDED'
 INPUTCONF='learned'
