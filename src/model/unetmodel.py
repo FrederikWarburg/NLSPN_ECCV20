@@ -1,7 +1,7 @@
 
 
 import torch
-from .common import *
+from common import *
 from torchvision.models.resnet import BasicBlock
 
 class UNETModel(nn.Module):
@@ -125,8 +125,8 @@ class UNETModel(nn.Module):
 
 if __name__ == "__main__":
     
-    rgb = torch.FloatTensor(torch.randn((1,3, 320,240)))
-    dep = torch.FloatTensor(torch.randn((1,1, 320,240)))
+    rgb = torch.FloatTensor(torch.randn((1,3, 300,65)))
+    dep = torch.FloatTensor(torch.randn((1,1, 300,65)))
 
     sample = {'rgb':rgb,'dep':dep}
 
