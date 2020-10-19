@@ -4,9 +4,9 @@ import torch
 from common import *
 from torchvision.models.resnet import BasicBlock
 
-class UnetModel(nn.Module):
+class UNETMODEL(nn.Module):
     def __init__(self, args = None):
-        super(UnetModel, self).__init__()
+        super(UNETMODEL, self).__init__()
 
         ####
         # RGB Stream
