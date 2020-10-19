@@ -13,13 +13,13 @@ DEPSRC="slam"
 MAXDEPTH=15.0
 NUM_SAMPLE=0
 
-LEFTCROP=55
+LEFTCROP=0
 TOPCROP=0
 PATCH_HEIGHT=240
-PATHC_WIDTH=265
+PATHC_WIDTH=320
 
 EPOCHS=60
-BATCH_SIZE=50
+BATCH_SIZE=8
 
 ###############
 # NLSPN
@@ -29,8 +29,8 @@ LOSS="1.0*L1+1.0*L2"
 SAVE="NLSPN_TartanairReduced"
 MODELNAME='NLSPN'
 INPUTCONF='input'
-DEVICE="0"
-PORT=30000
+DEVICE="1"
+PORT=20000
 
 python main.py --dir_data $DATAPATH \
                 --data_name $DATANAME \
@@ -61,8 +61,8 @@ LOSS="1.0*L2"
 SAVE="NCONV_ENCDEC_TartanairReduced"
 MODELNAME='NCONV_ENCDEC'
 INPUTCONF='input'
-DEVICE="0"
-PORT=30001
+DEVICE="1"
+PORT=20001
 
 python main.py --dir_data $DATAPATH \
                 --data_name $DATANAME \
@@ -93,8 +93,8 @@ LOSS="1.0*L2"
 SAVE="NCONV_STREAM_TartanairReduced"
 MODELNAME='NCONV_STREAM'
 INPUTCONF='input'
-DEVICE="0"
-PORT=30002
+DEVICE="1"
+PORT=20002
 
 python main.py --dir_data $DATAPATH \
                 --data_name $DATANAME \
@@ -125,8 +125,8 @@ LOSS="1.0*L2"
 SAVE="NCONV_UNGUIDED_TartanairReduced"
 MODELNAME='NCONV_UNGUIDED'
 INPUTCONF='input'
-DEVICE="0"
-PORT=30003
+DEVICE="1"
+PORT=20003
 
 python main.py --dir_data $DATAPATH \
                 --data_name $DATANAME \
@@ -158,8 +158,8 @@ LOSS="1.0*MaskedProbExp"
 SAVE="PNCONV_UNGUIDED_TartanairReduced"
 MODELNAME='PNCONV_UNGUIDED'
 INPUTCONF='learned'
-DEVICE="0"
-PORT=30004
+DEVICE="1"
+PORT=20004
 
 python main.py --dir_data $DATAPATH \
                 --data_name $DATANAME \

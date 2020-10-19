@@ -67,6 +67,7 @@ def read_sparse_depth(file_name, size):
     assert os.path.exists(file_name), "file not found: {}".format(file_name)
 
     image_depth = np.zeros(size, dtype=np.float32)
+    image_confidence = np.zeros(size, dtype=np.float32)
 
     # check if file is empty
     if os.stat(file_name).st_size == 0:
@@ -76,15 +77,15 @@ def read_sparse_depth(file_name, size):
     file_depth = file_depth.reshape(-1,4) # [features, params]
     
     for (x,y,z,sigma) in file_depth:
-        print(x,y,z,size)
+        #print(x,y,z,sigma,size)
         image_depth[int(y), int(x)] = z
-
+        image_confidence[int(y), int(x)] = sigma
     # Consider empty depth
     #assert (np.max(image_depth) == 0) or (np.max(image_depth) > 255), \
     #    "np.max(depth_png)={}, path={}".format(np.max(image_depth), file_name)
 
     #image_depth = image_depth.astype(np.float32) / 256.0
-    return image_depth
+    return image_depth, image_confidence
 
 
 # Reference : https://github.com/utiasSTARS/pykitti/blob/master/pykitti/utils.py
