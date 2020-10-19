@@ -91,7 +91,7 @@ parser.add_argument('--no_multiprocessing',
 parser.add_argument('--model_name',
                     type=str,
                     default='NLSPN',
-                    choices=('UNETMODEL', 'NLSPN','NCONV_UNGUIDED', 'NCONV_STREAM', 'NCONV_ENCDEC', 'PNCONV_UNGUIDED'),
+                    choices=('UNET', 'NLSPN','NCONV_UNGUIDED', 'NCONV_STREAM', 'NCONV_ENCDEC', 'PNCONV_UNGUIDED'),
                     help='model name')
 parser.add_argument('--network',
                     type=str,
