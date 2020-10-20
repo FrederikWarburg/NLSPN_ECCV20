@@ -3,22 +3,32 @@
 import torch
 from .common import *
 from torchvision.models.resnet import BasicBlock
+from torchvision import models
 
 class UNETModel(nn.Module):
     def __init__(self, args = None):
         super(UNETModel, self).__init__()
 
+        self.args = args
         ####
         # RGB Stream
         ####
 
+        if self.args.network == 'resnet18':
+            net = get_resnet18(not self.args.from_scratch)
+        elif self.args.network == 'resnet34':
+            net = get_resnet34(not self.args.from_scratch)
+        else:
+            raise NotImplementedError
+
         # Encoder
         self.conv1_rgb = conv_bn_relu(3, 64, kernel=3, stride=1, padding=1, bn=False)
-        self.conv2_rgb = self._make_layer(64, 64, stride=1) # 1/2
-        self.conv3_rgb = self._make_layer(64, 128, stride=2) # 1/4
-        self.conv4_rgb = self._make_layer(128, 256, stride=2) # 1/8
-        self.conv5_rgb = self._make_layer(256, 512, stride=2) # 1/16
+        self.conv2_rgb = net.layer1 #self._make_layer(64, 64, stride=1) # 1/2
+        self.conv3_rgb = net.layer2 #self._make_layer(64, 128, stride=2) # 1/4
+        self.conv4_rgb = net.layer3 #self._make_layer(128, 256, stride=2) # 1/8
+        self.conv5_rgb = net.layer4 #self._make_layer(256, 512, stride=2) # 1/16
         self.conv6_rgb = conv_bn_relu(512, 512, kernel=3, stride=2, padding=1) # 1/16
+        del net
 
         # Decoder
         self.dec5_rgb = convt_bn_relu(512, 256, kernel=3, stride=2, padding=1, output_padding=1) # 1/8
@@ -69,7 +79,7 @@ class UNETModel(nn.Module):
         layers = []
         layers.append(block(inplanes, planes, stride, downsample))
         inplanes = planes * block.expansion
-        for i in range(1, blocks):
+        for _ in range(1, blocks):
             layers.append(block(inplanes, planes))
 
         return torch.nn.Sequential(*layers)
@@ -90,7 +100,7 @@ class UNETModel(nn.Module):
 
         f = torch.cat((fd, fe), dim=dim)
 
-        return f    
+        return f
 
     def forward(self, sample):
 
