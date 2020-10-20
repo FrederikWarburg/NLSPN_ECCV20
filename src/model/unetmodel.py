@@ -37,8 +37,6 @@ class UNETModel(nn.Module):
         self.conv3_rgb = net.layer2 #self._make_layer(64, 128, stride=2) # 1/4
         self.conv4_rgb = net.layer3 #self._make_layer(128, 256, stride=2) # 1/8
         self.conv5_rgb = net.layer4 #self._make_layer(256, 512, stride=2) # 1/16
-
-        # Bottleneck
         self.conv6_rgb = conv_bn_relu(512, 512, kernel=3, stride=2, padding=1) # 1/16
 
         # Decoder
@@ -55,15 +53,15 @@ class UNETModel(nn.Module):
         self.conv1_dep = conv_bn_relu(1, 64, kernel=3, stride=1, padding=1, bn=False)
         if self.aggregate == 'cat':
             self.conv2_dep = self._make_layer(64, 64, stride=1) # 1/2
-            self.conv3_dep = self._make_layer(64 + self.D*(self.D+1) * 64, 128, stride=2) # 1/4
-            self.conv4_dep = self._make_layer(128+ self.D*(self.D+1) * 128, 256, stride=2) # 1/8
-            self.conv5_dep = self._make_layer(256+ self.D*(self.D+1) * 256, 512, stride=2) # 1/16
+            self.conv3_dep = self._make_layer(64 + 2*self.D * 64, 128, stride=2) # 1/4
+            self.conv4_dep = self._make_layer(128+ 2*self.D * 128, 256, stride=2) # 1/8
+            self.conv5_dep = self._make_layer(256+ 2*self.D * 256, 512, stride=2) # 1/16
         elif self.aggregate == 'sum':
             self.conv2_dep = net.layer1 # 1/2
             self.conv3_dep = net.layer2 # 1/4
             self.conv4_dep = net.layer3 # 1/8
             self.conv5_dep = net.layer4 # 1/16
-        self.conv6_dep = conv_bn_relu(512 + self.D*(self.D+1) * 512, 512, kernel=3, stride=2, padding=1) # 1/16
+        self.conv6_dep = conv_bn_relu(512 + 2*self.D * 512, 512, kernel=3, stride=2, padding=1) # 1/16
         del net
 
         # Decoder
