@@ -70,7 +70,7 @@ def read_sparse_depth(file_name, size):
     image_confidence = np.zeros(size, dtype=np.float32)
 
     # check if file is empty
-    if os.stat(file_name).st_size == 0:
+    if os.stat(file_name).st_size < 5:
         return image_depth
 
     file_depth = np.loadtxt(file_name, delimiter=',')
