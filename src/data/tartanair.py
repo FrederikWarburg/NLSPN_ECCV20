@@ -365,7 +365,7 @@ class TARTANAIR(BaseDataset):
 
             if depth_features is not None:
                 depth_features = TF.to_tensor(np.array(depth_features))
-                confindence_features = TF.to_tensor(np.array(confindence_features))
+                confidence_features = TF.to_tensor(np.array(confidence_features))
             if depth_sgbm is not None:
                 depth_sgbm = TF.to_tensor(np.array(depth_sgbm))
                 confidence_sgbm = TF.to_tensor(np.array(confidence_sgbm))
