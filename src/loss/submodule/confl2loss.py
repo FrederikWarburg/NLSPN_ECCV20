@@ -3,9 +3,9 @@ import torch
 import torch.nn as nn
 
 
-class L1Loss(nn.Module):
+class ConfL2Loss(nn.Module):
     def __init__(self, args):
-        super(L1Loss, self).__init__()
+        super(ConfL2Loss, self).__init__()
 
         self.args = args
         self.t_valid = 0.0001
