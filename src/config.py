@@ -138,7 +138,11 @@ parser.add_argument('--input_conf',
                     required=True,
                     choices=['learned', 'input'],
                     help='where the confidence is learned for nconv and pconc')
-
+parser.add_argument('--aggregate',
+                    type=str,
+                    default='cat',
+                    choices=['cat', 'sum'],
+                    help='how to aggregate information between encoder and decoder and rgb and depth in unet')
 
 # Training
 parser.add_argument('--loss',

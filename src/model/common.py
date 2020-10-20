@@ -25,7 +25,7 @@ model_path = {
 
 
 def get_resnet18(pretrained=True):
-    net = torchvision.models.resnet18(pretrained=False)
+    net = torchvision.models.resnet18(pretrained=True)
     if pretrained:
         state_dict = torch.load(model_path['resnet18'])
         net.load_state_dict(state_dict)
@@ -34,7 +34,7 @@ def get_resnet18(pretrained=True):
 
 
 def get_resnet34(pretrained=True):
-    net = torchvision.models.resnet34(pretrained=False)
+    net = torchvision.models.resnet34(pretrained=True)
     if pretrained:
         state_dict = torch.load(model_path['resnet34'])
         net.load_state_dict(state_dict)
