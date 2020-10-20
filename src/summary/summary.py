@@ -158,8 +158,8 @@ class Summary(BaseSummary):
             gt_tmp = 255.0 * gt_tmp / self.args.max_depth
             pred_tmp = 255.0 * pred_tmp / self.args.max_depth
             confidence_tmp = 255.0 * confidence_tmp
-            abs_err_tmp = 255.0 * abs_err_tmp / self.args.max_depth
-            
+            abs_err_tmp = 255.0 * abs_err_tmp / np.max(abs_err_tmp)
+                        
             if self.args.dep_src in ['slam', 'sgbm']:
                 dep_tmp = cm(dep_tmp.astype('uint8'))
             else:
