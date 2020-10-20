@@ -52,7 +52,7 @@ class UNETModel(nn.Module):
         self.cf_dec1 = conv_bn_relu(64+64, 32, kernel=3, stride=1, padding=1) # 1/1
         self.cf_dec0 = nn.Sequential(
             nn.Conv2d(32+64, 1, kernel_size=3, stride=1, padding=1),
-            nn.Sigmoid()
+            nn.Softplus()
         )
 
     def _make_layer(self, inplanes, planes, blocks=1, stride=1):
