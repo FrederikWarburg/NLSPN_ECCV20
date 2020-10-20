@@ -1,7 +1,7 @@
 
 
 import torch
-from common import *
+from .common import *
 from torchvision.models.resnet import BasicBlock
 
 class UNETModel(nn.Module):
@@ -73,7 +73,25 @@ class UNETModel(nn.Module):
             layers.append(block(inplanes, planes))
 
         return torch.nn.Sequential(*layers)
-    
+
+    def _concat(self, fd, fe, dim=1):
+        # Decoder feature may have additional padding
+        _, _, Hd, Wd = fd.shape
+        _, _, He, We = fe.shape
+
+        # Remove additional padding
+        if Hd > He:
+            h = Hd - He
+            fd = fd[:, :, :-h, :]
+
+        if Wd > We:
+            w = Wd - We
+            fd = fd[:, :, :, :-w]
+
+        f = torch.cat((fd, fe), dim=dim)
+
+        return f    
+
     def forward(self, sample):
 
         rgb = sample['rgb']
@@ -91,33 +109,34 @@ class UNETModel(nn.Module):
 
         # Decoding RGB
         fd5_rgb = self.dec5_rgb(fe6_rgb)
-        fd4_rgb = self.dec4_rgb(torch.cat((fd5_rgb, fe5_rgb), dim=1))
-        fd3_rgb = self.dec3_rgb(torch.cat((fd4_rgb, fe4_rgb), dim=1))
-        fd2_rgb = self.dec2_rgb(torch.cat((fd3_rgb, fe3_rgb), dim=1))
+        print(fd5_rgb.shape, fe5_rgb.shape)
+        fd4_rgb = self.dec4_rgb(self._concat(fd5_rgb, fe5_rgb, dim=1))
+        fd3_rgb = self.dec3_rgb(self._concat(fd4_rgb, fe4_rgb, dim=1))
+        fd2_rgb = self.dec2_rgb(self._concat(fd3_rgb, fe3_rgb, dim=1))
          
         # Encoding Depth
         fe1_dep = self.conv1_dep(dep)
         fe2_dep = self.conv2_dep(fe1_dep)
-        fe3_dep = self.conv3_dep(torch.cat((fe2_dep,fd2_rgb, fe2_rgb), dim=1))
-        fe4_dep = self.conv4_dep(torch.cat((fe3_dep,fd3_rgb, fe3_rgb), dim=1))
-        fe5_dep = self.conv5_dep(torch.cat((fe4_dep,fd4_rgb, fe4_rgb), dim=1))
+        fe3_dep = self.conv3_dep(torch.cat((fe2_dep, self._concat(fd2_rgb, fe2_rgb, dim=1)), dim=1))
+        fe4_dep = self.conv4_dep(torch.cat((fe3_dep, self._concat(fd3_rgb, fe3_rgb, dim=1)), dim=1))
+        fe5_dep = self.conv5_dep(torch.cat((fe4_dep, self._concat(fd4_rgb, fe4_rgb, dim=1)), dim=1))
 
         # Bottleneck Depth
-        fe6_dep = self.conv6_dep(torch.cat((fe5_dep,fd5_rgb, fe5_rgb), dim=1))
+        fe6_dep = self.conv6_dep(torch.cat((fe5_dep,self._concat(fd5_rgb, fe5_rgb, dim=1)), dim=1))
 
         # Decoding Depth
         fd5_dep = self.dec5_dep(fe6_dep)
-        fd4_dep = self.dec4_dep(torch.cat((fe5_dep, fd5_dep), dim=1))
-        fd3_dep = self.dec3_dep(torch.cat((fe4_dep, fd4_dep), dim=1))
-        fd2_dep = self.dec2_dep(torch.cat((fe3_dep, fd3_dep), dim=1))      
+        fd4_dep = self.dec4_dep(self._concat(fd5_dep, fe5_dep, dim=1))
+        fd3_dep = self.dec3_dep(self._concat(fd4_dep, fe4_dep, dim=1))
+        fd2_dep = self.dec2_dep(self._concat(fd3_dep, fe3_dep, dim=1))      
 
         # Depth Decoding
-        id_fd1 = self.id_dec1(torch.cat((fe2_dep, fd2_dep), dim=1))
-        pred = self.id_dec0(torch.cat((id_fd1, fe1_dep), dim=1))
+        id_fd1 = self.id_dec1(self._concat(fd2_dep, fe2_dep, dim=1))
+        pred = self.id_dec0(self._concat(id_fd1, fe1_dep, dim=1))
 
         # Confidence Decoding
-        cf_fd1 = self.cf_dec1(torch.cat((fe2_dep, fd2_dep), dim=1))
-        confidence = self.cf_dec0(torch.cat((cf_fd1, fe1_dep), dim=1))
+        cf_fd1 = self.cf_dec1(self._concat(fd2_dep, fe2_dep, dim=1))
+        confidence = self.cf_dec0(self._concat(cf_fd1, fe1_dep, dim=1))
 
         output = {'pred': pred, 'confidence': confidence}
 
@@ -130,6 +149,6 @@ if __name__ == "__main__":
 
     sample = {'rgb':rgb,'dep':dep}
 
-    model = UnetModel()
+    model = UNETModel()
 
     out = model(sample)
