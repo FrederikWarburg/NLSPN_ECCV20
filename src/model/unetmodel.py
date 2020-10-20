@@ -109,7 +109,6 @@ class UNETModel(nn.Module):
 
         # Decoding RGB
         fd5_rgb = self.dec5_rgb(fe6_rgb)
-        print(fd5_rgb.shape, fe5_rgb.shape)
         fd4_rgb = self.dec4_rgb(self._concat(fd5_rgb, fe5_rgb, dim=1))
         fd3_rgb = self.dec3_rgb(self._concat(fd4_rgb, fe4_rgb, dim=1))
         fd2_rgb = self.dec2_rgb(self._concat(fd3_rgb, fe3_rgb, dim=1))
