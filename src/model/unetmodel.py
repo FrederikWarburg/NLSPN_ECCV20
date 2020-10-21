@@ -11,8 +11,8 @@ class UNETModel(nn.Module):
 
         self.args = args
 
-        #self.network = self.args.network
-        self.aggregate = 'sum' #self.args.aggregate
+        self.network = self.args.network
+        self.aggregate = self.args.aggregate
 
         if self.aggregate == 'cat':
             self.D = 1
