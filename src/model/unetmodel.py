@@ -51,8 +51,8 @@ class UNETModel(nn.Module):
         ####
 
         # Encoder
-        #self.conv1_dep = conv_bn_relu(1, 64, kernel=3, stride=1, padding=1, bn=False)
-        self.conv1_dep = torch.nn.Sequential(*[net.conv1, net.bn1, net.relu, net.maxpool])
+        self.conv1_dep = conv_bn_relu(1, 64, kernel=3, stride=1, padding=1, bn=False)
+        #self.conv1_dep = torch.nn.Sequential(*[net.conv1, net.bn1, net.relu, net.maxpool])
         if self.aggregate == 'cat':
             self.conv2_dep = self._make_layer(64, 64, stride=1) # 1/2
             self.conv3_dep = self._make_layer(64 + 2*self.D * 64, 128, stride=2) # 1/4
