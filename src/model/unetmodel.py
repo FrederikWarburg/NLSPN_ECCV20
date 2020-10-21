@@ -1,9 +1,11 @@
 
 
 import torch
-from .common import *
+from common import *
+from visualtransformer import *
 from torchvision.models.resnet import BasicBlock
 from torchvision import models
+
 
 class UNETModel(nn.Module):
     def __init__(self, args = None):
@@ -11,8 +13,8 @@ class UNETModel(nn.Module):
 
         self.args = args
 
-        self.network = self.args.network
-        self.aggregate = self.args.aggregate
+        self.network = 'resnet18' #self.args.network
+        self.aggregate = 'sum' #self.args.aggregate
 
         if self.aggregate == 'cat':
             self.D = 1
@@ -20,14 +22,15 @@ class UNETModel(nn.Module):
             self.D = 0
         else:
             raise NotImplementedError       
-        
+        """
         if self.network == 'resnet18':
             net = get_resnet18(not self.args.from_scratch)
         elif self.network == 'resnet34':
             net = get_resnet34(not self.args.from_scratch)
         else:
             raise NotImplementedError
-
+        """
+        net = models.resnet18()
         ####
         # RGB Stream
         ####
@@ -82,6 +85,21 @@ class UNETModel(nn.Module):
             nn.Conv2d(64, 1, kernel_size=3, stride=1, padding=1),
             nn.Softplus()
         )
+
+        ####
+        # VISUAL TRANSFORMER
+        ####
+
+        L = 8 # number of tokens
+        CT = 1024 # size of tokens
+        C = 512 # number of channels for features
+        head = 16
+        groups = 16
+        kqv_groups = 8
+
+        self.tokenizer = Tokenizer(L, CT, C, head=head, groups=groups)
+        self.transformer = Transformer(CT, head=head, kqv_groups=kqv_groups)
+        self.projector = Projector(CT, C, head=head, groups=groups)
 
     def _make_layer(self, inplanes, planes, blocks=1, stride=1):
         downsample = None
@@ -153,20 +171,34 @@ class UNETModel(nn.Module):
         fd2_rgb = self.dec2_rgb(self._concat(fd3_rgb, fe3_rgb, dim=1))
         fd1_rgb = self.dec1_rgb(self._concat(fd2_rgb, fe2_rgb, dim=1))
         
+        ###
+        # DEPTH UNET
+        ###
+
         # Encoding Depth
         fe1_dep = self.conv1_dep(dep)
         fe2_dep = self.conv2_dep(self._concat(self._concat(fd1_rgb, fe1_rgb, dim=1), fe1_dep, dim=1))
         fe3_dep = self.conv3_dep(self._concat(self._concat(fd2_rgb, fe2_rgb, dim=1), fe2_dep, dim=1))
         fe4_dep = self.conv4_dep(self._concat(self._concat(fd3_rgb, fe3_rgb, dim=1), fe3_dep, dim=1))
         fe5_dep = self.conv5_dep(self._concat(self._concat(fd4_rgb, fe4_rgb, dim=1), fe4_dep,  dim=1))
-        fe6_dep = self.conv6_dep(fe5_dep)
 
+        # VT
+        tokens_in = self.tokenizer(fd5_rgb)
+        tokens_out = self.transformer(tokens_in)
+        fe5_dep = self.projector(fe5_dep, tokens_out)
+
+        fe6_dep = self.conv6_dep(fe5_dep)
+        
         # Decoding Depth
         fd5_dep = self.dec5_dep(fe6_dep)
         fd4_dep = self.dec4_dep(self._concat(fd5_dep, fe5_dep, dim=1))
         fd3_dep = self.dec3_dep(self._concat(fd4_dep, fe4_dep, dim=1))
         fd2_dep = self.dec2_dep(self._concat(fd3_dep, fe3_dep, dim=1))   
-        fd1_dep = self.dec1_dep(self._concat(fd2_dep, fe2_dep, dim=1))      
+        fd1_dep = self.dec1_dep(self._concat(fd2_dep, fe2_dep, dim=1))
+
+        ###
+        # PREDICTION HEADS
+        ###
 
         # Depth Decoding
         id_fd1 = self.id_dec1(fd1_dep)
@@ -185,8 +217,8 @@ class UNETModel(nn.Module):
 
 if __name__ == "__main__":
     
-    rgb = torch.FloatTensor(torch.randn((1,3, 300,65)))
-    dep = torch.FloatTensor(torch.randn((1,1, 300,65)))
+    rgb = torch.FloatTensor(torch.randn((1,3, 224,224)))
+    dep = torch.FloatTensor(torch.randn((1,1, 224,224)))
 
     sample = {'rgb':rgb,'dep':dep}
 
