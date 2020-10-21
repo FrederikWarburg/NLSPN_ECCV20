@@ -33,7 +33,7 @@ class UNETModel(nn.Module):
 
         # Encoder
         #self.conv1_rgb = conv_bn_relu(3, 64, kernel=3, stride=1, padding=1, bn=False)
-        self.conv1_rgb = torch.nn.Sequential(*[net.conv1, net.bn1, net.relu, net.maxpool])
+        self.conv1_rgb = torch.nn.Sequential(*[net.conv1, net.bn1, net.relu])#, net.maxpool])
         self.conv2_rgb = net.layer1 #self._make_layer(64, 64, stride=1) # 1/2
         self.conv3_rgb = net.layer2 #self._make_layer(64, 128, stride=2) # 1/4
         self.conv4_rgb = net.layer3 #self._make_layer(128, 256, stride=2) # 1/8
