@@ -1,7 +1,7 @@
 
 
 import torch
-from common import *
+from .common import *
 from visualtransformer import *
 from torchvision.models.resnet import BasicBlock
 from torchvision import models
@@ -13,8 +13,8 @@ class UNETModel(nn.Module):
 
         self.args = args
 
-        self.network = 'resnet18' #self.args.network
-        self.aggregate = 'sum' #self.args.aggregate
+        self.network = self.args.network
+        self.aggregate = self.args.aggregate
 
         if self.aggregate == 'cat':
             self.D = 1
@@ -22,15 +22,14 @@ class UNETModel(nn.Module):
             self.D = 0
         else:
             raise NotImplementedError       
-        """
+        
         if self.network == 'resnet18':
             net = get_resnet18(not self.args.from_scratch)
         elif self.network == 'resnet34':
             net = get_resnet34(not self.args.from_scratch)
         else:
             raise NotImplementedError
-        """
-        net = models.resnet18()
+
         ####
         # RGB Stream
         ####
