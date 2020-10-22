@@ -226,7 +226,8 @@ class Summary(BaseSummary):
 
                 for h in range(heads):
                     for l in range(L):
-
+                        print(proj_coef.shape)
+                        print(proj_coef[b, h, :, l])
                         proj_coef_tmp = proj_coef[b, h, :, l].reshape(Wb, Hb)
                         proj_coef_tmp = cv2.resize(proj_coef_tmp, (W,H), interpolation=cv2.INTER_CUBIC)
                         proj_coef_tmp = 255.0 * proj_coef_tmp 

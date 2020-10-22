@@ -248,7 +248,7 @@ def train(gpu, args):
 
                 pbar.set_description(error_str)
                 pbar.update(loader_train.batch_size * args.num_gpus)
-            
+            writer_train.update(epoch, sample, output)
         if gpu == 0:
             pbar.close()
 
