@@ -85,6 +85,11 @@ class Tokenizer(nn.Module):
         # store token_coef for visualizations
         self.token_coef = token_coef.clone()
 
+        print("tokencoef", token_coef.shape)
+        print("token", token.shape)
+        print("pos_encoding", pos_encoding.shape)
+        print("value", value.shape)
+
         return tokens
 
 class PosEncoder(nn.Module):
@@ -158,6 +163,12 @@ class Transformer(nn.Module):
         # save for visualization purposes
         self.kq = kq.clone()
 
+        print("k", k.shape)
+        print("q", q.shape)
+        print("kq", kq.shape)
+        print("kqv", kqv.shape)
+        print("tokens", tokens.shape)
+
         return tokens
 
 class Projector(nn.Module):
@@ -189,5 +200,11 @@ class Projector(nn.Module):
 
         # save for visualization purposes
         self.proj_coef = proj_coef.clone()
+
+        print("proj_v", proj_v.shape)
+        print("proj_k", proj_k.shape)
+        print("proj_q", proj_q.shape)
+        print("proj_coef", proj_coef.shape)
+        print("proj", proj.shape)
 
         return feature+proj.view(N,-1,H,W)
