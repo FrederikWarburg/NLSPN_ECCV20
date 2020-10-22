@@ -268,7 +268,7 @@ class Summary(BaseSummary):
         if 'kq' in output:
             img_total = np.concatenate(kq_img_list, axis=2)
             img_total = torch.from_numpy(img_total)
-            self.add_image(self.mode + '/proj_coefs', img_total, global_step)
+            self.add_image(self.mode + '/kq_coefs', img_total, global_step)
 
         if self.args.model_name.lower() == 'nlspn':
             self.add_scalar('Etc/gamma', output['gamma'], global_step)
