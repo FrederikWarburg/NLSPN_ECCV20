@@ -191,7 +191,7 @@ class Summary(BaseSummary):
             list_img.append(img)
 
             if 'token_coef' in output:
-                token_coef = output['token_coef'].detach().numpy()
+                token_coef = output['token_coef'].detach().data.cpu().numpy()
                 N, L, HW = token_coef.shape
                 H, W, _ = rgb_tmp.shape
                 token_coef = token_coef.reshape(N, L, H, W)
