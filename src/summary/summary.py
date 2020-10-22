@@ -197,31 +197,22 @@ class Summary(BaseSummary):
                 C, H, W = rgb_tmp.shape
                 Hb, Wb = 6, 20
                 attention_maps = [rgb_tmp, pred_tmp]
-                print(rgb_tmp.shape)
+
                 for h in range(heads):
                     for l in range(L):
-                        print()
-                        print(token_coef.shape)
-                        print(token_coef[b,h,:,l].shape, Hb, Wb)
+
                         token_coef_tmp = token_coef[b, h, :, l].reshape(Wb, Hb)
-                        print(token_coef_tmp.shape, W, H)
                         token_coef_tmp = cv2.resize(token_coef_tmp, (W,H), interpolation=cv2.INTER_CUBIC)
                         token_coef_tmp = 255.0 * token_coef_tmp
-                        #token_coef_tmp = np.expand_dims(token_coef_tmp, axis=0) 
-                        print(token_coef_tmp.shape)
                         token_coef_tmp = cm(token_coef_tmp.astype('uint8'))
-                        print(token_coef_tmp.shape)
                         token_coef_tmp = np.transpose(token_coef_tmp[:, :, :3], (2, 0, 1))
                         attention_maps.append(token_coef_tmp)
                 
                 token_img = np.concatenate(attention_maps, axis=1)
-                print("token img", token_img.shape)
                 token_img_list.append(token_img)
 
         img_total = np.concatenate(list_img, axis=2)
-        print("img total", img_total.shape)
         img_total = torch.from_numpy(img_total)
-        print("tensor", img_total.shape)
         self.add_image(self.mode + '/images', img_total, global_step)
 
         if 'token_coef' in output:
