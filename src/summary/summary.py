@@ -200,10 +200,14 @@ class Summary(BaseSummary):
 
                 for h in range(heads):
                     for l in range(L):
-
+                        
                         token_coef_tmp = token_coef[b, h, :, l].reshape(Wb, Hb)
+                        print(token_coef_tmp)
+                        print(np.min(token_coef_tmp), np.max(token_coef_tmp))
                         token_coef_tmp = cv2.resize(token_coef_tmp, (W,H), interpolation=cv2.INTER_CUBIC)
+                        print(np.min(token_coef_tmp), np.max(token_coef_tmp))
                         token_coef_tmp = 255.0 * token_coef_tmp
+                        print(np.min(token_coef_tmp), np.max(token_coef_tmp))
                         token_coef_tmp = cm(token_coef_tmp.astype('uint8'))
                         token_coef_tmp = np.transpose(token_coef_tmp[:, :, :3], (2, 0, 1))
                         attention_maps.append(token_coef_tmp)
