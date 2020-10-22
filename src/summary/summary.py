@@ -19,6 +19,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 from PIL import Image
+import cv2
 
 cm = plt.get_cmap('plasma')
 
@@ -192,14 +193,15 @@ class Summary(BaseSummary):
 
             if 'token_coef' in output:
                 token_coef = output['token_coef'].detach().data.cpu().numpy()
-                N, h, HW, L = token_coef.shape
+                N, heads, HW, L = token_coef.shape
                 H, W, _ = rgb_tmp.shape
                 Hb, Wb = 6, 20
-                attention_maps = []
+                attention_maps = [rgb_tmp, pred_tmp]
 
                 for h in range(heads):
                     for l in range(L):
                         token_coef_tmp = token_coef[b, h, :, l].reshape(Hb, Wb)
+                        token_coef_tmp = cv2.resize(token_coef_tmp, (W,H), interpolation=cv2.INTER_CUBIC)
                         token_coef_tmp = 255.0 * token_coef_tmp
                         token_coef_tmp = cm(token_coef_tmp.astype('uint8'))
                         attention_maps.append(token_coef_tmp)
