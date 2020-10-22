@@ -190,8 +190,8 @@ class Summary(BaseSummary):
 
             list_img.append(img)
 
-            if 'token_coef' in sample:
-                token_coef = sample['token_coef'].detach().numpy()
+            if 'token_coef' in output:
+                token_coef = output['token_coef'].detach().numpy()
                 N, L, HW = token_coef.shape
                 H, W, _ = rgb_tmp.shape
                 token_coef = token_coef.reshape(N, L, H, W)
@@ -210,7 +210,7 @@ class Summary(BaseSummary):
         img_total = torch.from_numpy(img_total)
         self.add_image(self.mode + '/images', img_total, global_step)
 
-        if 'token_coef' in sample:
+        if 'token_coef' in output:
             img_total = np.concatenate(token_img_list, axis=2)
             img_total = torch.from_numpy(img_total)
             self.add_image(self.mode + '/token_coefs', img_total, global_step)
