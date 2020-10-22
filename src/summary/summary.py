@@ -197,7 +197,8 @@ class Summary(BaseSummary):
                 token_coef = output['token_coef'].detach().data.cpu().numpy()
                 N, heads, HW, L = token_coef.shape
                 C, H, W = rgb_tmp.shape
-                Hb, Wb = 5, 19
+                Hb, Wb = output['size']
+                print("size", Hb,Wb)
                 attention_maps = [rgb_tmp, pred_tmp]
 
                 for h in range(heads):
@@ -219,7 +220,7 @@ class Summary(BaseSummary):
                 proj_coef = output['proj_coef'].detach().data.cpu().numpy()
                 N, heads, HW, L = proj_coef.shape
                 C, H, W = rgb_tmp.shape
-                Hb, Wb = 5, 19
+                Hb, Wb = output['size']
                 attention_maps = [rgb_tmp, pred_tmp]
 
                 for h in range(heads):
