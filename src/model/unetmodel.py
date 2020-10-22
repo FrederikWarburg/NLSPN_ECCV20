@@ -2,7 +2,7 @@
 
 import torch
 from .common import *
-from visualtransformer import *
+from .visualtransformer import *
 from torchvision.models.resnet import BasicBlock
 from torchvision import models
 
