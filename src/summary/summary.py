@@ -203,7 +203,7 @@ class Summary(BaseSummary):
 
                         token_coef_tmp = token_coef[b, h, :, l].reshape(Wb, Hb)
                         token_coef_tmp = cv2.resize(token_coef_tmp, (W,H), interpolation=cv2.INTER_CUBIC)
-                        token_coef_tmp = 255.0 * token_coef_tmp
+                        token_coef_tmp = 255.0 * token_coef_tmp 
                         token_coef_tmp = cm(token_coef_tmp.astype('uint8'))
                         token_coef_tmp = np.transpose(token_coef_tmp[:, :, :3], (2, 0, 1))
                         attention_maps.append(token_coef_tmp)

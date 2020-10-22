@@ -142,7 +142,12 @@ parser.add_argument('--aggregate',
                     type=str,
                     default='cat',
                     choices=['cat', 'sum'],
-                    help='how to aggregate information between encoder and decoder and rgb and depth in unet')
+                    help='how to aggregate information between encoder and decoder in rgb/depth unet')
+parser.add_argument('--guide',
+                    type=str,
+                    default='cat',
+                    choices=['cat', 'sum', 'none'],
+                    help='how to aggregate information between rgb and depth in unet')
 
 # Training
 parser.add_argument('--loss',

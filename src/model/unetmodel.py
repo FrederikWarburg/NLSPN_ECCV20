@@ -15,11 +15,21 @@ class UNETModel(nn.Module):
 
         self.network = self.args.network
         self.aggregate = self.args.aggregate
+        self.guide = self.args.guide
+
+        if self.guide == 'cat':
+            self.D_guide = 2
+        elif self.guide == 'sum':
+            self.D_guide = 0
+        elif self.guide == 'none':
+            self.D_guide = 0
+        else:
+            raise NotImplementedError    
 
         if self.aggregate == 'cat':
-            self.D = 1
+            self.D_skip = 1
         elif self.aggregate == 'sum':
-            self.D = 0
+            self.D_skip = 0
         else:
             raise NotImplementedError       
         
@@ -44,10 +54,10 @@ class UNETModel(nn.Module):
 
         # Decoder
         self.dec5_rgb = convt_bn_relu(512, 512, kernel=3, stride=2, padding=1, output_padding=1) # 1/16
-        self.dec4_rgb = convt_bn_relu(512+self.D * 512, 256, kernel=3, stride=2, padding=1, output_padding=1) # 1/8
-        self.dec3_rgb = convt_bn_relu(256+self.D * 256, 128, kernel=3, stride=2, padding=1, output_padding=1) # 1/4
-        self.dec2_rgb = convt_bn_relu(128+self.D * 128, 64, kernel=3, stride=2, padding=1, output_padding=1) # 1/2
-        self.dec1_rgb = conv_bn_relu(64+self.D * 64, 64, kernel=3, stride=1, padding=1) # 1/2
+        self.dec4_rgb = convt_bn_relu(512+self.D_skip * 512, 256, kernel=3, stride=2, padding=1, output_padding=1) # 1/8
+        self.dec3_rgb = convt_bn_relu(256+self.D_skip * 256, 128, kernel=3, stride=2, padding=1, output_padding=1) # 1/4
+        self.dec2_rgb = convt_bn_relu(128+self.D_skip * 128, 64, kernel=3, stride=2, padding=1, output_padding=1) # 1/2
+        self.dec1_rgb = conv_bn_relu(64+self.D_skip * 64, 64, kernel=3, stride=1, padding=1) # 1/2
 
         ####
         # Depth Stream
@@ -61,18 +71,18 @@ class UNETModel(nn.Module):
             self.conv4_dep = net.layer3 # 1/8
             self.conv5_dep = net.layer4 # 1/16
         elif self.aggregate == 'cat':
-            self.conv2_dep = self._make_layer(64 + 2*self.D * 64, 64, stride=1, blocks=2) # 1/2
-            self.conv3_dep = self._make_layer(64 + 2*self.D * 64, 128, stride=2, blocks=2) # 1/4
-            self.conv4_dep = self._make_layer(128 + 2*self.D * 128, 256, stride=2, blocks=2) # 1/8
-            self.conv5_dep = self._make_layer(256 + 2*self.D * 256, 512, stride=2, blocks=2) # 1/16
+            self.conv2_dep = self._make_layer(64 + self.D_guide * 64, 64, stride=1, blocks=2) # 1/2
+            self.conv3_dep = self._make_layer(64 + self.D_guide * 64, 128, stride=2, blocks=2) # 1/4
+            self.conv4_dep = self._make_layer(128 + self.D_guide * 128, 256, stride=2, blocks=2) # 1/8
+            self.conv5_dep = self._make_layer(256 + self.D_guide * 256, 512, stride=2, blocks=2) # 1/16
         self.conv6_dep = conv_bn_relu(512, 512, kernel=3, stride=2, padding=1, bn=False) # 1/32
 
         # Decoder
         self.dec5_dep = convt_bn_relu(512, 512, kernel=3, stride=2, padding=1, output_padding=1) # 1/16
-        self.dec4_dep = convt_bn_relu(512+self.D * 512, 256, kernel=3, stride=2, padding=1, output_padding=1) # 1/8
-        self.dec3_dep = convt_bn_relu(256+self.D * 256, 128, kernel=3, stride=2, padding=1, output_padding=1) # 1/4
-        self.dec2_dep = convt_bn_relu(128+self.D * 128, 64, kernel=3, stride=2, padding=1, output_padding=1) # 1/2
-        self.dec1_dep = convt_bn_relu(64+self.D * 64, 64, kernel=3, stride=2, padding=1, output_padding=1) # 1/1
+        self.dec4_dep = convt_bn_relu(512+self.D_skip * 512, 256, kernel=3, stride=2, padding=1, output_padding=1) # 1/8
+        self.dec3_dep = convt_bn_relu(256+self.D_skip * 256, 128, kernel=3, stride=2, padding=1, output_padding=1) # 1/4
+        self.dec2_dep = convt_bn_relu(128+self.D_skip * 128, 64, kernel=3, stride=2, padding=1, output_padding=1) # 1/2
+        self.dec1_dep = convt_bn_relu(64+self.D_skip * 64, 64, kernel=3, stride=2, padding=1, output_padding=1) # 1/1
 
         # Depth Branch
         self.id_dec1 = conv_bn_relu(64, 64, kernel=3, stride=1, padding=1) # 1/1
@@ -119,13 +129,22 @@ class UNETModel(nn.Module):
 
         return torch.nn.Sequential(*layers)
 
-    def _concat(self, fd, fe, dim=1):
+    def _guide(self, fd_rgb, fe_rgb, fe_dep, guide = 'cat', dim = 1):
+
+        if guide == 'cat':
+            return self._concat(self._concat(fd_rgb, fe_rgb, aggregate='cat', dim=1), fe_dep, aggregate='cat', dim=1)
+        elif guide == 'sum':
+            return self._concat(self._concat(fd_rgb, fe_rgb, aggregate='sum', dim=1), fe_dep, aggregate='sum', dim=1)
+        elif guide == 'none':
+            return fe_dep
+
+    def _concat(self, fd, fe, aggregate='cat', dim=1):
         
         fd = self._remove_extra_pad(fd, fe)
 
-        if self.aggregate == 'cat':
+        if aggregate == 'cat':
             f = torch.cat((fd, fe), dim=dim)
-        elif self.aggregate == 'sum':
+        elif aggregate == 'sum':
             f = fd + fe
 
         return f
@@ -165,10 +184,10 @@ class UNETModel(nn.Module):
 
         # Decoding RGB
         fd5_rgb = self.dec5_rgb(fe6_rgb)
-        fd4_rgb = self.dec4_rgb(self._concat(fd5_rgb, fe5_rgb, dim=1))
-        fd3_rgb = self.dec3_rgb(self._concat(fd4_rgb, fe4_rgb, dim=1))
-        fd2_rgb = self.dec2_rgb(self._concat(fd3_rgb, fe3_rgb, dim=1))
-        fd1_rgb = self.dec1_rgb(self._concat(fd2_rgb, fe2_rgb, dim=1))
+        fd4_rgb = self.dec4_rgb(self._concat(fd5_rgb, fe5_rgb, aggregate=self.aggregate, dim=1))
+        fd3_rgb = self.dec3_rgb(self._concat(fd4_rgb, fe4_rgb, aggregate=self.aggregate, dim=1))
+        fd2_rgb = self.dec2_rgb(self._concat(fd3_rgb, fe3_rgb, aggregate=self.aggregate, dim=1))
+        fd1_rgb = self.dec1_rgb(self._concat(fd2_rgb, fe2_rgb, aggregate=self.aggregate, dim=1))
         
         ###
         # DEPTH UNET
@@ -176,10 +195,10 @@ class UNETModel(nn.Module):
 
         # Encoding Depth
         fe1_dep = self.conv1_dep(dep)
-        fe2_dep = self.conv2_dep(self._concat(self._concat(fd1_rgb, fe1_rgb, dim=1), fe1_dep, dim=1))
-        fe3_dep = self.conv3_dep(self._concat(self._concat(fd2_rgb, fe2_rgb, dim=1), fe2_dep, dim=1))
-        fe4_dep = self.conv4_dep(self._concat(self._concat(fd3_rgb, fe3_rgb, dim=1), fe3_dep, dim=1))
-        fe5_dep = self.conv5_dep(self._concat(self._concat(fd4_rgb, fe4_rgb, dim=1), fe4_dep,  dim=1))
+        fe2_dep = self.conv2_dep(self._guide(fd1_rgb, fe1_rgb, fe1_dep, guide=self.guide, dim=1))
+        fe3_dep = self.conv3_dep(self._guide(fd2_rgb, fe2_rgb, fe2_dep, guide=self.guide, dim=1))
+        fe4_dep = self.conv4_dep(self._guide(fd3_rgb, fe3_rgb, fe3_dep, guide=self.guide, dim=1))
+        fe5_dep = self.conv5_dep(self._guide(fd4_rgb, fe4_rgb, fe4_dep, guide=self.guide, dim=1))
 
         # VT
         tokens_in = self.tokenizer(fd5_rgb)
@@ -190,10 +209,10 @@ class UNETModel(nn.Module):
         
         # Decoding Depth
         fd5_dep = self.dec5_dep(fe6_dep)
-        fd4_dep = self.dec4_dep(self._concat(fd5_dep, fe5_dep, dim=1))
-        fd3_dep = self.dec3_dep(self._concat(fd4_dep, fe4_dep, dim=1))
-        fd2_dep = self.dec2_dep(self._concat(fd3_dep, fe3_dep, dim=1))   
-        fd1_dep = self.dec1_dep(self._concat(fd2_dep, fe2_dep, dim=1))
+        fd4_dep = self.dec4_dep(self._concat(fd5_dep, fe5_dep, aggregate=self.aggregate, dim=1))
+        fd3_dep = self.dec3_dep(self._concat(fd4_dep, fe4_dep, aggregate=self.aggregate, dim=1))
+        fd2_dep = self.dec2_dep(self._concat(fd3_dep, fe3_dep, aggregate=self.aggregate, dim=1))   
+        fd1_dep = self.dec1_dep(self._concat(fd2_dep, fe2_dep, aggregate=self.aggregate, dim=1))
 
         ###
         # PREDICTION HEADS
