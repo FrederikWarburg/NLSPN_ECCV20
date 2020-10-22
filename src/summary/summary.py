@@ -139,6 +139,8 @@ class Summary(BaseSummary):
 
         list_img = []
         token_img_list = []
+        proj_coef_img_list = []
+        kq_img_list = []
 
         for b in range(0, num_summary):
             rgb_tmp = rgb[b, :, :, :]
@@ -211,6 +213,42 @@ class Summary(BaseSummary):
                 token_img = np.concatenate(attention_maps, axis=1)
                 token_img_list.append(token_img)
 
+            list_img.append(img)
+
+            if 'proj_coef' in output:
+                proj_coef = output['proj_coef'].detach().data.cpu().numpy()
+                N, heads, HW, L = proj_coef.shape
+                C, H, W = rgb_tmp.shape
+                Hb, Wb = 6, 20
+                attention_maps = [rgb_tmp, pred_tmp]
+
+                for h in range(heads):
+                    for l in range(L):
+
+                        proj_coef_tmp = proj_coef[b, h, :, l].reshape(Wb, Hb)
+                        proj_coef_tmp = cv2.resize(proj_coef_tmp, (W,H), interpolation=cv2.INTER_CUBIC)
+                        proj_coef_tmp = 255.0 * proj_coef_tmp 
+                        proj_coef_tmp = cm(proj_coef_tmp.astype('uint8'))
+                        proj_coef_tmp = np.transpose(proj_coef_tmp[:, :, :3], (2, 0, 1))
+                        attention_maps.append(proj_coef_tmp)
+                
+                proj_coef_img = np.concatenate(attention_maps, axis=1)
+                proj_coef_img_list.append(proj_coef_img)
+
+            if 'kq' in output:
+                kq = output['kq'].detach().data.cpu().numpy()
+                N, heads, L, L = kq.shape
+                for h in range(heads):
+
+                    kq_tmp = kq[b, h, :].reshape(L,L)
+                    kq_tmp = 255.0 * kq_tmp 
+                    kq_tmp = cm(kq_tmp.astype('uint8'))
+                    kq_tmp = np.transpose(kq_tmp[:, :, :3], (2, 0, 1))
+                    attention_maps.append(kq_tmp)
+                
+                kq_tmp_img = np.concatenate(attention_maps, axis=1)
+                kq_img_list.append(kq_tmp_img)
+
         img_total = np.concatenate(list_img, axis=2)
         img_total = torch.from_numpy(img_total)
         self.add_image(self.mode + '/images', img_total, global_step)
@@ -219,6 +257,16 @@ class Summary(BaseSummary):
             img_total = np.concatenate(token_img_list, axis=2)
             img_total = torch.from_numpy(img_total)
             self.add_image(self.mode + '/token_coefs', img_total, global_step)
+
+        if 'proj_coef' in output:
+            img_total = np.concatenate(proj_coef_img_list, axis=2)
+            img_total = torch.from_numpy(img_total)
+            self.add_image(self.mode + '/proj_coefs', img_total, global_step)
+
+        if 'kq' in output:
+            img_total = np.concatenate(kq_img_list, axis=2)
+            img_total = torch.from_numpy(img_total)
+            self.add_image(self.mode + '/proj_coefs', img_total, global_step)
 
         if self.args.model_name.lower() == 'nlspn':
             self.add_scalar('Etc/gamma', output['gamma'], global_step)

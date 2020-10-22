@@ -155,6 +155,9 @@ class Transformer(nn.Module):
         tokens = tokens+kqv
         tokens = tokens+self.ff_conv(tokens)
 
+        # save for visualization purposes
+        self.kq = kq.clone()
+
         return tokens
 
 class Projector(nn.Module):
@@ -183,5 +186,8 @@ class Projector(nn.Module):
         #proj : N,h,C//h,HW
         proj=torch.matmul(proj_v,proj_coef.permute(0,1,3,2))
         _,_,H,W=feature.shape
+
+        # save for visualization purposes
+        self.proj_coef = proj_coef.clone()
 
         return feature+proj.view(N,-1,H,W)
