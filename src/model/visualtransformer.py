@@ -82,6 +82,9 @@ class Tokenizer(nn.Module):
             # N, C+Cp , L_a -> N, CT , L_a , then cat to N, CT , (L_a + L_b )
             tokens = torch.cat(( T_b, self.conv_token(tokens)), dim = 2)
 
+        # store token_coef for visualizations
+        self.token_coef = token_coef.clone()
+
         return tokens
 
 class PosEncoder(nn.Module):

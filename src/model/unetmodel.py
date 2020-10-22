@@ -211,14 +211,14 @@ class UNETModel(nn.Module):
         pred = self._remove_extra_pad(pred, dep)
         confidence = self._remove_extra_pad(confidence, dep)
 
-        output = {'pred': pred, 'confidence': confidence}
+        output = {'pred': pred, 'confidence': confidence, 'token_coef': self.tokenizer.token_coef}
 
         return output
 
 if __name__ == "__main__":
     
-    rgb = torch.FloatTensor(torch.randn((1,3, 224,224)))
-    dep = torch.FloatTensor(torch.randn((1,1, 224,224)))
+    rgb = torch.FloatTensor(torch.randn((1,3, 300,65)))
+    dep = torch.FloatTensor(torch.randn((1,1, 300,65)))
 
     sample = {'rgb':rgb,'dep':dep}
 

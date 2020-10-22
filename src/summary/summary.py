@@ -137,6 +137,7 @@ class Summary(BaseSummary):
         abs_err[gt == 0] = 0
 
         list_img = []
+        token_img_list = []
 
         for b in range(0, num_summary):
             rgb_tmp = rgb[b, :, :, :]
@@ -189,13 +190,34 @@ class Summary(BaseSummary):
 
             list_img.append(img)
 
+            if 'token_coef' in sample:
+                token_coef = sample['token_coef'].detach().numpy()
+                N, L, HW = token_coef.shape
+                H, W, _ = rgb_tmp.shape
+                token_coef = token_coef.reshape(N, L, H, W)
+                
+                attention_maps = [rgb_tmp, pred_tmp]
+                for l in range(L):
+                    token_coef_tmp = token_coef[b, l, :, :]
+                    token_coef_tmp = 255.0 * token_coef_tmp
+                    token_coef_tmp = cm(token_coef_tmp.astype('uint8'))
+                    attention_maps.append(token_coef_tmp)
+
+                token_img = np.concatenate(attention_maps)
+                token_img_list.append(token_img)
+
         img_total = np.concatenate(list_img, axis=2)
         img_total = torch.from_numpy(img_total)
-
         self.add_image(self.mode + '/images', img_total, global_step)
+
+        if 'token_coef' in sample:
+            img_total = np.concatenate(token_img_list, axis=2)
+            img_total = torch.from_numpy(img_total)
+            self.add_image(self.mode + '/token_coefs', img_total, global_step)
 
         if self.args.model_name.lower() == 'nlspn':
             self.add_scalar('Etc/gamma', output['gamma'], global_step)
+
 
         self.flush()
 
