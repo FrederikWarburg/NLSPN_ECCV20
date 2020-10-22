@@ -218,7 +218,7 @@ def train(gpu, args):
             output = net(sample)
 
             loss_sum, loss_val = loss(sample, output)
-
+            
             # Divide by batch size
             loss_sum = loss_sum / loader_train.batch_size
             loss_val = loss_val / loader_train.batch_size
@@ -248,6 +248,8 @@ def train(gpu, args):
 
                 pbar.set_description(error_str)
                 pbar.update(loader_train.batch_size * args.num_gpus)
+            
+            writer_train.update(epoch, sample, output)
 
         if gpu == 0:
             pbar.close()
