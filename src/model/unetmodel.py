@@ -192,13 +192,16 @@ class UNETModel(nn.Module):
         ###
         # DEPTH UNET
         ###
-
+        
         # Encoding Depth
         fe1_dep = self.conv1_dep(dep)
         fe2_dep = self.conv2_dep(self._guide(fd1_rgb, fe1_rgb, fe1_dep, guide=self.guide, dim=1))
         fe3_dep = self.conv3_dep(self._guide(fd2_rgb, fe2_rgb, fe2_dep, guide=self.guide, dim=1))
         fe4_dep = self.conv4_dep(self._guide(fd3_rgb, fe3_rgb, fe3_dep, guide=self.guide, dim=1))
         fe5_dep = self.conv5_dep(self._guide(fd4_rgb, fe4_rgb, fe4_dep, guide=self.guide, dim=1))
+
+        # we need first to remove some extra padding which is added in the decoding stage
+        fd5_rgb = self._remove_extra_pad(fd5_rgb, fe5_dep)
 
         # VT
         tokens_in = self.tokenizer(fd5_rgb)

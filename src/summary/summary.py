@@ -197,15 +197,13 @@ class Summary(BaseSummary):
                 token_coef = output['token_coef'].detach().data.cpu().numpy()
                 N, heads, HW, L = token_coef.shape
                 C, H, W = rgb_tmp.shape
-                Hb, Wb = 6, 20
+                Hb, Wb = 5, 19
                 attention_maps = [rgb_tmp, pred_tmp]
 
                 for h in range(heads):
                     for l in range(L):
                         
                         token_coef_tmp = token_coef[b, h, :, l].reshape(Wb, Hb)
-                        print(token_coef_tmp)
-                        print(np.min(token_coef_tmp), np.max(token_coef_tmp))
                         token_coef_tmp = cv2.resize(token_coef_tmp, (W,H), interpolation=cv2.INTER_CUBIC)
                         token_coef_tmp = 255.0 * token_coef_tmp 
                         token_coef_tmp = cm(token_coef_tmp.astype('uint8'))
@@ -221,13 +219,12 @@ class Summary(BaseSummary):
                 proj_coef = output['proj_coef'].detach().data.cpu().numpy()
                 N, heads, HW, L = proj_coef.shape
                 C, H, W = rgb_tmp.shape
-                Hb, Wb = 6, 20
+                Hb, Wb = 5, 19
                 attention_maps = [rgb_tmp, pred_tmp]
 
                 for h in range(heads):
                     for l in range(L):
-                        print(proj_coef.shape)
-                        print(proj_coef[b, h, :, l])
+                                               
                         proj_coef_tmp = proj_coef[b, h, :, l].reshape(Wb, Hb)
                         proj_coef_tmp = cv2.resize(proj_coef_tmp, (W,H), interpolation=cv2.INTER_CUBIC)
                         proj_coef_tmp = 255.0 * proj_coef_tmp 
@@ -239,17 +236,21 @@ class Summary(BaseSummary):
                 proj_coef_img_list.append(proj_coef_img)
 
             if 'kq' in output:
+                attention_maps = []
                 kq = output['kq'].detach().data.cpu().numpy()
+                
                 N, heads, L, L = kq.shape
                 for h in range(heads):
 
-                    kq_tmp = kq[b, h, :].reshape(L,L)
+                    kq_tmp = kq[b, h, :, :].reshape(L,L)
+                    
                     kq_tmp = 255.0 * kq_tmp 
                     kq_tmp = cm(kq_tmp.astype('uint8'))
                     kq_tmp = np.transpose(kq_tmp[:, :, :3], (2, 0, 1))
                     attention_maps.append(kq_tmp)
                 
                 kq_tmp_img = np.concatenate(attention_maps, axis=1)
+                
                 kq_img_list.append(kq_tmp_img)
 
         img_total = np.concatenate(list_img, axis=2)

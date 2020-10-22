@@ -7,7 +7,7 @@ import numpy as np
 def conv1x1_1d(channel_in, channel_out, stride=1, groups = 1):
     return nn.Conv1d(channel_in, channel_out, kernel_size=1, stride=stride, groups=groups)
 
-def conv1x1_2d(channel_in, channel_out, stride=1, groups=1, padding=1):
+def conv1x1_2d(channel_in, channel_out, stride=1, groups=1, padding=0):
     return nn.Conv2d(channel_in, channel_out, kernel_size=(1,1), stride=stride, padding=padding, groups=groups)
 
 def conv3x3_2d(channel_in, channel_out, stride=1, groups=1, padding=1):
@@ -84,7 +84,13 @@ class Tokenizer(nn.Module):
 
         # store token_coef for visualizations
         self.token_coef = token_coef.clone()
-
+        
+        """
+        print("tokencoef", token_coef.shape)
+        print("token", tokens.shape)
+        print("pos_encoding", pos_encoding.shape)
+        print("value", value.shape)
+        """
         return tokens
 
 class PosEncoder(nn.Module):
@@ -157,7 +163,14 @@ class Transformer(nn.Module):
 
         # save for visualization purposes
         self.kq = kq.clone()
-
+        
+        """
+        print("k", k.shape)
+        print("q", q.shape)
+        print("kq", kq.shape)
+        print("kqv", kqv.shape)
+        print("tokens", tokens.shape)
+        """
         return tokens
 
 class Projector(nn.Module):
@@ -166,29 +179,34 @@ class Projector(nn.Module):
 
         self.proj_value_conv = conv1x1_1d(CT,C)
         self.proj_key_conv = conv1x1_1d(CT,C)
-        self.proj_query_conv = conv1x1_2d(C,C,groups=groups, padding=1)
+        self.proj_query_conv = conv1x1_2d(C,C,groups=groups)
         self.head = head
 
     def forward(self,feature,token):
         N,_,L = token.shape
         h = self.head
-        print("token shape", token.shape)
         
         proj_v = self.proj_value_conv(token).view(N,h,-1,L)
         proj_k = self.proj_key_conv(token).view(N,h,-1,L)
         proj_q = self.proj_query_conv(feature)
-        print(proj_v.shape, proj_k.shape, proj_q.shape)
+        
         N,C,H,W = proj_q.shape
         proj_q = proj_q.view(N,h,C//h,H*W).permute(0,1,3,2)
-        print("proj_q", proj_q.shape)
+        
         #proj_coef : N,h,HW,L
         proj_coef=F.softmax(torch.matmul(proj_q,proj_k)/np.sqrt(C/h),dim=3)
-        print("proj_coef", proj_coef.shape)
+        
         #proj : N,h,C//h,HW
         proj=torch.matmul(proj_v,proj_coef.permute(0,1,3,2))
         _,_,H,W=feature.shape
 
         # save for visualization purposes
         self.proj_coef = proj_coef.clone()
-
+        """
+        print("proj_v", proj_v.shape)
+        print("proj_k", proj_k.shape)
+        print("proj_q", proj_q.shape)
+        print("proj_coef", proj_coef.shape)
+        print("proj", proj.shape)
+        """
         return feature+proj.view(N,-1,H,W)
