@@ -172,17 +172,18 @@ class Projector(nn.Module):
     def forward(self,feature,token):
         N,_,L = token.shape
         h = self.head
-
+        print("token shape", token.shape)
+        
         proj_v = self.proj_value_conv(token).view(N,h,-1,L)
         proj_k = self.proj_key_conv(token).view(N,h,-1,L)
         proj_q = self.proj_query_conv(feature)
-
+        print(proj_v.shape, proj_k.shape, proj_q.shape)
         N,C,H,W = proj_q.shape
         proj_q = proj_q.view(N,h,C//h,H*W).permute(0,1,3,2)
-
+        print("proj_q", proj_q.shape)
         #proj_coef : N,h,HW,L
         proj_coef=F.softmax(torch.matmul(proj_q,proj_k)/np.sqrt(C/h),dim=3)
-
+        print("proj_coef", proj_coef.shape)
         #proj : N,h,C//h,HW
         proj=torch.matmul(proj_v,proj_coef.permute(0,1,3,2))
         _,_,H,W=feature.shape

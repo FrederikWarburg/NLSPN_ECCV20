@@ -102,9 +102,9 @@ class UNETModel(nn.Module):
         L = 8 # number of tokens
         CT = 1024 # size of tokens
         C = 512 # number of channels for features
-        head = 16
-        groups = 16
-        kqv_groups = 8
+        head = 1
+        groups = 1
+        kqv_groups = 1
 
         self.tokenizer = Tokenizer(L, CT, C, head=head, groups=groups)
         self.transformer = Transformer(CT, head=head, kqv_groups=kqv_groups)
