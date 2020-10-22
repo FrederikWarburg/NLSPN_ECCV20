@@ -7,11 +7,11 @@ import numpy as np
 def conv1x1_1d(channel_in, channel_out, stride=1, groups = 1):
     return nn.Conv1d(channel_in, channel_out, kernel_size=1, stride=stride, groups=groups)
 
-def conv1x1_2d(channel_in, channel_out, stride=1, groups=1):
-    return nn.Conv2d(channel_in, channel_out, kernel_size=(1,1), stride=stride, groups=groups)
+def conv1x1_2d(channel_in, channel_out, stride=1, groups=1, padding=1):
+    return nn.Conv2d(channel_in, channel_out, kernel_size=(1,1), stride=stride, padding=padding, groups=groups)
 
 def conv3x3_2d(channel_in, channel_out, stride=1, groups=1, padding=1):
-    return nn.Conv2d(channel_in, channel_out, kernel_size=(3,3), stride=stride, groups=groups, padding=1)
+    return nn.Conv2d(channel_in, channel_out, kernel_size=(3,3), stride=stride, groups=groups, padding=padding)
 
 class Tokenizer(nn.Module):
     def __init__(self,L,CT,C,head = 16,groups = 16,dynamic = False):
@@ -166,7 +166,7 @@ class Projector(nn.Module):
 
         self.proj_value_conv = conv1x1_1d(CT,C)
         self.proj_key_conv = conv1x1_1d(CT,C)
-        self.proj_query_conv = conv1x1_2d(C,C,groups=groups)
+        self.proj_query_conv = conv1x1_2d(C,C,groups=groups, padding=1)
         self.head = head
 
     def forward(self,feature,token):
