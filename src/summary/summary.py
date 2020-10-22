@@ -192,16 +192,17 @@ class Summary(BaseSummary):
 
             if 'token_coef' in output:
                 token_coef = output['token_coef'].detach().data.cpu().numpy()
-                N, L, HW = token_coef.shape
+                N, h, HW, L = token_coef.shape
                 H, W, _ = rgb_tmp.shape
-                token_coef = token_coef.reshape(N, L, H, W)
-                
-                attention_maps = [rgb_tmp, pred_tmp]
-                for l in range(L):
-                    token_coef_tmp = token_coef[b, l, :, :]
-                    token_coef_tmp = 255.0 * token_coef_tmp
-                    token_coef_tmp = cm(token_coef_tmp.astype('uint8'))
-                    attention_maps.append(token_coef_tmp)
+                Hb, Wb = 6, 20
+                attention_maps = []
+
+                for h in range(heads):
+                    for l in range(L):
+                        token_coef_tmp = token_coef[b, h, :, l].reshape(Hb, Wb)
+                        token_coef_tmp = 255.0 * token_coef_tmp
+                        token_coef_tmp = cm(token_coef_tmp.astype('uint8'))
+                        attention_maps.append(token_coef_tmp)
 
                 token_img = np.concatenate(attention_maps)
                 token_img_list.append(token_img)
