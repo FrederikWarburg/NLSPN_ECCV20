@@ -52,6 +52,20 @@ class UNETModel(nn.Module):
         self.conv5_rgb = net.layer4 #1/16
         self.conv6_rgb = conv_bn_relu(512, 512, kernel=3, stride=2, padding=1, bn=False) # 1/32
 
+        # Encoder
+        self.conv1_dep = conv_bn_relu(1, 64, kernel=7, stride=2, padding=3, bn=False) # 1/2
+        if self.aggregate == 'sum':
+            self.conv2_dep = net.layer1 # 1/2
+            self.conv3_dep = net.layer2 # 1/4
+            self.conv4_dep = net.layer3 # 1/8
+            self.conv5_dep = net.layer4 # 1/16
+        elif self.aggregate == 'cat':
+            self.conv2_dep = self._make_layer(64 + self.D_guide * 64, 64, stride=1, blocks=2) # 1/2
+            self.conv3_dep = self._make_layer(64 + self.D_guide * 64, 128, stride=2, blocks=2) # 1/4
+            self.conv4_dep = self._make_layer(128 + self.D_guide * 128, 256, stride=2, blocks=2) # 1/8
+            self.conv5_dep = self._make_layer(256 + self.D_guide * 256, 512, stride=2, blocks=2) # 1/16
+        self.conv6_dep = conv_bn_relu(512, 512, kernel=3, stride=2, padding=1, bn=False) # 1/32
+
         # Decoder
         self.dec5_rgb = convt_bn_relu(512, 512, kernel=3, stride=2, padding=1, output_padding=1) # 1/16
         self.dec4_rgb = convt_bn_relu(512+self.D_skip * 512, 256, kernel=3, stride=2, padding=1, output_padding=1) # 1/8
