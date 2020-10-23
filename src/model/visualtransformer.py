@@ -156,8 +156,18 @@ class Transformer(nn.Module):
         self.ff_conv=conv1x1_1d(CT,CT)
         self.head=head
         self.CT=CT
-        self.layernorm = nn.LayerNorm(CT)
-        self.dropout = nn.Dropout(p=0.2)
+
+        # Implementation of Feedforward model
+        dropout = 0.2
+        self.linear1 = nn.Linear(CT, CT)
+        self.dropout = nn.Dropout(dropout)
+        self.linear2 = nn.Linear(CT, CT)
+
+        self.norm1 = nn.LayerNorm(CT)
+        self.norm2 = nn.LayerNorm(CT)
+        self.dropout1 = nn.Dropout(dropout)
+        self.dropout2 = nn.Dropout(dropout)
+        self.activation = nn.ReLU()
 
         self._reset_parameters()
 
@@ -186,12 +196,26 @@ class Transformer(nn.Module):
         #kqv : N,CT,L
         kqv = torch.matmul(v,kq).view(N,self.CT,-1)
         
+        # How they had it
         #tokens = tokens+kqv
         #tokens = tokens+self.ff_conv(tokens)
 
-        tokens = tokens + self.dropout(self.ff_conv(kqv))
+        # How DETR has it:
+        #src = src + self.dropout1(src2)
+        #src2 = self.norm1(src)
+        #src2 = self.linear2(self.dropout(self.activation(self.linear1(src2))))
+        #src = src + self.dropout2(src2)
+        #src = self.norm2(src)
+
+        tokens = tokens + self.dropout1(kqv)
+        kqv = self.norm1(tokens)
+        kqv = self.linear2(self.dropout(self.activation(self.linear1(kqv))))
+        tokens = tokens + self.dropout2(kqv)
+        tokens = self.norm2(tokens)
+
+        #tokens = tokens + self.dropout(self.ff_conv(kqv))
         # we need to permute twice to normalize over the Ct dimension
-        tokens = self.layernorm(tokens.permute(0,2,1)).permute(0,2,1) 
+        #tokens = self.layernorm(tokens.permute(0,2,1)).permute(0,2,1)
 
         # save for visualization purposes
         self.kq = kq
