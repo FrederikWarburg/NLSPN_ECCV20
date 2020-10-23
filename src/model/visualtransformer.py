@@ -98,14 +98,14 @@ class Tokenizer(nn.Module):
         print("token", tokens.shape)
         print("pos_encoding", pos_encoding.shape)
         print("value", value.shape)
-        """
+        
 
         tokens = tokens + self.dropout1(kqv)
         kqv = self.norm1(tokens.permute(0,2,1))
         kqv = self.linear2(self.dropout(self.activation(self.linear1(kqv))))
         tokens = tokens + self.dropout2(kqv.permute(0,2,1))
         tokens = self.norm2(tokens.permute(0,2,1)).permute(0,2,1)
-
+        """
         return tokens
 
 class PosEncoder(nn.Module):
