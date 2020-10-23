@@ -59,10 +59,21 @@ class UNETModel(nn.Module):
         self.dec2_rgb = convt_bn_relu(128+self.D_skip * 128, 64, kernel=3, stride=2, padding=1, output_padding=1) # 1/2
         self.dec1_rgb = conv_bn_relu(64+self.D_skip * 64, 64, kernel=3, stride=1, padding=1) # 1/2
 
+        # Depth Branch
+        self.id_dec1_rgb = conv_bn_relu(64, 64, kernel=3, stride=1, padding=1) # 1/1
+        self.id_dec0_rgb = conv_bn_relu(64, 1, kernel=3, stride=1, padding=1, bn=False, relu=True)
+
+        # Confidence Branch
+        self.cf_dec1_rgb = conv_bn_relu(64, 64, kernel=3, stride=1, padding=1) # 1/1
+        self.cf_dec0_rgb = nn.Sequential(
+            nn.Conv2d(64, 1, kernel_size=3, stride=1, padding=1),
+            nn.Softplus()
+        )
+
         ####
         # Depth Stream
         ####
-
+        """
         # Encoder
         self.conv1_dep = conv_bn_relu(1, 64, kernel=7, stride=2, padding=3, bn=False) # 1/2
         if self.aggregate == 'sum':
@@ -84,6 +95,7 @@ class UNETModel(nn.Module):
         self.dec2_dep = convt_bn_relu(128+self.D_skip * 128, 64, kernel=3, stride=2, padding=1, output_padding=1) # 1/2
         self.dec1_dep = convt_bn_relu(64+self.D_skip * 64, 64, kernel=3, stride=2, padding=1, output_padding=1) # 1/1
 
+
         # Depth Branch
         self.id_dec1 = conv_bn_relu(64, 64, kernel=3, stride=1, padding=1) # 1/1
         self.id_dec0 = conv_bn_relu(64, 1, kernel=3, stride=1, padding=1, bn=False, relu=True)
@@ -94,7 +106,7 @@ class UNETModel(nn.Module):
             nn.Conv2d(64, 1, kernel_size=3, stride=1, padding=1),
             nn.Softplus()
         )
-
+        """
         ####
         # VISUAL TRANSFORMER
         ####
@@ -182,13 +194,35 @@ class UNETModel(nn.Module):
         fe5_rgb = self.conv5_rgb(fe4_rgb)
         fe6_rgb = self.conv6_rgb(fe5_rgb)
 
+        # VT
+        tokens_in = self.tokenizer(fe6_rgb)
+        tokens_out = self.transformer(tokens_in)
+        fe6_rgb = self.projector(fe6_rgb, tokens_out)
+
         # Decoding RGB
         fd5_rgb = self.dec5_rgb(fe6_rgb)
         fd4_rgb = self.dec4_rgb(self._concat(fd5_rgb, fe5_rgb, aggregate=self.aggregate, dim=1))
         fd3_rgb = self.dec3_rgb(self._concat(fd4_rgb, fe4_rgb, aggregate=self.aggregate, dim=1))
         fd2_rgb = self.dec2_rgb(self._concat(fd3_rgb, fe3_rgb, aggregate=self.aggregate, dim=1))
         fd1_rgb = self.dec1_rgb(self._concat(fd2_rgb, fe2_rgb, aggregate=self.aggregate, dim=1))
-        
+
+        ###
+        # PREDICTION HEADS
+        ###
+
+        # Depth Decoding
+        id_fd1_rgb = self.id_dec1_rgb(fd1_rgb)
+        pred_rgb = self.id_dec0_rgb(id_fd1_rgb)
+
+        # Confidence Decoding
+        cf_fd1_rgb = self.cf_dec1_rgb(fd1_rgb)
+        confidence_rgb = self.cf_dec0_rgb(cf_fd1_rgb)
+
+        pred_rgb = self._remove_extra_pad(pred_rgb, dep)
+        confidence_rgb = self._remove_extra_pad(confidence_rgb, dep)
+
+
+        """
         ###
         # DEPTH UNET
         ###
@@ -231,8 +265,8 @@ class UNETModel(nn.Module):
 
         pred = self._remove_extra_pad(pred, dep)
         confidence = self._remove_extra_pad(confidence, dep)
-
-        output = {'pred': pred, 'confidence': confidence, 'token_coef': self.tokenizer.token_coef, 'kq': self.transformer.kq, 'proj_coef': self.projector.proj_coef, 'size': fd5_rgb.shape[-2:]}
+        """
+        output = {'pred': pred_rgb, 'confidence': confidence_rgb, 'token_coef': self.tokenizer.token_coef, 'kq': self.transformer.kq, 'proj_coef': self.projector.proj_coef, 'size': fd5_rgb.shape[-2:]}
 
         return output
 

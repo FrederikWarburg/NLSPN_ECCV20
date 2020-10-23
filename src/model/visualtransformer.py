@@ -25,7 +25,7 @@ class Tokenizer(nn.Module):
             self.conv_query = conv1x1_1d(CT,C)
             self.conv_key = conv1x1_2d(C,C,groups = groups)
         
-        self.conv_value = conv1x1_2d(C,CT,groups = groups)
+        self.conv_value = conv1x1_2d(C,CT, groups = groups)
 
         num_downsample = 1
         size = 14
@@ -99,6 +99,13 @@ class Tokenizer(nn.Module):
         print("pos_encoding", pos_encoding.shape)
         print("value", value.shape)
         """
+
+        tokens = tokens + self.dropout1(kqv)
+        kqv = self.norm1(tokens.permute(0,2,1))
+        kqv = self.linear2(self.dropout(self.activation(self.linear1(kqv))))
+        tokens = tokens + self.dropout2(kqv.permute(0,2,1))
+        tokens = self.norm2(tokens.permute(0,2,1)).permute(0,2,1)
+
         return tokens
 
 class PosEncoder(nn.Module):
@@ -277,8 +284,6 @@ class Projector(nn.Module):
         print("proj_coef", proj_coef.shape)
         print("proj", proj.shape)
         """
-
-        print(proj.shape)        
 
         feature = feature + self.dropout1(proj).view(N,-1,H,W)
         proj = self.norm1(proj.view(N*h, C, H*W).permute(0,2,1))
