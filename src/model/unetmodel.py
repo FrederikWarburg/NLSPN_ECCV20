@@ -266,7 +266,7 @@ class UNETModel(nn.Module):
         pred = self._remove_extra_pad(pred, dep)
         confidence = self._remove_extra_pad(confidence, dep)
         """
-        output = {'pred': pred_rgb, 'confidence': confidence_rgb, 'token_coef': self.tokenizer.token_coef, 'kq': self.transformer.kq, 'proj_coef': self.projector.proj_coef, 'size': fd5_rgb.shape[-2:]}
+        output = {'pred': pred_rgb, 'confidence': confidence_rgb, 'token_coef': self.tokenizer.token_coef, 'kq': self.transformer.kq, 'proj_coef': self.projector.proj_coef, 'size': fe6_rgb.shape[-2:]}
 
         return output
 
