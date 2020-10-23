@@ -205,9 +205,9 @@ class Transformer(nn.Module):
         #src = self.norm2(src)
 
         tokens = tokens + self.dropout1(kqv)
-        kqv = self.norm1(tokens.permute(0,2,1)).permute(0,2,1)
+        kqv = self.norm1(tokens.permute(0,2,1))
         kqv = self.linear2(self.dropout(self.activation(self.linear1(kqv))))
-        tokens = tokens + self.dropout2(kqv)
+        tokens = tokens + self.dropout2(kqv.permute(0,2,1))
         tokens = self.norm2(tokens.permute(0,2,1)).permute(0,2,1)
 
         # save for visualization purposes
@@ -275,9 +275,9 @@ class Projector(nn.Module):
 
 
         feature = feature + self.dropout1(proj).view(N,-1,H,W)
-        proj = self.norm1(proj.permute(0,2,1)).permute(0,2,1)
+        proj = self.norm1(proj.permute(0,2,1))
         proj = self.linear2(self.dropout(self.activation(self.linear1(proj))))
-        feature = feature + self.dropout2(proj).view(N,-1,H,W)
+        feature = feature + self.dropout2(proj.permute(0,2,1)).view(N,-1,H,W)
         feature = self.norm2(feature.permute(0,2,3,1)).permute(0,3,1,2)
 
         return feature
