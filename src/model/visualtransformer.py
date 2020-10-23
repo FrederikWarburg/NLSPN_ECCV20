@@ -205,14 +205,10 @@ class Transformer(nn.Module):
         #src = self.norm2(src)
 
         tokens = tokens + self.dropout1(kqv)
-        kqv = self.norm1(tokens)
+        kqv = self.norm1(tokens.permute(0,2,1)).permute(0,2,1)
         kqv = self.linear2(self.dropout(self.activation(self.linear1(kqv))))
         tokens = tokens + self.dropout2(kqv)
-        tokens = self.norm2(tokens)
-
-        #tokens = tokens + self.dropout(self.ff_conv(kqv))
-        # we need to permute twice to normalize over the Ct dimension
-        #tokens = self.layernorm(tokens.permute(0,2,1)).permute(0,2,1)
+        tokens = self.norm2(tokens.permute(0,2,1)).permute(0,2,1)
 
         # save for visualization purposes
         self.kq = kq
@@ -235,7 +231,12 @@ class Projector(nn.Module):
         self.proj_query_conv = conv1x1_2d(C,C,groups=groups)
         self.head = head
 
-        self.dropout = nn.Dropout(p=0.2)
+        dropout = 0.2
+        self.norm1 = nn.LayerNorm(C)
+        self.norm2 = nn.LayerNorm(C)
+        self.dropout1 = nn.Dropout(dropout)
+        self.dropout2 = nn.Dropout(dropout)
+        self.activation = nn.ReLU()
 
         self._reset_parameters()
 
@@ -271,4 +272,12 @@ class Projector(nn.Module):
         print("proj_coef", proj_coef.shape)
         print("proj", proj.shape)
         """
-        return feature + self.dropout(proj.view(N,-1,H,W))
+
+
+        feature = feature + self.dropout1(proj).view(N,-1,H,W)
+        proj = self.norm1(proj.permute(0,2,1)).permute(0,2,1)
+        proj = self.linear2(self.dropout(self.activation(self.linear1(proj))))
+        feature = feature + self.dropout2(proj).view(N,-1,H,W)
+        feature = self.norm2(feature.permute(0,2,3,1)).permute(0,3,1,2)
+
+        return feature
