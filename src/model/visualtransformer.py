@@ -156,7 +156,7 @@ class Transformer(nn.Module):
         self.ff_conv=conv1x1_1d(CT,CT)
         self.head=head
         self.CT=CT
-        self.layernorm = nn.LayerNorm()
+        self.layernorm = nn.LayerNorm(CT)
         self.dropout = nn.Dropout(p=0.2)
 
         self._reset_parameters()
@@ -189,7 +189,9 @@ class Transformer(nn.Module):
         #tokens = tokens+kqv
         #tokens = tokens+self.ff_conv(tokens)
 
-        tokens = self.layernorm(tokens + self.dropout(self.ff_conv(kqv)))
+        tokens = tokens + self.dropout(self.ff_conv(kqv))
+        # we need to permute twice to normalize over the Ct dimension
+        tokens = self.layernorm(tokens.permute(0,2,1)).permute(0,2,1) 
 
         # save for visualization purposes
         self.kq = kq
@@ -212,7 +214,6 @@ class Projector(nn.Module):
         self.proj_query_conv = conv1x1_2d(C,C,groups=groups)
         self.head = head
 
-        self.layernorm = nn.LayerNorm()
         self.dropout = nn.Dropout(p=0.2)
 
         self._reset_parameters()
@@ -249,4 +250,4 @@ class Projector(nn.Module):
         print("proj_coef", proj_coef.shape)
         print("proj", proj.shape)
         """
-        return self.layernorm(feature + self.dropout(proj.view(N,-1,H,W)))
+        return feature + self.dropout(proj.view(N,-1,H,W))
