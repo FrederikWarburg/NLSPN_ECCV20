@@ -67,9 +67,6 @@ class Tokenizer(nn.Module):
             token_coef = torch.matmul(key.permute(0,1,3,2),query)
             token_coef = token_coef/np.sqrt(C/self.head)
         
-        print()
-        print(self.conv_token_coef.weight)
-        print()
 
         N, C, H, W = feature.shape
         token_coef = F.softmax(token_coef,dim = 2)
