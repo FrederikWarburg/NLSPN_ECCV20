@@ -35,6 +35,13 @@ class Tokenizer(nn.Module):
         self.head = head
         self.dynamic = dynamic
 
+        self._reset_parameters()
+
+    def _reset_parameters(self):
+        for p in self.parameters():
+            if p.dim() > 1:
+                nn.init.xavier_uniform_(p)
+
     def forward(self, feature, tokens = None):
         #compute token coefficients
         # feature: N,C,H,W, tokens: N, CT, L
@@ -60,6 +67,10 @@ class Tokenizer(nn.Module):
             token_coef = torch.matmul(key.permute(0,1,3,2),query)
             token_coef = token_coef/np.sqrt(C/self.head)
         
+        print()
+        print(self.conv_token_coef.weight)
+        print()
+
         N, C, H, W = feature.shape
         token_coef = F.softmax(token_coef,dim = 2)
         value = self.conv_value(feature).view(N, self.head, self.CT//self.head , H*W) # N,h,C//h,HW
@@ -83,7 +94,7 @@ class Tokenizer(nn.Module):
             tokens = torch.cat(( T_b, self.conv_token(tokens)), dim = 2)
 
         # store token_coef for visualizations
-        self.token_coef = token_coef.clone()
+        self.token_coef = token_coef
         
         """
         print("tokencoef", token_coef.shape)
@@ -110,6 +121,13 @@ class PosEncoder(nn.Module):
         self.pos_dim=size**2//(4**num_downsample) # Cp
 
         self.pos_conv=conv1x1_1d(self.pos_dim,self.pos_dim)
+
+        self._reset_parameters()
+
+    def _reset_parameters(self):
+        for p in self.parameters():
+            if p.dim() > 1:
+                nn.init.xavier_uniform_(p)
 
     def forward(self,token_coef,input_size):
 
@@ -138,6 +156,15 @@ class Transformer(nn.Module):
         self.ff_conv=conv1x1_1d(CT,CT)
         self.head=head
         self.CT=CT
+        self.layernorm = nn.LayerNorm()
+        self.dropout = nn.Dropout(p=0.2)
+
+        self._reset_parameters()
+
+    def _reset_parameters(self):
+        for p in self.parameters():
+            if p.dim() > 1:
+                nn.init.xavier_uniform_(p)
 
     def forward(self,tokens):
 
@@ -158,11 +185,14 @@ class Transformer(nn.Module):
 
         #kqv : N,CT,L
         kqv = torch.matmul(v,kq).view(N,self.CT,-1)
-        tokens = tokens+kqv
-        tokens = tokens+self.ff_conv(tokens)
+        
+        #tokens = tokens+kqv
+        #tokens = tokens+self.ff_conv(tokens)
+
+        tokens = self.layernorm(tokens + self.dropout(self.ff_conv(kqv)))
 
         # save for visualization purposes
-        self.kq = kq.clone()
+        self.kq = kq
         
         """
         print("k", k.shape)
@@ -181,6 +211,16 @@ class Projector(nn.Module):
         self.proj_key_conv = conv1x1_1d(CT,C)
         self.proj_query_conv = conv1x1_2d(C,C,groups=groups)
         self.head = head
+
+        self.layernorm = nn.LayerNorm()
+        self.dropout = nn.Dropout(p=0.2)
+
+        self._reset_parameters()
+
+    def _reset_parameters(self):
+        for p in self.parameters():
+            if p.dim() > 1:
+                nn.init.xavier_uniform_(p)
 
     def forward(self,feature,token):
         N,_,L = token.shape
@@ -201,7 +241,7 @@ class Projector(nn.Module):
         _,_,H,W=feature.shape
 
         # save for visualization purposes
-        self.proj_coef = proj_coef.clone()
+        self.proj_coef = proj_coef
         """
         print("proj_v", proj_v.shape)
         print("proj_k", proj_k.shape)
@@ -209,4 +249,4 @@ class Projector(nn.Module):
         print("proj_coef", proj_coef.shape)
         print("proj", proj.shape)
         """
-        return feature+proj.view(N,-1,H,W)
+        return self.layernorm(feature + self.dropout(proj.view(N,-1,H,W)))
