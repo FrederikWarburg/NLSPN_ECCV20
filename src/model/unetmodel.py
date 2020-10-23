@@ -57,7 +57,7 @@ class UNETModel(nn.Module):
         self.dec4_rgb = convt_bn_relu(512+self.D_skip * 512, 256, kernel=3, stride=2, padding=1, output_padding=1) # 1/8
         self.dec3_rgb = convt_bn_relu(256+self.D_skip * 256, 128, kernel=3, stride=2, padding=1, output_padding=1) # 1/4
         self.dec2_rgb = convt_bn_relu(128+self.D_skip * 128, 64, kernel=3, stride=2, padding=1, output_padding=1) # 1/2
-        self.dec1_rgb = convt_bn_relu(64+self.D_skip * 64, 64, kernel=3, stride=2, padding=1) # 1/2
+        self.dec1_rgb = convt_bn_relu(64+self.D_skip * 64, 64, kernel=3, stride=2, padding=1, output_padding=1) # 1/2
 
         # Depth Branch
         self.id_dec1_rgb = conv_bn_relu(64, 64, kernel=3, stride=1, padding=1) # 1/1
