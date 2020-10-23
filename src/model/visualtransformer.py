@@ -231,9 +231,14 @@ class Projector(nn.Module):
         self.proj_query_conv = conv1x1_2d(C,C,groups=groups)
         self.head = head
 
+        # Implementation of Feedforward model
         dropout = 0.2
-        self.norm1 = nn.LayerNorm(C)
-        self.norm2 = nn.LayerNorm(C)
+        self.linear1 = nn.Linear(CT, CT)
+        self.dropout = nn.Dropout(dropout)
+        self.linear2 = nn.Linear(CT, CT)
+
+        self.norm1 = nn.LayerNorm(CT)
+        self.norm2 = nn.LayerNorm(CT)
         self.dropout1 = nn.Dropout(dropout)
         self.dropout2 = nn.Dropout(dropout)
         self.activation = nn.ReLU()
