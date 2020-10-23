@@ -233,12 +233,12 @@ class Projector(nn.Module):
 
         # Implementation of Feedforward model
         dropout = 0.2
-        self.linear1 = nn.Linear(CT, CT)
+        self.linear1 = nn.Linear(C, C)
         self.dropout = nn.Dropout(dropout)
-        self.linear2 = nn.Linear(CT, CT)
+        self.linear2 = nn.Linear(C, C)
 
-        self.norm1 = nn.LayerNorm(CT)
-        self.norm2 = nn.LayerNorm(CT)
+        self.norm1 = nn.LayerNorm(C)
+        self.norm2 = nn.LayerNorm(C)
         self.dropout1 = nn.Dropout(dropout)
         self.dropout2 = nn.Dropout(dropout)
         self.activation = nn.ReLU()
