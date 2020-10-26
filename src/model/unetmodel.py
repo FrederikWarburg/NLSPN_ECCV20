@@ -125,12 +125,29 @@ class UNETModel(nn.Module):
         # VISUAL TRANSFORMER
         ####
 
-        L = 8 # number of tokens
-        CT = 1024 # size of tokens
-        C = 64 # number of channels for features
-        head = 1
-        groups = 1
-        kqv_groups = 1
+        if args.attention_stage == 'early':
+
+            L = 8 # number of tokens
+            CT = 1024 # size of tokens
+            C = 64 # number of channels for features
+            head = 1
+            groups = 1
+            kqv_groups = 1
+        elif args.attention_stage == 'bottlenect':
+            L = 8 # number of tokens
+            CT = 1024 # size of tokens
+            C = 512 # number of channels for features
+            head = 1
+            groups = 1
+            kqv_groups = 1
+        elif args.attention_stage == 'late':
+            L = 8 # number of tokens
+            CT = 1024 # size of tokens
+            C = 64 # number of channels for features
+            head = 1
+            groups = 1
+            kqv_groups = 1
+
 
         self.tokenizer = Tokenizer(L, CT, C, head=head, groups=groups)
         self.transformer = Transformer(CT, head=head, kqv_groups=kqv_groups)
@@ -201,8 +218,8 @@ class UNETModel(nn.Module):
         dep = sample['dep']
 
         # Encoding Depth
-        fe1_dep = self.conv1_dep(dep)
-        fe2_dep = self.conv2_dep(fe1_dep)
+        #fe1_dep = self.conv1_dep(dep)
+        #fe2_dep = self.conv2_dep(fe1_dep)
         #fe3_dep = self.conv3_dep(fe2_dep)
         #fe4_dep = self.conv4_dep(fe3_dep)
         #fe5_dep = self.conv5_dep(fe4_dep)
@@ -213,25 +230,33 @@ class UNETModel(nn.Module):
         fe2_rgb = self.conv2_rgb(fe1_rgb)
 
         # VT
-        tokens_in = self.tokenizer(fe2_dep)
-        tokens_out = self.transformer(tokens_in)
-        fe2_rgb = self.projector(fe2_rgb, tokens_out)
+        if self.args.attention_stage == 'early':
+            tokens_in = self.tokenizer(fe2_rgb)
+            tokens_out = self.transformer(tokens_in)
+            fe2_rgb = self.projector(fe2_rgb, tokens_out)
 
         fe3_rgb = self.conv3_rgb(fe2_rgb)
         fe4_rgb = self.conv4_rgb(fe3_rgb)
         fe5_rgb = self.conv5_rgb(fe4_rgb)
         fe6_rgb = self.conv6_rgb(fe5_rgb)
 
+        # VT
+        if self.args.attention_stage == 'bottleneck':
+            tokens_in = self.tokenizer(fe6_rgb)
+            tokens_out = self.transformer(tokens_in)
+            fe6_rgb = self.projector(fe6_rgb, tokens_out)
+
         # Decoding RGB
-        #print("fe6_rgb", fe6_rgb.is_contiguous())
         fd5_rgb = self.dec5_rgb(fe6_rgb)
-        #print("fe5_rgb", fd5_rgb.is_contiguous())
         fd4_rgb = self.dec4_rgb(self._concat(fd5_rgb, fe5_rgb, aggregate=self.aggregate, dim=1))
-        #print("fe4_rgb", fd4_rgb.is_contiguous())
         fd3_rgb = self.dec3_rgb(self._concat(fd4_rgb, fe4_rgb, aggregate=self.aggregate, dim=1))
-        #print("fe3_rgb", fd3_rgb.is_contiguous())
         fd2_rgb = self.dec2_rgb(self._concat(fd3_rgb, fe3_rgb, aggregate=self.aggregate, dim=1))
-        #print("fe2_rgb", fd2_rgb.is_contiguous())
+
+        # VT
+        if self.args.attention_stage == 'late':
+            tokens_in = self.tokenizer(fd2_rgb)
+            tokens_out = self.transformer(tokens_in)
+            fd2_rgb = self.projector(fd2_rgb, tokens_out)
 
         # Decoding RGB
         #fd5_rgb = self.dec5_rgb(fe6_rgb)

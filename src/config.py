@@ -148,6 +148,10 @@ parser.add_argument('--guide',
                     default='cat',
                     choices=['cat', 'sum', 'none'],
                     help='how to aggregate information between rgb and depth in unet')
+parser.add_argument('--attention_stage',
+                    type=str,
+                    default=None,
+                    help='when to apply VT')
 
 # Training
 parser.add_argument('--loss',
@@ -198,6 +202,7 @@ parser.add_argument('--test_crop',
                     action='store_true',
                     default=False,
                     help='crop for test')
+
 
 
 # Summary
