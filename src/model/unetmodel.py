@@ -165,7 +165,7 @@ class UNETModel(nn.Module):
             return fe_dep
 
     def _concat(self, fd, fe, aggregate='cat', dim=1):
-        print(fe.shape,)
+        #print(fe.shape,)
         fd = self._remove_extra_pad(fd, fe)
 
         if aggregate == 'cat':
