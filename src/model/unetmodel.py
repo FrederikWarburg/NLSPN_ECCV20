@@ -167,12 +167,12 @@ class UNETModel(nn.Module):
     def _concat(self, fd, fe, aggregate='cat', dim=1):
         #print(fe.shape,)
         fd = self._remove_extra_pad(fd, fe)
-        print("fd/fe", fd.shape, fe.shape, fd.is_contiguous(), fe.is_contiguous() )
+        #print("fd/fe", fd.shape, fe.shape, fd.is_contiguous(), fe.is_contiguous() )
         if aggregate == 'cat':
             f = torch.cat((fd, fe), dim=dim)
         elif aggregate == 'sum':
             f = fd + fe
-        print("f", f.shape, f.is_contiguous() )
+        #print("f", f.shape, f.is_contiguous() )
         return f
 
     def _remove_extra_pad(self, fd, fe, dim=1):
@@ -223,15 +223,15 @@ class UNETModel(nn.Module):
         fe6_rgb = self.conv6_rgb(fe5_rgb)
 
         # Decoding RGB
-        print("fe6_rgb", fe6_rgb.is_contiguous())
+        #print("fe6_rgb", fe6_rgb.is_contiguous())
         fd5_rgb = self.dec5_rgb(fe6_rgb)
-        print("fe5_rgb", fd5_rgb.is_contiguous())
+        #print("fe5_rgb", fd5_rgb.is_contiguous())
         fd4_rgb = self.dec4_rgb(self._concat(fd5_rgb, fe5_rgb, aggregate=self.aggregate, dim=1))
-        print("fe4_rgb", fd4_rgb.is_contiguous())
+        #print("fe4_rgb", fd4_rgb.is_contiguous())
         fd3_rgb = self.dec3_rgb(self._concat(fd4_rgb, fe4_rgb, aggregate=self.aggregate, dim=1))
-        print("fe3_rgb", fd3_rgb.is_contiguous())
+        #print("fe3_rgb", fd3_rgb.is_contiguous())
         fd2_rgb = self.dec2_rgb(self._concat(fd3_rgb, fe3_rgb, aggregate=self.aggregate, dim=1))
-        print("fe2_rgb", fd2_rgb.is_contiguous())
+        #print("fe2_rgb", fd2_rgb.is_contiguous())
 
         # Decoding RGB
         #fd5_rgb = self.dec5_rgb(fe6_rgb)
@@ -314,4 +314,4 @@ if __name__ == "__main__":
     model = UNETModel()
 
     out = model(sample)
-    print(out['pred'].shape)
+    #print(out['pred'].shape)
