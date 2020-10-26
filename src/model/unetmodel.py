@@ -234,6 +234,7 @@ class UNETModel(nn.Module):
             tokens_in = self.tokenizer(fe2_rgb)
             tokens_out = self.transformer(tokens_in)
             fe2_rgb = self.projector(fe2_rgb, tokens_out)
+            size = fe2_rgb.shape[-2:]
 
         fe3_rgb = self.conv3_rgb(fe2_rgb)
         fe4_rgb = self.conv4_rgb(fe3_rgb)
@@ -245,6 +246,7 @@ class UNETModel(nn.Module):
             tokens_in = self.tokenizer(fe6_rgb)
             tokens_out = self.transformer(tokens_in)
             fe6_rgb = self.projector(fe6_rgb, tokens_out)
+            size = fe6_rgb.shape[-2:]
 
         # Decoding RGB
         fd5_rgb = self.dec5_rgb(fe6_rgb)
@@ -257,6 +259,7 @@ class UNETModel(nn.Module):
             tokens_in = self.tokenizer(fd2_rgb)
             tokens_out = self.transformer(tokens_in)
             fd2_rgb = self.projector(fd2_rgb, tokens_out)
+            size = fd2_rgb.shape[-2:]
 
         # Decoding RGB
         #fd5_rgb = self.dec5_rgb(fe6_rgb)
@@ -325,7 +328,10 @@ class UNETModel(nn.Module):
         pred = self._remove_extra_pad(pred, dep)
         confidence = self._remove_extra_pad(confidence, dep)
         """
-        output = {'pred': pred_rgb, 'confidence': confidence_rgb}#, 'token_coef': self.tokenizer.token_coef, 'kq': self.transformer.kq, 'proj_coef': self.projector.proj_coef, 'size': fe2_rgb.shape[-2:]}
+        if self.args.attention_stage == 'none':
+            output = {'pred': pred_rgb, 'confidence': confidence_rgb}
+        else:
+            output = {'pred': pred_rgb, 'confidence': confidence_rgb, 'token_coef': self.tokenizer.token_coef, 'kq': self.transformer.kq, 'proj_coef': self.projector.proj_coef, 'size': size}
 
         return output
 
