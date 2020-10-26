@@ -193,7 +193,7 @@ class UNETModel(nn.Module):
             w = Wd - We
             fd = fd[:, :, :, :-w]
 
-        return fd
+        return fd.contiguous()
 
     def forward(self, sample):
 
