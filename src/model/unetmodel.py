@@ -133,8 +133,8 @@ class UNETModel(nn.Module):
             head = 1
             groups = 1
             kqv_groups = 1
-            num_downsample = 4
-            size = 14
+            num_downsample = 3
+            size = 25
         elif args.attention_stage == 'bottleneck':
             L = 8 # number of tokens
             CT = 1024 # size of tokens
@@ -151,8 +151,8 @@ class UNETModel(nn.Module):
             head = 1
             groups = 1
             kqv_groups = 1
-            num_downsample = 4
-            size = 14
+            num_downsample = 3
+            size = 25
 
         if args.attention_stage != 'none':
             self.tokenizer = Tokenizer(L, CT, C, head=head, groups=groups, num_downsample=num_downsample, size=size)
