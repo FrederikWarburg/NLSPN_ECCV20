@@ -27,8 +27,8 @@ class Tokenizer(nn.Module):
         
         self.conv_value = conv1x1_2d(C,CT, groups = groups)
 
-        num_downsample = 1
-        size = 14
+        num_downsample = num_downsample
+        size = size
         self.CT = CT
         self.pos_encoding = PosEncoder(size, num_downsample)
         self.conv_token = conv1x1_1d(self.CT+self.pos_encoding.pos_dim, self.CT)
