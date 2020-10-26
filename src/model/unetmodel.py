@@ -223,15 +223,15 @@ class UNETModel(nn.Module):
         fe6_rgb = self.conv6_rgb(fe5_rgb)
 
         # Decoding RGB
-        print("fe6_rgb", fe6_rgb.contiguous())
+        print("fe6_rgb", fe6_rgb.is_contiguous())
         fd5_rgb = self.dec5_rgb(fe6_rgb)
-        print("fe5_rgb", fd5_rgb.contiguous())
+        print("fe5_rgb", fd5_rgb.is_contiguous())
         fd4_rgb = self.dec4_rgb(self._concat(fd5_rgb, fe5_rgb, aggregate=self.aggregate, dim=1))
-        print("fe4_rgb", fd4_rgb.contiguous())
+        print("fe4_rgb", fd4_rgb.is_contiguous())
         fd3_rgb = self.dec3_rgb(self._concat(fd4_rgb, fe4_rgb, aggregate=self.aggregate, dim=1))
-        print("fe3_rgb", fd3_rgb.contiguous())
+        print("fe3_rgb", fd3_rgb.is_contiguous())
         fd2_rgb = self.dec2_rgb(self._concat(fd3_rgb, fe3_rgb, aggregate=self.aggregate, dim=1))
-        print("fe2_rgb", fd2_rgb.contiguous())
+        print("fe2_rgb", fd2_rgb.is_contiguous())
 
         # Decoding RGB
         #fd5_rgb = self.dec5_rgb(fe6_rgb)
