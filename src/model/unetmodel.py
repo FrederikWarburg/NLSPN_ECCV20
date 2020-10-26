@@ -208,24 +208,30 @@ class UNETModel(nn.Module):
         fe5_rgb = self.conv5_rgb(fe4_rgb)
         fe6_rgb = self.conv6_rgb(fe5_rgb)
 
-        # Encoding Depth
-        fe1_dep = self.conv1_dep(dep)
-        fe2_dep = self.conv2_dep(fe1_dep)
-        fe3_dep = self.conv3_dep(fe2_dep)
-        fe4_dep = self.conv4_dep(fe3_dep)
-        fe5_dep = self.conv5_dep(fe4_dep)
-        fe6_dep = self.conv6_dep(fe5_dep)
-
-        # VT
-        tokens_in = self.tokenizer(fe6_dep)
-        tokens_out = self.transformer(tokens_in)
-        fe6_rgb = self.projector(fe6_rgb, tokens_out)
-
         # Decoding RGB
         fd5_rgb = self.dec5_rgb(fe6_rgb)
         fd4_rgb = self.dec4_rgb(self._concat(fd5_rgb, fe5_rgb, aggregate=self.aggregate, dim=1))
         fd3_rgb = self.dec3_rgb(self._concat(fd4_rgb, fe4_rgb, aggregate=self.aggregate, dim=1))
         fd2_rgb = self.dec2_rgb(self._concat(fd3_rgb, fe3_rgb, aggregate=self.aggregate, dim=1))
+
+        # Encoding Depth
+        fe1_dep = self.conv1_dep(dep)
+        fe2_dep = self.conv2_dep(fe1_dep)
+        #fe3_dep = self.conv3_dep(fe2_dep)
+        #fe4_dep = self.conv4_dep(fe3_dep)
+        #fe5_dep = self.conv5_dep(fe4_dep)
+        #fe6_dep = self.conv6_dep(fe5_dep)
+
+        # VT
+        tokens_in = self.tokenizer(fe2_dep)
+        tokens_out = self.transformer(tokens_in)
+        fd2_rgb = self.projector(fd2_rgb, tokens_out)
+
+        # Decoding RGB
+        #fd5_rgb = self.dec5_rgb(fe6_rgb)
+        #fd4_rgb = self.dec4_rgb(self._concat(fd5_rgb, fe5_rgb, aggregate=self.aggregate, dim=1))
+        #fd3_rgb = self.dec3_rgb(self._concat(fd4_rgb, fe4_rgb, aggregate=self.aggregate, dim=1))
+        #fd2_rgb = self.dec2_rgb(self._concat(fd3_rgb, fe3_rgb, aggregate=self.aggregate, dim=1))
         fd1_rgb = self.dec1_rgb(self._concat(fd2_rgb, fe2_rgb, aggregate=self.aggregate, dim=1))
 
         ###
