@@ -49,7 +49,7 @@ class Tokenizer(nn.Module):
             token_coef = self.conv_token_coef(feature)
             N, L, H, W = token_coef.shape
             token_coef = token_coef.view(N,1,L,H*W)
-            token_coef = token_coef.permute(0,1,3,2) # N,1,HW,L
+            token_coef = token_coef.permute(0,1,3,2).contiguous() # N,1,HW,L
             token_coef = token_coef/np.sqrt(feature.shape[1])
         else:
             L = tokens.shape[2]
@@ -64,7 +64,7 @@ class Tokenizer(nn.Module):
             key = self.conv_key(feature).view(N,self.head,C//self.head,H*W) # N,h,C//h,HW
             #Compute token coefficients.
             #N,h,HW,L_a
-            token_coef = torch.matmul(key.permute(0,1,3,2),query)
+            token_coef = torch.matmul(key.permute(0,1,3,2).contiguous(),query)
             token_coef = token_coef/np.sqrt(C/self.head)
         
 
@@ -145,7 +145,7 @@ class PosEncoder(nn.Module):
 
         #downsampling
         token_coef=self.ds_conv(token_coef)
-        token_coef=token_coef.view(N, L, -1).permute(0,2,1)
+        token_coef=token_coef.view(N, L, -1).permute(0,2,1).contiguous()
 
         #compress and compute the position encoding.
         return self.pos_conv(token_coef) # N, Cp, L
@@ -194,7 +194,7 @@ class Transformer(nn.Module):
         v = self.v_conv(tokens).view(N,self.head,self.CT//self.head,-1)
 
         # kq : N,h,L,L
-        kq = torch.matmul(k.permute(0,1,3,2),q)
+        kq = torch.matmul(k.permute(0,1,3,2).contiguous(),q)
         kq = F.softmax(kq/np.sqrt(kq.shape[2]),dim=2)
 
         #kqv : N,CT,L
@@ -212,10 +212,10 @@ class Transformer(nn.Module):
         #src = self.norm2(src)
 
         tokens = tokens + self.dropout1(kqv)
-        kqv = self.norm1(tokens.permute(0,2,1))
+        kqv = self.norm1(tokens.permute(0,2,1).contiguous())
         kqv = self.linear2(self.dropout(self.activation(self.linear1(kqv))))
-        tokens = tokens + self.dropout2(kqv.permute(0,2,1))
-        tokens = self.norm2(tokens.permute(0,2,1)).permute(0,2,1)
+        tokens = tokens + self.dropout2(kqv.permute(0,2,1).contiguous())
+        tokens = self.norm2(tokens.permute(0,2,1).contiguous()).permute(0,2,1).contiguous()
 
         # save for visualization purposes
         self.kq = kq
@@ -266,13 +266,13 @@ class Projector(nn.Module):
         proj_q = self.proj_query_conv(feature)
         
         N,C,H,W = proj_q.shape
-        proj_q = proj_q.view(N,h,C//h,H*W).permute(0,1,3,2)
+        proj_q = proj_q.view(N,h,C//h,H*W).permute(0,1,3,2).contiguous()
         
         #proj_coef : N,h,HW,L
         proj_coef=F.softmax(torch.matmul(proj_q,proj_k)/np.sqrt(C/h),dim=3)
         
         #proj : N,h,C//h,HW
-        proj=torch.matmul(proj_v,proj_coef.permute(0,1,3,2))
+        proj=torch.matmul(proj_v,proj_coef.permute(0,1,3,2).contiguous())
         _,_,H,W=feature.shape
 
         # save for visualization purposes
@@ -286,9 +286,9 @@ class Projector(nn.Module):
         """
 
         feature = feature + self.dropout1(proj).view(N,-1,H,W)
-        proj = self.norm1(proj.view(N*h, C, H*W).permute(0,2,1))
+        proj = self.norm1(proj.view(N*h, C, H*W).permute(0,2,1).contiguous())
         proj = self.linear2(self.dropout(self.activation(self.linear1(proj))))
-        feature = feature + self.dropout2(proj.permute(0,2,1)).view(N,-1,H,W)
-        feature = self.norm2(feature.permute(0,2,3,1)).permute(0,3,1,2)
+        feature = feature + self.dropout2(proj.permute(0,2,1).contiguous()).view(N,-1,H,W)
+        feature = self.norm2(feature.permute(0,2,3,1).contiguous()).permute(0,3,1,2).contiguous()
 
         return feature
