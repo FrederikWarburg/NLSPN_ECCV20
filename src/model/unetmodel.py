@@ -127,7 +127,7 @@ class UNETModel(nn.Module):
 
         L = 8 # number of tokens
         CT = 1024 # size of tokens
-        C = 512 # number of channels for features
+        C = 64 # number of channels for features
         head = 1
         groups = 1
         kqv_groups = 1
@@ -222,6 +222,8 @@ class UNETModel(nn.Module):
         #fe5_dep = self.conv5_dep(fe4_dep)
         #fe6_dep = self.conv6_dep(fe5_dep)
 
+        fd2_rgb = self._remove_extra_pad(fd2_rgb, fe2_dep)
+
         # VT
         tokens_in = self.tokenizer(fe2_dep)
         tokens_out = self.transformer(tokens_in)
@@ -294,7 +296,7 @@ class UNETModel(nn.Module):
         pred = self._remove_extra_pad(pred, dep)
         confidence = self._remove_extra_pad(confidence, dep)
         """
-        output = {'pred': pred_rgb, 'confidence': confidence_rgb, 'token_coef': self.tokenizer.token_coef, 'kq': self.transformer.kq, 'proj_coef': self.projector.proj_coef, 'size': fe6_rgb.shape[-2:]}
+        output = {'pred': pred_rgb, 'confidence': confidence_rgb, 'token_coef': self.tokenizer.token_coef, 'kq': self.transformer.kq, 'proj_coef': self.projector.proj_coef, 'size': fd2_rgb.shape[-2:]}
 
         return output
 
