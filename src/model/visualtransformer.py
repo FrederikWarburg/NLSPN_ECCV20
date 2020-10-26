@@ -14,7 +14,7 @@ def conv3x3_2d(channel_in, channel_out, stride=1, groups=1, padding=1):
     return nn.Conv2d(channel_in, channel_out, kernel_size=(3,3), stride=stride, groups=groups, padding=padding)
 
 class Tokenizer(nn.Module):
-    def __init__(self,L,CT,C,head = 16,groups = 16,dynamic = False):
+    def __init__(self,L,CT,C,head = 16,groups = 16,dynamic = False, size=14, num_downsample=1):
         super(Tokenizer,self).__init__()
         if not dynamic:
             #use static weights to compute token coefficients.
