@@ -99,16 +99,8 @@ class UNETModel(nn.Module):
         # VISUAL TRANSFORMER
         ####
 
-        L = 8 # number of tokens
-        CT = 1024 # size of tokens
-        C = 512 # number of channels for features
-        head = 1
-        groups = 1
-        kqv_groups = 1
+        self.vt1 = VisualTransformer(L=8, CT=1024, C=512, head=1, groups=1, kqv_groups=1, dynamic=False)
 
-        self.tokenizer = Tokenizer(L, CT, C, head=head, groups=groups)
-        self.transformer = Transformer(CT, head=head, kqv_groups=kqv_groups)
-        self.projector = Projector(CT, C, head=head, groups=groups)
 
     def _make_layer(self, inplanes, planes, blocks=1, stride=1):
         downsample = None
@@ -202,11 +194,7 @@ class UNETModel(nn.Module):
 
         # we need first to remove some extra padding which is added in the decoding stage
         fd5_rgb = self._remove_extra_pad(fd5_rgb, fe5_dep)
-
-        # VT
-        tokens_in = self.tokenizer(fd5_rgb)
-        tokens_out = self.transformer(tokens_in)
-        fe5_dep = self.projector(fe5_dep, tokens_out)
+        fe5_dep = self.vt1(fd5_rgb, fe5_dep)
 
         fe6_dep = self.conv6_dep(fe5_dep)
         

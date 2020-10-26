@@ -13,6 +13,31 @@ def conv1x1_2d(channel_in, channel_out, stride=1, groups=1, padding=0):
 def conv3x3_2d(channel_in, channel_out, stride=1, groups=1, padding=1):
     return nn.Conv2d(channel_in, channel_out, kernel_size=(3,3), stride=stride, groups=groups, padding=padding)
 
+
+class VisualTransformer(nn.Module):
+    def __init__(self, L, CT, C, head = 16, groups = 16, kqv_groups = 16, dynamic = False):
+
+        self.L = L # number of tokens
+        self.CT = CT # size of tokens
+        self.C = C # number of channels for features
+        self.head = head
+        self.groups = groups
+        self.kqv_groups = kqv_groups
+
+        self.tokenizer = Tokenizer(L, CT, C, head=head, groups=groups)
+        self.transformer = Transformer(CT, head=head, kqv_groups=kqv_groups)
+        self.projector = Projector(CT, C, head=head, groups=groups)
+
+    def forward(self, src, dst):
+
+        assert src.shape == dst.shape
+
+        self.tokens_in = self.tokenizer(src)
+        self.tokens_out = self.transformer(self.tokens_in)
+        dst = self.projector(dst, self.tokens_out)
+
+        return dst
+
 class Tokenizer(nn.Module):
     def __init__(self,L,CT,C,head = 16,groups = 16,dynamic = False):
         super(Tokenizer,self).__init__()
