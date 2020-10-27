@@ -247,16 +247,17 @@ class UNETModel(nn.Module):
 
             elif self.args.attention_type == 'standard':
                 N, C, W, H = fe5_rgb.shape
-                #print(fe5_rgb.shape)
-                fe5_rgb = fe5_rgb.view(N, C, H*W).permute(2,0,1)
-                #print(fe5_rgb.shape)
-                attn_output, attn_output_weights = self.multihead_attn(fe5_rgb, fe5_rgb, fe5_rgb)
-                #print(attn_output.shape)
 
-                fe5_rgb = attn_output.permute(1,2,0).view(N,C,W,H)
-                size = fe5_rgb.shape[-2:]
-                #print(fe5_rgb.shape)
-                #print()
+                attn_input = fe5_rgb.view(N, C, H*W).permute(2,0,1)
+
+                attn_output, attn_output_weights = self.multihead_attn(attn_input, attn_input, attn_input)
+
+                attn_output = attn_output.permute(1,2,0).view(N,C,W,H)
+                size = attn_output.shape[-2:]
+
+                # skip connections
+                fe5_rgb = fe5_rgb + attn_output
+
         # Decoding RGB
         #fd5_rgb = self.dec5_rgb(fe6_rgb)
         #fd5_rgb = fe6_rgb
