@@ -152,7 +152,12 @@ parser.add_argument('--attention_stage',
                     type=str,
                     default=None,
                     help='when to apply VT')
+parser.add_argument('--attention_type',
+                    type=str,
+                    default='VT',
+                    help='whuch form of attention to apply')
 
+               
 # Training
 parser.add_argument('--loss',
                     type=str,

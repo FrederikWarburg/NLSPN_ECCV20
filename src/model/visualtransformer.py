@@ -139,14 +139,15 @@ class PosEncoder(nn.Module):
         N, h, HW, L = token_coef.shape
 
         token_coef=token_coef.view(N*L,h,H,W)
-
+        #print("token_coef", token_coef.shape)
         #interpolation to deal with input with varying sizes
         token_coef=F.interpolate(token_coef,size=(self.size,self.size))
-
+        #print("token_coef2", token_coef.shape)
         #downsampling
         token_coef=self.ds_conv(token_coef)
+        #print("2", token_coef.shape)
         token_coef=token_coef.view(N, L, -1).permute(0,2,1)
-
+        #print("3", token_coef.shape)
         #compress and compute the position encoding.
         return self.pos_conv(token_coef) # N, Cp, L
 

@@ -126,15 +126,22 @@ class UNETModel(nn.Module):
         ####
 
         if args.attention_stage == 'early':
+<<<<<<< HEAD
             L = 8 # number of tokens
             CT = 1024 # size of tokens
+=======
+
+            L = 128 # number of tokens
+            CT = 256 # size of tokens
+>>>>>>> febbd67f160d63929b13106f2a1a24604358e1b5
             C = 64 # number of channels for features
             head = 1
             groups = 1
             kqv_groups = 1
             num_downsample = 3
-            size = 100
+            size = 128
         elif args.attention_stage == 'bottleneck':
+<<<<<<< HEAD
             if args.attention_type == 'VT':
                 L = 8 # number of tokens
                 CT = 1024 # size of tokens
@@ -148,15 +155,25 @@ class UNETModel(nn.Module):
                 embed_dim = 512
                 num_heads = 1
                 multihead_attn = nn.MultiheadAttention(embed_dim, num_heads)
+=======
+            L = 64 # number of tokens
+            CT = 256 # size of tokens
+            C = 512 # number of channels for features
+            head = 1
+            groups = 1
+            kqv_groups = 1
+            num_downsample = 1
+            size = 14
+>>>>>>> febbd67f160d63929b13106f2a1a24604358e1b5
         elif args.attention_stage == 'late':
-            L = 8 # number of tokens
-            CT = 1024 # size of tokens
+            L = 16 # number of tokens
+            CT = 512 # size of tokens
             C = 64 # number of channels for features
             head = 1
             groups = 1
             kqv_groups = 1
             num_downsample = 3
-            size = 100
+            size = 128
 
         if args.attention_stage != 'none':
             self.tokenizer = Tokenizer(L, CT, C, head=head, groups=groups, num_downsample=num_downsample, size=size)
@@ -304,7 +321,9 @@ class UNETModel(nn.Module):
 
         pred_rgb = self._remove_extra_pad(pred_rgb, dep)
         confidence_rgb = self._remove_extra_pad(confidence_rgb, dep)
+        
 
+        #print(pred_rgb.shape, dep.shape)
         """
         ###
         # DEPTH UNET
