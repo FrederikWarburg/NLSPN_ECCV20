@@ -142,6 +142,7 @@ class Summary(BaseSummary):
         token_img_rel_list = []
         proj_coef_img_list = []
         kq_img_list = []
+        attm_output_weights_img_list = []
 
         for b in range(0, num_summary):
             rgb_tmp = rgb[b, :, :, :]
@@ -226,8 +227,6 @@ class Summary(BaseSummary):
                 token_img = np.concatenate(attention_maps_rel, axis=1)
                 token_img_rel_list.append(token_img)
 
-            list_img.append(img)
-
             if 'proj_coef' in output:
                 proj_coef = output['proj_coef'].detach().data.cpu().numpy()
                 N, heads, HW, L = proj_coef.shape
@@ -266,6 +265,25 @@ class Summary(BaseSummary):
                 
                 kq_img_list.append(kq_tmp_img)
 
+            if 'attn_output_weights' in output:
+                attm_output_weights = output['attn_output_weights'].detach().data.cpu().numpy()
+                N, HW, HW = attm_output_weights.shape
+                C, H, W = rgb_tmp.shape
+                Hb, Wb = output['size']
+                attention_maps = [rgb_tmp, pred_tmp]
+
+                for m in range(HW):
+                         
+                    attm_output_weights_tmp = attm_output_weights[b, m, :].reshape(Hb, Wb)
+                    attm_output_weights_tmp = cv2.resize(attm_output_weights_tmp, (W,H), interpolation=cv2.INTER_LINEAR)
+                    attm_output_weights_tmp = 255.0 * attm_output_weights_tmp 
+                    attm_output_weights_tmp = cm(attm_output_weights_tmp.astype('uint8'))
+                    attm_output_weights_tmp = np.transpose(attm_output_weights_tmp[:, :, :3], (2, 0, 1))
+                    attention_maps.append(attm_output_weights_tmp)
+            
+                attm_output_weights_img = np.concatenate(attention_maps, axis=1)
+                attm_output_weights_img_list.append(attm_output_weights_img)
+
         img_total = np.concatenate(list_img, axis=2)
         img_total = torch.from_numpy(img_total)
         self.add_image(self.mode + '/images', img_total, global_step)
@@ -275,9 +293,9 @@ class Summary(BaseSummary):
             img_total = torch.from_numpy(img_total)
             self.add_image(self.mode + '/token_coefs', img_total, global_step)
 
-            img_total = np.concatenate(token_img_rel_list, axis=2)
-            img_total = torch.from_numpy(img_total)
-            self.add_image(self.mode + '/token_normalized_coefs', img_total, global_step)
+            #img_total = np.concatenate(token_img_rel_list, axis=2)
+            #img_total = torch.from_numpy(img_total)
+            #self.add_image(self.mode + '/token_normalized_coefs', img_total, global_step)
 
         if 'proj_coef' in output:
             img_total = np.concatenate(proj_coef_img_list, axis=2)
@@ -288,6 +306,11 @@ class Summary(BaseSummary):
             img_total = np.concatenate(kq_img_list, axis=2)
             img_total = torch.from_numpy(img_total)
             self.add_image(self.mode + '/kq_coefs', img_total, global_step)
+
+        if 'attn_output_weights' in output:
+            img_total = np.concatenate(attm_output_weights_img_list, axis=2)
+            img_total = torch.from_numpy(img_total)
+            self.add_image(self.mode + '/attm_output', img_total, global_step)
 
         if self.args.model_name.lower() == 'nlspn':
             self.add_scalar('Etc/gamma', output['gamma'], global_step)

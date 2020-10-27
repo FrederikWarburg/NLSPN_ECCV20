@@ -126,7 +126,6 @@ class UNETModel(nn.Module):
         ####
 
         if args.attention_stage == 'early':
-
             L = 8 # number of tokens
             CT = 1024 # size of tokens
             C = 64 # number of channels for features
@@ -136,14 +135,19 @@ class UNETModel(nn.Module):
             num_downsample = 3
             size = 100
         elif args.attention_stage == 'bottleneck':
-            L = 8 # number of tokens
-            CT = 1024 # size of tokens
-            C = 512 # number of channels for features
-            head = 1
-            groups = 1
-            kqv_groups = 1
-            num_downsample = 1
-            size = 14
+            if args.attention_type == 'VT':
+                L = 8 # number of tokens
+                CT = 1024 # size of tokens
+                C = 512 # number of channels for features
+                head = 1
+                groups = 1
+                kqv_groups = 1
+                num_downsample = 1
+                size = 14
+            elif args.attention_type == 'standard':
+                embed_dim = 512
+                num_heads = 1
+                multihead_attn = nn.MultiheadAttention(embed_dim, num_heads)
         elif args.attention_stage == 'late':
             L = 8 # number of tokens
             CT = 1024 # size of tokens
@@ -249,10 +253,22 @@ class UNETModel(nn.Module):
 
         # VT
         if self.args.attention_stage == 'bottleneck':
-            tokens_in = self.tokenizer(fe6_rgb)
-            tokens_out = self.transformer(tokens_in)
-            fe6_rgb = self.projector(fe6_rgb, tokens_out)
-            size = fe6_rgb.shape[-2:]
+
+            if self.args.attention_type == 'VT':
+                tokens_in = self.tokenizer(fe6_rgb)
+                tokens_out = self.transformer(tokens_in)
+                fe6_rgb = self.projector(fe6_rgb, tokens_out)
+                size = fe6_rgb.shape[-2:]
+
+            elif self.args.attention_type == 'standard':
+                N, C, W, H = fe6_rgb.shape
+                
+                fe6_rgb = fe6_rgb.view(N, C, H*W).permute(2,0,1)
+
+                attn_output, attn_output_weights = self.multihead_attn(fe6_rgb, fe6_rgb, fe6_rgb)
+
+                fe6_rgb = attn_output.permute(1,2,0).view(N,C,W,H)
+                size = fe6_rgb.shape[-2:]
 
         # Decoding RGB
         fd5_rgb = self.dec5_rgb(fe6_rgb)
@@ -336,6 +352,8 @@ class UNETModel(nn.Module):
         """
         if self.args.attention_stage == 'none':
             output = {'pred': pred_rgb, 'confidence': confidence_rgb}
+        elif self.args.attention_type == 'standard':
+            output = {'pred': pred_rgb, 'confidence': confidence_rgb, 'attn_output_weights': attn_output_weights, 'size':size}
         else:
             output = {'pred': pred_rgb, 'confidence': confidence_rgb, 'token_coef': self.tokenizer.token_coef, 'kq': self.transformer.kq, 'proj_coef': self.projector.proj_coef, 'size': size}
 
