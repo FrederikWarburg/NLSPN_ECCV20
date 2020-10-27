@@ -156,6 +156,14 @@ parser.add_argument('--attention_type',
                     type=str,
                     default='VT',
                     help='whuch form of attention to apply')
+parser.add_argument('--num_tokens',
+                    type=int,
+                    default=8,
+                    help='Number of tokens in visual transformer')
+parser.add_argument('--token_size',
+                    type=int,
+                    default=1024,
+                    help='size of tokens in visual transformer (CT)')
 
                
 # Training
