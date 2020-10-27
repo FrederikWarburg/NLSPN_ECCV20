@@ -216,7 +216,7 @@ class Summary(BaseSummary):
 
                         token_coef_tmp = token_coef[b, h, :, l].reshape(Hb, Wb)
                         token_coef_tmp = cv2.resize(token_coef_tmp, (W,H), interpolation=cv2.INTER_LINEAR)
-                        token_coef_tmp_rel = 255.0 * (token_coef_tmp - np.min(token_coef_tmp)) / (np.max(token_coef_tmp) - np.min(np.max(token_coef_tmp) + 1e-6))
+                        token_coef_tmp_rel = 255.0 * (token_coef_tmp - np.min(token_coef_tmp)) / (np.max(token_coef_tmp) - np.min(token_coef_tmp) + 1e-6))
                         token_coef_tmp_rel = cm(token_coef_tmp_rel.astype('uint8'))
                         token_coef_tmp_rel = np.transpose(token_coef_tmp_rel[:, :, :3], (2, 0, 1))
                         attention_maps_rel.append(token_coef_tmp_rel)
@@ -293,9 +293,9 @@ class Summary(BaseSummary):
             img_total = torch.from_numpy(img_total)
             self.add_image(self.mode + '/token_coefs', img_total, global_step)
 
-            #img_total = np.concatenate(token_img_rel_list, axis=2)
-            #img_total = torch.from_numpy(img_total)
-            #self.add_image(self.mode + '/token_normalized_coefs', img_total, global_step)
+            img_total = np.concatenate(token_img_rel_list, axis=2)
+            img_total = torch.from_numpy(img_total)
+            self.add_image(self.mode + '/token_normalized_coefs', img_total, global_step)
 
         if 'proj_coef' in output:
             img_total = np.concatenate(proj_coef_img_list, axis=2)
