@@ -126,9 +126,6 @@ class UNETModel(nn.Module):
         ####
 
         if args.attention_stage == 'early':
-
-            L = 128 # number of tokens
-            CT = 256 # size of tokens
             C = 64 # number of channels for features
             head = 1
             groups = 1
@@ -137,8 +134,6 @@ class UNETModel(nn.Module):
             size = 128
         elif args.attention_stage == 'bottleneck':
             if args.attention_type == 'VT':
-                L = 64 # number of tokens
-                CT = 256 # size of tokens
                 C = 512 # number of channels for features
                 head = 1
                 groups = 1
@@ -150,8 +145,6 @@ class UNETModel(nn.Module):
                 num_heads = 1
                 self.multihead_attn = nn.MultiheadAttention(embed_dim, num_heads)
         elif args.attention_stage == 'late':
-            L = 16 # number of tokens
-            CT = 512 # size of tokens
             C = 64 # number of channels for features
             head = 1
             groups = 1
@@ -160,9 +153,9 @@ class UNETModel(nn.Module):
             size = 128
 
         if args.attention_type == 'VT':
-            self.tokenizer = Tokenizer(L, CT, C, head=head, groups=groups, num_downsample=num_downsample, size=size)
-            self.transformer = Transformer(CT, head=head, kqv_groups=kqv_groups)
-            self.projector = Projector(CT, C, head=head, groups=groups)
+            self.tokenizer = Tokenizer(args.num_tokens, self.token_size, C, head=head, groups=groups, num_downsample=num_downsample, size=size)
+            self.transformer = Transformer(self.token_size, head=head, kqv_groups=kqv_groups)
+            self.projector = Projector(self.token_size, C, head=head, groups=groups)
 
     def _make_layer(self, inplanes, planes, blocks=1, stride=1):
         downsample = None
@@ -250,7 +243,7 @@ class UNETModel(nn.Module):
         fe3_rgb = self.conv3_rgb(fe2_rgb)
         fe4_rgb = self.conv4_rgb(fe3_rgb)
         fe5_rgb = self.conv5_rgb(fe4_rgb)
-        #fe6_rgb = fe5_rgb
+
         #fe6_rgb = self.conv6_rgb(fe5_rgb)
 
         # VT
