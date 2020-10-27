@@ -250,30 +250,33 @@ class UNETModel(nn.Module):
         fe3_rgb = self.conv3_rgb(fe2_rgb)
         fe4_rgb = self.conv4_rgb(fe3_rgb)
         fe5_rgb = self.conv5_rgb(fe4_rgb)
-        fe6_rgb = self.conv6_rgb(fe5_rgb)
+        #fe6_rgb = fe5_rgb
+        #fe6_rgb = self.conv6_rgb(fe5_rgb)
 
         # VT
         if self.args.attention_stage == 'bottleneck':
 
             if self.args.attention_type == 'VT':
-                tokens_in = self.tokenizer(fe6_rgb)
+                tokens_in = self.tokenizer(fe5_rgb)
                 tokens_out = self.transformer(tokens_in)
-                fe6_rgb = self.projector(fe6_rgb, tokens_out)
-                size = fe6_rgb.shape[-2:]
+                fe5_rgb = self.projector(fe5_rgb, tokens_out)
+                size = fe5_rgb.shape[-2:]
 
             elif self.args.attention_type == 'standard':
-                N, C, W, H = fe6_rgb.shape
-                
-                fe6_rgb = fe6_rgb.view(N, C, H*W).permute(2,0,1)
-
-                attn_output, attn_output_weights = self.multihead_attn(fe6_rgb, fe6_rgb, fe6_rgb)
-
-                fe6_rgb = attn_output.permute(1,2,0).view(N,C,W,H)
-                size = fe6_rgb.shape[-2:]
-
+                N, C, W, H = fe5_rgb.shape
+                #print(fe5_rgb.shape)
+                fe5_rgb = fe5_rgb.view(N, C, H*W).permute(2,0,1)
+                #print(fe5_rgb.shape)
+                attn_output, attn_output_weights = self.multihead_attn(fe5_rgb, fe5_rgb, fe5_rgb)
+                #print(attn_output.shape)
+                fe5_rgb = attn_output.permute(1,2,0).view(N,C,W,H)
+                size = fe5_rgb.shape[-2:]
+                #print(fe5_rgb.shape)
+                #print()
         # Decoding RGB
-        fd5_rgb = self.dec5_rgb(fe6_rgb)
-        fd4_rgb = self.dec4_rgb(self._concat(fd5_rgb, fe5_rgb, aggregate=self.aggregate, dim=1))
+        #fd5_rgb = self.dec5_rgb(fe6_rgb)
+        #fd5_rgb = fe6_rgb
+        fd4_rgb = self.dec4_rgb(fe5_rgb)# self._concat(fd5_rgb, fe5_rgb, aggregate=self.aggregate, dim=1))
         fd3_rgb = self.dec3_rgb(self._concat(fd4_rgb, fe4_rgb, aggregate=self.aggregate, dim=1))
         fd2_rgb = self.dec2_rgb(self._concat(fd3_rgb, fe3_rgb, aggregate=self.aggregate, dim=1))
 
