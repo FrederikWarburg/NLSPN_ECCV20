@@ -159,7 +159,7 @@ class UNETModel(nn.Module):
             num_downsample = 3
             size = 128
 
-        if args.attention_stage != 'none':
+        if args.attention_type == 'VT':
             self.tokenizer = Tokenizer(L, CT, C, head=head, groups=groups, num_downsample=num_downsample, size=size)
             self.transformer = Transformer(CT, head=head, kqv_groups=kqv_groups)
             self.projector = Projector(CT, C, head=head, groups=groups)
