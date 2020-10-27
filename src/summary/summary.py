@@ -304,6 +304,10 @@ class Summary(BaseSummary):
             img_total = torch.from_numpy(img_total)
             self.add_image(self.mode + '/proj_coefs', img_total, global_step)
 
+            img_total = np.concatenate(proj_coef_img_rel_list, axis=2)
+            img_total = torch.from_numpy(img_total)
+            self.add_image(self.mode + '/proj_normalized_coefs', img_total, global_step)
+
         if 'kq' in output:
             img_total = np.concatenate(kq_img_list, axis=2)
             img_total = torch.from_numpy(img_total)
