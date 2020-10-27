@@ -127,35 +127,25 @@ class UNETModel(nn.Module):
 
         if args.attention_stage == 'early':
             C = 64 # number of channels for features
-            head = 1
-            groups = 1
-            kqv_groups = 1
             num_downsample = 3
             size = 128
         elif args.attention_stage == 'bottleneck':
             if args.attention_type == 'VT':
                 C = 512 # number of channels for features
-                head = 1
-                groups = 1
-                kqv_groups = 1
                 num_downsample = 1
                 size = 14
             elif args.attention_type == 'standard':
                 embed_dim = 512
-                num_heads = 1
-                self.multihead_attn = nn.MultiheadAttention(embed_dim, num_heads)
+                self.multihead_attn = nn.MultiheadAttention(embed_dim, args.num_heads)
         elif args.attention_stage == 'late':
             C = 64 # number of channels for features
-            head = 1
-            groups = 1
-            kqv_groups = 1
             num_downsample = 3
             size = 128
 
         if args.attention_type == 'VT':
-            self.tokenizer = Tokenizer(args.num_tokens, args.token_size, C, head=head, groups=groups, num_downsample=num_downsample, size=size)
-            self.transformer = Transformer(args.token_size, head=head, kqv_groups=kqv_groups)
-            self.projector = Projector(args.token_size, C, head=head, groups=groups)
+            self.tokenizer = Tokenizer(args.num_tokens, args.token_size, C, head=args.num_heads, groups=args.groups, num_downsample=num_downsample, size=size)
+            self.transformer = Transformer(args.token_size, head=args.num_heads, kqv_groups=args.kqv_groups)
+            self.projector = Projector(args.token_size, C, head=args.num_heads, groups=args.groups)
 
     def _make_layer(self, inplanes, planes, blocks=1, stride=1):
         downsample = None
@@ -262,6 +252,7 @@ class UNETModel(nn.Module):
                 #print(fe5_rgb.shape)
                 attn_output, attn_output_weights = self.multihead_attn(fe5_rgb, fe5_rgb, fe5_rgb)
                 #print(attn_output.shape)
+
                 fe5_rgb = attn_output.permute(1,2,0).view(N,C,W,H)
                 size = fe5_rgb.shape[-2:]
                 #print(fe5_rgb.shape)
