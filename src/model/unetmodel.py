@@ -153,9 +153,9 @@ class UNETModel(nn.Module):
             size = 128
 
         if args.attention_type == 'VT':
-            self.tokenizer = Tokenizer(args.num_tokens, self.token_size, C, head=head, groups=groups, num_downsample=num_downsample, size=size)
-            self.transformer = Transformer(self.token_size, head=head, kqv_groups=kqv_groups)
-            self.projector = Projector(self.token_size, C, head=head, groups=groups)
+            self.tokenizer = Tokenizer(args.num_tokens, args.token_size, C, head=head, groups=groups, num_downsample=num_downsample, size=size)
+            self.transformer = Transformer(args.token_size, head=head, kqv_groups=kqv_groups)
+            self.projector = Projector(args.token_size, C, head=head, groups=groups)
 
     def _make_layer(self, inplanes, planes, blocks=1, stride=1):
         downsample = None
