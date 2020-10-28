@@ -52,6 +52,8 @@ class PositionEmbeddingLearned(nn.Module):
         self.col_embed = nn.Embedding(50, num_pos_feats)
         self.reset_parameters()
 
+        self.pos_dim = num_pos_feats
+
     def reset_parameters(self):
         nn.init.uniform_(self.row_embed.weight)
         nn.init.uniform_(self.col_embed.weight)
