@@ -30,6 +30,8 @@ class UNETModel(nn.Module):
             self.D_skip = 1
         elif self.aggregate == 'sum':
             self.D_skip = 0
+        elif self.aggregate == 'none':
+            self.D_skip = 0
         else:
             raise NotImplementedError       
         
