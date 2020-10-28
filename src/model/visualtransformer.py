@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
+from .position_encoding import PositionEmbeddingLearned
 
 
 def conv1x1_1d(channel_in, channel_out, stride=1, groups = 1):
@@ -30,7 +31,8 @@ class Tokenizer(nn.Module):
         num_downsample = num_downsample
         size = size
         self.CT = CT
-        self.pos_encoding = PosEncoder(size, num_downsample)
+        self.pos_encoding = PositionEmbeddingLearned()
+        #self.pos_encoding = PosEncoder(size, num_downsample)
         self.conv_token = conv1x1_1d(self.CT+self.pos_encoding.pos_dim, self.CT)
         self.head = head
         self.dynamic = dynamic
@@ -79,7 +81,7 @@ class Tokenizer(nn.Module):
 
         # compute position encoding
         # if static: pos_encoding: N, Cp, L  else: N,Cp,L_a
-        pos_encoding = self.pos_encoding(token_coef, (H,W))
+        pos_encoding = self.pos_encoding(token_coef)#, (H,W))
 
         tokens = torch.cat((tokens,pos_encoding),dim = 1)
 
