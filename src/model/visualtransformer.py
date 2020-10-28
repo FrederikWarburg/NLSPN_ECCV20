@@ -81,7 +81,7 @@ class Tokenizer(nn.Module):
 
         # compute position encoding
         # if static: pos_encoding: N, Cp, L  else: N,Cp,L_a
-        pos_encoding = self.pos_encoding(token_coef)#, (H,W))
+        pos_encoding = self.pos_encoding(feature)#, (H,W))
         print(pos_encoding.shape, tokens.shape)
         tokens = torch.cat((tokens,pos_encoding),dim = 1)
 
