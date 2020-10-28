@@ -183,6 +183,8 @@ class UNETModel(nn.Module):
             f = torch.cat((fd, fe), dim=dim)
         elif aggregate == 'sum':
             f = fd + fe
+        elif aggregate == 'none':
+            f = fd
         #print("f", f.shape, f.is_contiguous() )
         return f
 
