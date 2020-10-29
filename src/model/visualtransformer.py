@@ -29,7 +29,8 @@ class VisualTransformer(nn.Module):
         self.projector = Projector(CT, C, head=head, groups=groups)
 
     def forward(self, src, dst):
-
+        
+        print(src.shape, dst.shape)
         assert src.shape == dst.shape
         self.size = src.shape[-2:]
         self.tokens_in = self.tokenizer(src)
