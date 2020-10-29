@@ -16,7 +16,7 @@ def conv3x3_2d(channel_in, channel_out, stride=1, groups=1, padding=1):
 
 class VisualTransformer(nn.Module):
     def __init__(self, L, CT, C, head = 16, groups = 16, kqv_groups = 16, dynamic = False):
-
+        super(VisualTransformer,self).__init__()
         self.L = L # number of tokens
         self.CT = CT # size of tokens
         self.C = C # number of channels for features
