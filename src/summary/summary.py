@@ -240,7 +240,7 @@ class Summary(BaseSummary):
                 token_img_rel_list.append(token_img)
 
             
-                proj_coef = output[vt].projecter.detach().data.cpu().numpy()
+                proj_coef = output[vt].projector.detach().data.cpu().numpy()
                 N, heads, HW, L = proj_coef.shape
                 C, H, W = rgb_tmp.shape
                 Hb, Wb = output[vt].size
