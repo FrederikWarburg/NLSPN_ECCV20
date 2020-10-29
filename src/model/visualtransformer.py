@@ -30,7 +30,7 @@ class VisualTransformer(nn.Module):
 
     def forward(self, src, dst):
         
-        print(src.shape, dst.shape)
+        #print(src.shape, dst.shape)
         assert src.shape == dst.shape
         self.size = src.shape[-2:]
         self.tokens_in = self.tokenizer(src)
