@@ -221,14 +221,14 @@ class Summary(BaseSummary):
                 N, heads, HW, L = token_coef.shape
 
                 print(rgb_tmp.shape)
-                rgb_tmp = np.transpose(rgb_tmp, (0,1,2))
+                rgb_tmp = np.transpose(rgb_tmp, (1,2,0))
                 print(rgb_tmp.shape)
                 rgb_tmp = cv2.resize(rgb_tmp, (300, 65), interpolation=cv2.INTER_LINEAR)
                 print(rgb_tmp.shape)
                 rgb_tmp = np.transpose(rgb_tmp, (2,0,1))
                 print(rgb_tmp.shape)
                 
-                pred_tmp = np.transpose(pred_tmp, (0,1,2))
+                pred_tmp = np.transpose(pred_tmp, (1,2,0))
                 pred_tmp = cv2.resize(pred_tmp, (300, 65), interpolation=cv2.INTER_LINEAR)
                 pred_tmp = np.transpose(pred_tmp, (2,0,1))
                 
