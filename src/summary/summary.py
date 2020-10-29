@@ -230,6 +230,9 @@ class Summary(BaseSummary):
                         
                         attention_maps.append(visualize(token_coef[b, h, :, l], (Wb, Hb), (W,H), normalize = False))
                         attention_maps_rel.append(visualize(token_coef[b, h, :, l], (Wb, Hb), (W,H), normalize = True))
+
+                        if h*l > 10:
+                            break
                 
                 token_img = np.concatenate(attention_maps, axis=1)
                 token_img_list.append(token_img)
@@ -249,7 +252,9 @@ class Summary(BaseSummary):
                                                
                         attention_maps.append(visualize(proj_coef[b, h, :, l], (Wb, Hb), (W,H), normalize = False))
                         attention_maps_rel.append(visualize(proj_coef[b, h, :, l], (Wb, Hb), (W,H), normalize = True))
-                
+
+                        if h*l > 10:
+                            break
                 proj_coef_img_rel = np.concatenate(attention_maps_rel, axis=1)
                 proj_coef_img_rel_list.append(proj_coef_img_rel)
 
@@ -268,6 +273,9 @@ class Summary(BaseSummary):
                     kq_tmp = cm(kq_tmp.astype('uint8'))
                     kq_tmp = np.transpose(kq_tmp[:, :, :3], (2, 0, 1))
                     attention_maps.append(kq_tmp)
+
+                    if h > 10:
+                        break
                 
                 kq_tmp_img = np.concatenate(attention_maps, axis=1)
                 
