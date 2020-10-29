@@ -23,6 +23,22 @@ import cv2
 
 cm = plt.get_cmap('plasma')
 
+def visualize(im, sizeb, size, normalize = False):
+
+    cm = plt.get_cmap('plasma')
+
+    Wb, Hb = sizeb
+    W,H = size
+    im = im.reshape(Hb, Wb)
+    im = cv2.resize(im, (W,H), interpolation=cv2.INTER_LINEAR)
+
+    if normalize:
+        im = (im - np.min(im)) / (np.max(im) - np.min(im) + 1e-6)
+    im = 255.0 * im 
+    im = cm(im.astype('uint8'))
+    im = np.transpose(im[:, :, :3], (2, 0, 1))
+
+    return im 
 
 class Summary(BaseSummary):
     def __init__(self, log_dir, mode, args, loss_name, metric_name):
@@ -141,7 +157,10 @@ class Summary(BaseSummary):
         token_img_list = []
         token_img_rel_list = []
         proj_coef_img_list = []
+        proj_coef_img_rel_list = []
         kq_img_list = []
+        attm_output_weights_img_list = []
+        
 
         for b in range(0, num_summary):
             rgb_tmp = rgb[b, :, :, :]
@@ -194,31 +213,25 @@ class Summary(BaseSummary):
 
             list_img.append(img)
 
-            if 'token_coef' in output:
-                token_coef = output['token_coef'].detach().data.cpu().numpy()
+            img_total = np.concatenate(list_img, axis=2)
+            img_total = torch.from_numpy(img_total)
+            self.add_image(self.mode + '/images', img_total, global_step)
+
+            for vt in ['vt1', 'vt2', 'vt3', 'vt4']:
+                
+                token_coef = output[vt].tokenizer.token_coef.detach().data.cpu().numpy()
                 N, heads, HW, L = token_coef.shape
                 C, H, W = rgb_tmp.shape
                 Hb, Wb = output['size']
-                print("size", Hb,Wb)
+
                 attention_maps = [rgb_tmp, pred_tmp]
                 attention_maps_rel = [rgb_tmp, pred_tmp]
 
                 for h in range(heads):
                     for l in range(L):
                         
-                        token_coef_tmp = token_coef[b, h, :, l].reshape(Hb, Wb)
-                        token_coef_tmp = cv2.resize(token_coef_tmp, (W,H), interpolation=cv2.INTER_LINEAR)
-                        token_coef_tmp = 255.0 * token_coef_tmp 
-                        token_coef_tmp = cm(token_coef_tmp.astype('uint8'))
-                        token_coef_tmp = np.transpose(token_coef_tmp[:, :, :3], (2, 0, 1))
-                        attention_maps.append(token_coef_tmp)
-
-                        token_coef_tmp = token_coef[b, h, :, l].reshape(Hb, Wb)
-                        token_coef_tmp = cv2.resize(token_coef_tmp, (W,H), interpolation=cv2.INTER_LINEAR)
-                        token_coef_tmp_rel = 255.0 * (token_coef_tmp - np.min(token_coef_tmp)) / (np.max(token_coef_tmp) - np.min(np.max(token_coef_tmp) + 1e-6))
-                        token_coef_tmp_rel = cm(token_coef_tmp_rel.astype('uint8'))
-                        token_coef_tmp_rel = np.transpose(token_coef_tmp_rel[:, :, :3], (2, 0, 1))
-                        attention_maps_rel.append(token_coef_tmp_rel)
+                        attention_maps.append(visualize(token_coef[b, h, :, l], (Wb, Hb), (W,H), normalize = False))
+                        attention_maps_rel.append(visualize(token_coef[b, h, :, l], (Wb, Hb), (W,H), normalize = True))
                 
                 token_img = np.concatenate(attention_maps, axis=1)
                 token_img_list.append(token_img)
@@ -226,31 +239,29 @@ class Summary(BaseSummary):
                 token_img = np.concatenate(attention_maps_rel, axis=1)
                 token_img_rel_list.append(token_img)
 
-            list_img.append(img)
-
-            if 'proj_coef' in output:
-                proj_coef = output['proj_coef'].detach().data.cpu().numpy()
+            
+                proj_coef = output[vt].projecter.detach().data.cpu().numpy()
                 N, heads, HW, L = proj_coef.shape
                 C, H, W = rgb_tmp.shape
                 Hb, Wb = output['size']
                 attention_maps = [rgb_tmp, pred_tmp]
+                attention_maps_rel = [rgb_tmp, pred_tmp]
 
                 for h in range(heads):
                     for l in range(L):
-                                               
-                        proj_coef_tmp = proj_coef[b, h, :, l].reshape(Hb, Wb)
-                        proj_coef_tmp = cv2.resize(proj_coef_tmp, (W,H), interpolation=cv2.INTER_LINEAR)
-                        proj_coef_tmp = 255.0 * proj_coef_tmp 
-                        proj_coef_tmp = cm(proj_coef_tmp.astype('uint8'))
-                        proj_coef_tmp = np.transpose(proj_coef_tmp[:, :, :3], (2, 0, 1))
-                        attention_maps.append(proj_coef_tmp)
+                                                
+                        attention_maps.append(visualize(proj_coef[b, h, :, l], (Wb, Hb), (W,H), normalize = False))
+                        attention_maps_rel.append(visualize(proj_coef[b, h, :, l], (Wb, Hb), (W,H), normalize = True))
                 
+                proj_coef_img_rel = np.concatenate(attention_maps_rel, axis=1)
+                proj_coef_img_rel_list.append(proj_coef_img_rel)
+
                 proj_coef_img = np.concatenate(attention_maps, axis=1)
                 proj_coef_img_list.append(proj_coef_img)
 
-            if 'kq' in output:
+                
                 attention_maps = []
-                kq = output['kq'].detach().data.cpu().numpy()
+                kq = output[vt].transformer.kq.detach().data.cpu().numpy()
                 
                 N, heads, L, L = kq.shape
                 for h in range(heads):
@@ -266,28 +277,48 @@ class Summary(BaseSummary):
                 
                 kq_img_list.append(kq_tmp_img)
 
-        img_total = np.concatenate(list_img, axis=2)
-        img_total = torch.from_numpy(img_total)
-        self.add_image(self.mode + '/images', img_total, global_step)
+                img_total = np.concatenate(token_img_list, axis=2)
+                img_total = torch.from_numpy(img_total)
+                self.add_image(self.mode + '/' + vt + '_token_coefs', img_total, global_step)
 
-        if 'token_coef' in output:
-            img_total = np.concatenate(token_img_list, axis=2)
-            img_total = torch.from_numpy(img_total)
-            self.add_image(self.mode + '/token_coefs', img_total, global_step)
+                img_total = np.concatenate(token_img_rel_list, axis=2)
+                img_total = torch.from_numpy(img_total)
+                self.add_image(self.mode + '/' + vt + '_token_normalized_coefs', img_total, global_step)
 
-            img_total = np.concatenate(token_img_rel_list, axis=2)
-            img_total = torch.from_numpy(img_total)
-            self.add_image(self.mode + '/token_normalized_coefs', img_total, global_step)
+                img_total = np.concatenate(proj_coef_img_list, axis=2)
+                img_total = torch.from_numpy(img_total)
+                self.add_image(self.mode + '/' + vt + '_proj_coefs', img_total, global_step)
 
-        if 'proj_coef' in output:
-            img_total = np.concatenate(proj_coef_img_list, axis=2)
-            img_total = torch.from_numpy(img_total)
-            self.add_image(self.mode + '/proj_coefs', img_total, global_step)
+                img_total = np.concatenate(proj_coef_img_rel_list, axis=2)
+                img_total = torch.from_numpy(img_total)
+                self.add_image(self.mode + '/' + vt + '_proj_normalized_coefs', img_total, global_step)
 
-        if 'kq' in output:
-            img_total = np.concatenate(kq_img_list, axis=2)
+                img_total = np.concatenate(kq_img_list, axis=2)
+                img_total = torch.from_numpy(img_total)
+                self.add_image(self.mode + '/' + vt + '_kq_coefs', img_total, global_step)
+
+    if 'attn_output_weights' in output:
+        attn_output_weights = output['attn_output_weights'].detach().data.cpu().numpy()
+        N, HW, HW = attn_output_weights.shape
+        C, H, W = rgb_tmp.shape
+        Hb, Wb = output['size']
+        attention_maps = [rgb_tmp, pred_tmp]
+
+        for m in range(HW):
+                    
+            attention_maps.append(visualize(attn_output_weights[b, m, :], (Wb,Hb), (W,H), normalize=False))
+    
+        attm_output_weights_img = np.concatenate(attention_maps, axis=1)
+        attm_output_weights_img_list.append(attm_output_weights_img)
+
+
+
+        
+
+        if 'attn_output_weights' in output:
+            img_total = np.concatenate(attm_output_weights_img_list, axis=2)
             img_total = torch.from_numpy(img_total)
-            self.add_image(self.mode + '/kq_coefs', img_total, global_step)
+            self.add_image(self.mode + '/attm_output', img_total, global_step)
 
         if self.args.model_name.lower() == 'nlspn':
             self.add_scalar('Etc/gamma', output['gamma'], global_step)

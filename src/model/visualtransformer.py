@@ -31,7 +31,7 @@ class VisualTransformer(nn.Module):
     def forward(self, src, dst):
 
         assert src.shape == dst.shape
-
+        self.size = src.shape[-2:]
         self.tokens_in = self.tokenizer(src)
         self.tokens_out = self.transformer(self.tokens_in)
         dst = self.projector(dst, self.tokens_out)
@@ -303,12 +303,15 @@ class Projector(nn.Module):
         print("proj", proj.shape)
         """
 
-        print(proj.shape)        
+        #print(proj.shape)        
 
         feature = feature + self.dropout1(proj).view(N,-1,H,W)
+
+        """
         proj = self.norm1(proj.view(N*h, C, H*W).permute(0,2,1))
         proj = self.linear2(self.dropout(self.activation(self.linear1(proj))))
         feature = feature + self.dropout2(proj.permute(0,2,1)).view(N,-1,H,W)
         feature = self.norm2(feature.permute(0,2,3,1)).permute(0,3,1,2)
+        """
 
         return feature
