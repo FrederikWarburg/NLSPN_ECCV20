@@ -238,7 +238,7 @@ class UNETModel(nn.Module):
         pred = self._remove_extra_pad(pred, dep)
         confidence = self._remove_extra_pad(confidence, dep)
 
-        output = {'pred': pred, 'confidence': confidence, 'vt': (self.vt1, self.vt2, self.vt3, self.vt4)}}
+        output = {'pred': pred, 'confidence': confidence, 'vt1': self.vt1, 'vt2': self.vt2, 'vt3':self.vt3, 'vt4':self.vt4)}
 
         return output
 

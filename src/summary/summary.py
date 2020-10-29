@@ -297,25 +297,20 @@ class Summary(BaseSummary):
                 img_total = torch.from_numpy(img_total)
                 self.add_image(self.mode + '/' + vt + '_kq_coefs', img_total, global_step)
 
-    if 'attn_output_weights' in output:
-        attn_output_weights = output['attn_output_weights'].detach().data.cpu().numpy()
-        N, HW, HW = attn_output_weights.shape
-        C, H, W = rgb_tmp.shape
-        Hb, Wb = output['size']
-        attention_maps = [rgb_tmp, pred_tmp]
-
-        for m in range(HW):
-                    
-            attention_maps.append(visualize(attn_output_weights[b, m, :], (Wb,Hb), (W,H), normalize=False))
-    
-        attm_output_weights_img = np.concatenate(attention_maps, axis=1)
-        attm_output_weights_img_list.append(attm_output_weights_img)
-
-
-
-        
-
         if 'attn_output_weights' in output:
+            attn_output_weights = output['attn_output_weights'].detach().data.cpu().numpy()
+            N, HW, HW = attn_output_weights.shape
+            C, H, W = rgb_tmp.shape
+            Hb, Wb = output['size']
+            attention_maps = [rgb_tmp, pred_tmp]
+
+            for m in range(HW):
+                        
+                attention_maps.append(visualize(attn_output_weights[b, m, :], (Wb,Hb), (W,H), normalize=False))
+        
+            attm_output_weights_img = np.concatenate(attention_maps, axis=1)
+            attm_output_weights_img_list.append(attm_output_weights_img)
+
             img_total = np.concatenate(attm_output_weights_img_list, axis=2)
             img_total = torch.from_numpy(img_total)
             self.add_image(self.mode + '/attm_output', img_total, global_step)
