@@ -219,6 +219,10 @@ class Summary(BaseSummary):
             
                 token_coef = output[vt].tokenizer.token_coef.detach().data.cpu().numpy()
                 N, heads, HW, L = token_coef.shape
+
+                rgb_tmp = cv2.resize(rgb_tmp, (300, 65))
+                pred_tmp = cv2.resize(pred_tmp, (300, 65))
+
                 C, H, W = rgb_tmp.shape
                 Hb, Wb = output[vt].size
 
