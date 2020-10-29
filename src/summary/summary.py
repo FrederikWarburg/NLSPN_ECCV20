@@ -222,7 +222,7 @@ class Summary(BaseSummary):
                 token_coef = output[vt].tokenizer.token_coef.detach().data.cpu().numpy()
                 N, heads, HW, L = token_coef.shape
                 C, H, W = rgb_tmp.shape
-                Hb, Wb = output['size']
+                Hb, Wb = output[vt].size
 
                 attention_maps = [rgb_tmp, pred_tmp]
                 attention_maps_rel = [rgb_tmp, pred_tmp]
@@ -243,7 +243,7 @@ class Summary(BaseSummary):
                 proj_coef = output[vt].projecter.detach().data.cpu().numpy()
                 N, heads, HW, L = proj_coef.shape
                 C, H, W = rgb_tmp.shape
-                Hb, Wb = output['size']
+                Hb, Wb = output[vt].size
                 attention_maps = [rgb_tmp, pred_tmp]
                 attention_maps_rel = [rgb_tmp, pred_tmp]
 
