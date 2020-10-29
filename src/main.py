@@ -66,6 +66,7 @@ def check_args(args):
             "file not found: {}".format(args.pretrain)
 
         if args.resume:
+            print("resume")
             checkpoint = torch.load(args.pretrain)
 
             new_args = checkpoint['args']
