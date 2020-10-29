@@ -148,7 +148,37 @@ parser.add_argument('--guide',
                     default='cat',
                     choices=['cat', 'sum', 'none'],
                     help='how to aggregate information between rgb and depth in unet')
+parser.add_argument('--attention_stage',
+                    type=str,
+                    default=None,
+                    help='when to apply VT')
+parser.add_argument('--attention_type',
+                    type=str,
+                    default='VT',
+                    help='whuch form of attention to apply')
+parser.add_argument('--num_tokens',
+                    type=int,
+                    default=8,
+                    help='Number of tokens in visual transformer')
+parser.add_argument('--token_size',
+                    type=int,
+                    default=1024,
+                    help='size of tokens in visual transformer (CT)')
+parser.add_argument('--num_heads',
+                    type=int,
+                    default=16,
+                    help='number of heads for attention')
+parser.add_argument('--groups',
+                    type=int,
+                    default=16,
+                    help='groups to use for visual transformer')
+parser.add_argument('--kqv_groups',
+                    type=int,
+                    default=8,
+                    help='groups for transformer to use for visual transformer')
 
+
+               
 # Training
 parser.add_argument('--loss',
                     type=str,
@@ -198,6 +228,7 @@ parser.add_argument('--test_crop',
                     action='store_true',
                     default=False,
                     help='crop for test')
+
 
 
 # Summary
