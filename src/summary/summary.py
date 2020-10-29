@@ -220,9 +220,12 @@ class Summary(BaseSummary):
                 token_coef = output[vt].tokenizer.token_coef.detach().data.cpu().numpy()
                 N, heads, HW, L = token_coef.shape
 
-                rgb_tmp = cv2.resize(rgb_tmp, (300, 65))
-                pred_tmp = cv2.resize(pred_tmp, (300, 65))
-
+                print(rgb_tmp.shape)
+                rgb_tmp = cv2.resize(rgb_tmp, (300, 65), interpolation=cv2.INTER_LINEAR)
+                print(rgb_tmp.shape)
+                print(pred_tmp.shape)
+                pred_tmp = cv2.resize(pred_tmp, (300, 65), interpolation=cv2.INTER_LINEAR)
+                print(pred_tmp.shape)
                 C, H, W = rgb_tmp.shape
                 Hb, Wb = output[vt].size
 
@@ -265,7 +268,6 @@ class Summary(BaseSummary):
                     
                     if h*l + l > 10:
                         break
-                    
                 proj_coef_img_rel = np.concatenate(attention_maps_rel, axis=1)
                 proj_coef_img_rel_list.append(proj_coef_img_rel)
 
