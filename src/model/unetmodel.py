@@ -206,7 +206,7 @@ class UNETModel(nn.Module):
 
         # we need first to remove some extra padding which is added in the decoding stage
         fd4_rgb = self._remove_extra_pad(fd4_rgb, fe4_dep)
-        fe4_dep = self.vt3(fd5_rgb, fe4_dep)
+        fe4_dep = self.vt3(fd4_rgb, fe4_dep)
 
         fe5_dep = self.conv5_dep(self._guide(fd4_rgb, fe4_rgb, fe4_dep, guide=self.guide, dim=1))
 
