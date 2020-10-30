@@ -74,9 +74,11 @@ class Tokenizer(nn.Module):
         #compute token coefficients
         # feature: N,C,H,W, tokens: N, CT, L
         if not self.dynamic:
+            print(feature.shape)
             token_coef = self.conv_token_coef(feature)
             #print(torch.min(token_coef), torch.max(token_coef))
             #print(token_coef.is_contiguous())
+            token_coef = token_coef.permute(0,1,3,2)
             N, L, H, W = token_coef.shape
             token_coef = token_coef.view(N,1,L,H*W)
             token_coef = token_coef.permute(0,1,3,2) # N,1,HW,L
