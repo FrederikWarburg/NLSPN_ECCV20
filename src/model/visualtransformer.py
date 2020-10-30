@@ -190,7 +190,7 @@ class PositionEmbeddingLearned(nn.Module):
     def forward(self, token_coef, input_size):
         
         h,w = input_size # feature size
-        N, h, HW, L = token_coef.shape
+        N, head, HW, L = token_coef.shape
         print("token_coef", token_coef.shape, input_size)
         i = torch.arange(w, device=token_coef.device)
         j = torch.arange(h, device=token_coef.device)
