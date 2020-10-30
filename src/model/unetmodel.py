@@ -99,10 +99,10 @@ class UNETModel(nn.Module):
         # VISUAL TRANSFORMER
         ####
 
-        self.vt1 = VisualTransformer(L=args.num_tokens, CT=args.token_size, C=64, head=args.num_heads, groups=args.groups, kqv_groups=args.kqv_groups, dynamic=False)
-        self.vt2 = VisualTransformer(L=args.num_tokens, CT=args.token_size, C=128, head=args.num_heads, groups=args.groups, kqv_groups=args.kqv_groups, dynamic=False)
-        self.vt3 = VisualTransformer(L=args.num_tokens, CT=args.token_size, C=256, head=args.num_heads, groups=args.groups, kqv_groups=args.kqv_groups, dynamic=False)
-        self.vt4 = VisualTransformer(L=args.num_tokens, CT=args.token_size, C=512, head=args.num_heads, groups=args.groups, kqv_groups=args.kqv_groups, dynamic=False)
+        self.vt1 = VisualTransformer(L=args.num_tokens, CT=args.token_size, C=64, size = 16, num_downsample = 6, head=args.num_heads, groups=args.groups, kqv_groups=args.kqv_groups, dynamic=False)
+        self.vt2 = VisualTransformer(L=args.num_tokens, CT=args.token_size, C=128, size = 16, num_downsample = 5,head=args.num_heads, groups=args.groups, kqv_groups=args.kqv_groups, dynamic=False)
+        self.vt3 = VisualTransformer(L=args.num_tokens, CT=args.token_size, C=256, size = 16, num_downsample = 4,head=args.num_heads, groups=args.groups, kqv_groups=args.kqv_groups, dynamic=False)
+        self.vt4 = VisualTransformer(L=args.num_tokens, CT=args.token_size, C=512, size = 16, num_downsample = 3,head=args.num_heads, groups=args.groups, kqv_groups=args.kqv_groups, dynamic=False)
 
 
     def _make_layer(self, inplanes, planes, blocks=1, stride=1):
