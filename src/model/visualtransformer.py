@@ -191,7 +191,7 @@ class PositionEmbeddingLearned(nn.Module):
         
         h,w = input_size # feature size
         N, h, HW, L = token_coef.shape
-
+        print("token_coef", token_coef.shape, input_size)
         i = torch.arange(w, device=token_coef.device)
         j = torch.arange(h, device=token_coef.device)
         x_emb = self.col_embed(i)
@@ -201,11 +201,11 @@ class PositionEmbeddingLearned(nn.Module):
             y_emb.unsqueeze(1).repeat(1, w, 1),
 
         ], dim=-1)
-        print(pos.shape)
+        print("pos1", pos.shape)
         pos = pos.permute(2, 0, 1).unsqueeze(0).repeat(N*L, 1, 1, 1) 
-        print(pos.shape)
+        print("pos2", pos.shape)
         pos = pos.view(N, -1, L) # N, Cp, L
-        print(pos.shape)
+        print("pos3", pos.shape)
         return pos
 
 
