@@ -75,14 +75,14 @@ class Tokenizer(nn.Module):
         # feature: N,C,H,W, tokens: N, CT, L
         if not self.dynamic:
             token_coef = self.conv_token_coef(feature)
-            print(torch.min(token_coef), torch.max(token_coef))
-            print(token_coef.is_contiguous())
+            #print(torch.min(token_coef), torch.max(token_coef))
+            #print(token_coef.is_contiguous())
             N, L, H, W = token_coef.shape
             token_coef = token_coef.view(N,1,L,H*W)
             token_coef = token_coef.permute(0,1,3,2) # N,1,HW,L
             #token_coef = token_coef/np.sqrt(feature.shape[1])
-            print(torch.min(token_coef), torch.max(token_coef))
-            print(token_coef.is_contiguous())
+            #print(torch.min(token_coef), torch.max(token_coef))
+            #print(token_coef.is_contiguous())
         else:
             L = tokens.shape[2]
             # Split input tokens
