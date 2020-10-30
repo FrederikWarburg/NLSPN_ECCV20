@@ -79,7 +79,7 @@ class Tokenizer(nn.Module):
             N, L, H, W = token_coef.shape
             token_coef = token_coef.view(N,1,L,H*W)
             token_coef = token_coef.permute(0,1,3,2) # N,1,HW,L
-            token_coef = token_coef/np.sqrt(feature.shape[1])
+            #token_coef = token_coef/np.sqrt(feature.shape[1])
         else:
             L = tokens.shape[2]
             # Split input tokens
@@ -96,11 +96,11 @@ class Tokenizer(nn.Module):
             token_coef = torch.matmul(key.permute(0,1,3,2),query)
             #token_coef = token_coef/np.sqrt(C/self.head)
         
-
-        N, C, H, W = feature.shape
-
         # store token_coef for visualizations
         self.token_coef = token_coef
+      
+
+        N, C, H, W = feature.shape
 
         token_coef = F.softmax(token_coef,dim = 2)
         value = self.conv_value(feature).view(N, self.head, self.CT//self.head , H*W) # N,h,C//h,HW
