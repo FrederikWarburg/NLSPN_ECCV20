@@ -15,7 +15,7 @@ def conv3x3_2d(channel_in, channel_out, stride=1, groups=1, padding=1):
 
 
 class VisualTransformer(nn.Module):
-    def __init__(self, L, CT, C, head = 16, groups = 16, kqv_groups = 16, dynamic = False):
+    def __init__(self, L, CT, C, size =14, num_downsample = 1, head = 16, groups = 16, kqv_groups = 16, dynamic = False):
         super(VisualTransformer,self).__init__()
         self.L = L # number of tokens
         self.CT = CT # size of tokens
@@ -23,8 +23,10 @@ class VisualTransformer(nn.Module):
         self.head = head
         self.groups = groups
         self.kqv_groups = kqv_groups
+        self.size = size
+        self.num_downsample = num_downsample
 
-        self.tokenizer = Tokenizer(L, CT, C, head=head, groups=groups)
+        self.tokenizer = Tokenizer(L, CT, C, size=size, num_downsample=num_downsample, head=head, groups=groups)
         self.transformer = Transformer(CT, head=head, kqv_groups=kqv_groups)
         self.projector = Projector(CT, C, head=head, groups=groups)
 
@@ -40,7 +42,7 @@ class VisualTransformer(nn.Module):
         return dst
 
 class Tokenizer(nn.Module):
-    def __init__(self,L,CT,C,head = 16,groups = 16,dynamic = False):
+    def __init__(self,L,CT,C,size = 14, num_downsample = 1, head = 16,groups = 16,dynamic = False):
         super(Tokenizer,self).__init__()
         if not dynamic:
             #use static weights to compute token coefficients.
@@ -53,8 +55,8 @@ class Tokenizer(nn.Module):
         
         self.conv_value = conv1x1_2d(C,CT,groups = groups)
 
-        num_downsample = 1
-        size = 14
+        num_downsample = num_downsample
+        size = size
         self.CT = CT
         self.pos_encoding = PosEncoder(size, num_downsample)
         self.conv_token = conv1x1_1d(self.CT+self.pos_encoding.pos_dim, self.CT)
