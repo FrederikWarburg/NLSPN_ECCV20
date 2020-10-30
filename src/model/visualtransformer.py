@@ -80,7 +80,8 @@ class Tokenizer(nn.Module):
             N, L, H, W = token_coef.shape
             token_coef = token_coef.view(N,1,L,H*W)
             token_coef = token_coef.permute(0,1,3,2) # N,1,HW,L
-            #token_coef = token_coef/np.sqrt(feature.shape[1])
+            print(np.sqrt(feature.shape[1]), feature.shape[1])
+            token_coef = token_coef/np.sqrt(feature.shape[1])
             #print(torch.min(token_coef), torch.max(token_coef))
             #print(token_coef.is_contiguous())
         else:
@@ -102,7 +103,6 @@ class Tokenizer(nn.Module):
         # store token_coef for visualizations
         self.token_coef = token_coef
       
-
         N, C, H, W = feature.shape
 
         token_coef = F.softmax(token_coef,dim = 2)
