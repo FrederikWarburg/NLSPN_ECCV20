@@ -171,6 +171,43 @@ class PosEncoder(nn.Module):
         #compress and compute the position encoding.
         return self.pos_conv(token_coef) # N, Cp, L
 
+
+class PositionEmbeddingLearned(nn.Module):
+    """
+    Absolute pos embedding, learned.
+    """
+    def __init__(self, num_pos_feats=256):
+        super().__init__()
+        self.row_embed = nn.Embedding(50, num_pos_feats)
+        self.col_embed = nn.Embedding(50, num_pos_feats)
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        nn.init.uniform_(self.row_embed.weight)
+        nn.init.uniform_(self.col_embed.weight)
+
+    def forward(self, token_coef, input_size):
+        
+        h,w = input_size # feature size
+        N, h, HW, L = token_coef.shape
+
+        i = torch.arange(w, device=token_coef.device)
+        j = torch.arange(h, device=token_coef.device)
+        x_emb = self.col_embed(i)
+        y_emb = self.row_embed(j)
+        pos = torch.cat([
+            x_emb.unsqueeze(0).repeat(h, 1, 1),
+            y_emb.unsqueeze(1).repeat(1, w, 1),
+
+        ], dim=-1)
+        print(pos.shape)
+        pos = pos.permute(2, 0, 1).unsqueeze(0).repeat(N*L, 1, 1, 1) 
+        print(pos.shape)
+        pos = pos.view(N, -1, L) # N, Cp, L
+        print(pos.shape)
+        return pos
+
+
 class Transformer(nn.Module):
     def __init__(self,CT,head=16,kqv_groups=8):
         super(Transformer,self).__init__()
