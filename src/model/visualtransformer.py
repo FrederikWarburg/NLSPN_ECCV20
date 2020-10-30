@@ -58,7 +58,7 @@ class Tokenizer(nn.Module):
         num_downsample = num_downsample
         size = size
         self.CT = CT
-        self.pos_encoding = PosEncoder(size, num_downsample)
+        self.pos_encoding = PositionEmbeddingLearned(size, num_downsample)
         self.conv_token = conv1x1_1d(self.CT+self.pos_encoding.pos_dim, self.CT)
         self.head = head
         self.dynamic = dynamic
@@ -176,7 +176,7 @@ class PositionEmbeddingLearned(nn.Module):
     """
     Absolute pos embedding, learned.
     """
-    def __init__(self, num_pos_feats=256):
+    def __init__(self, size, num_downsample, num_pos_feats=256):
         super().__init__()
         self.row_embed = nn.Embedding(50, num_pos_feats)
         self.col_embed = nn.Embedding(50, num_pos_feats)
