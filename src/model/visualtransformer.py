@@ -74,10 +74,10 @@ class Tokenizer(nn.Module):
         #compute token coefficients
         # feature: N,C,H,W, tokens: N, CT, L
         if not self.dynamic:
-            print(feature.shape)
+            #print(feature.shape)
             token_coef = self.conv_token_coef(feature)
             #print(torch.min(token_coef), torch.max(token_coef))
-            print("1", token_coef.is_contiguous())
+            #print("1", token_coef.is_contiguous())
             #print("tio", token_coef.shape)
             #token_coef = token_coef.permute(0,1,3,2)
             #print("tio1", token_coef.shape)
@@ -87,12 +87,9 @@ class Tokenizer(nn.Module):
             #print(np.sqrt(feature.shape[1]), feature.shape[1])
             token_coef = token_coef/np.sqrt(feature.shape[1])
             #print(torch.min(token_coef), torch.max(token_coef))
-            print("2", token_coef.is_contiguous())
+            #print("2", token_coef.is_contiguous())
 
-            # store token_coef for visualizations
 
-            import pdb; pdb.set_trace()
-            self.token_coef = token_coef.clone()
         else:
             L = tokens.shape[2]
             # Split input tokens
@@ -141,6 +138,10 @@ class Tokenizer(nn.Module):
         print("pos_encoding", pos_encoding.shape)
         print("value", value.shape)
         """
+
+        # store token_coef for visualizations
+        self.token_coef = token_coef.clone()
+
         return tokens
 
 class PosEncoder(nn.Module):
