@@ -180,6 +180,7 @@ class PositionEmbeddingLearned(nn.Module):
         super().__init__()
         self.row_embed = nn.Embedding(50, num_pos_feats)
         self.col_embed = nn.Embedding(50, num_pos_feats)
+        self.pos_dim = 50 * num_pos_feats
         self.reset_parameters()
 
     def reset_parameters(self):
