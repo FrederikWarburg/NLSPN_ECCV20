@@ -78,16 +78,19 @@ class Tokenizer(nn.Module):
             token_coef = self.conv_token_coef(feature)
             #print(torch.min(token_coef), torch.max(token_coef))
             #print(token_coef.is_contiguous())
-            print("tio", token_coef.shape)
-            token_coef = token_coef.permute(0,1,3,2)
-            print("tio1", token_coef.shape)
+            #print("tio", token_coef.shape)
+            #token_coef = token_coef.permute(0,1,3,2)
+            #print("tio1", token_coef.shape)
             N, L, H, W = token_coef.shape
             token_coef = token_coef.view(N,1,L,H*W)
             token_coef = token_coef.permute(0,1,3,2) # N,1,HW,L
-            print(np.sqrt(feature.shape[1]), feature.shape[1])
+            #print(np.sqrt(feature.shape[1]), feature.shape[1])
             token_coef = token_coef/np.sqrt(feature.shape[1])
             #print(torch.min(token_coef), torch.max(token_coef))
             #print(token_coef.is_contiguous())
+
+            # store token_coef for visualizations
+            self.token_coef = token_coef.clone()
         else:
             L = tokens.shape[2]
             # Split input tokens
@@ -104,8 +107,7 @@ class Tokenizer(nn.Module):
             token_coef = torch.matmul(key.permute(0,1,3,2),query)
             #token_coef = token_coef/np.sqrt(C/self.head)
         
-        # store token_coef for visualizations
-        self.token_coef = token_coef
+
       
         N, C, H, W = feature.shape
 
