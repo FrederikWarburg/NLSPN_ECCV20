@@ -94,10 +94,14 @@ class Tokenizer(nn.Module):
             #Compute token coefficients.
             #N,h,HW,L_a
             token_coef = torch.matmul(key.permute(0,1,3,2),query)
-            token_coef = token_coef/np.sqrt(C/self.head)
+            #token_coef = token_coef/np.sqrt(C/self.head)
         
 
         N, C, H, W = feature.shape
+
+        # store token_coef for visualizations
+        self.token_coef = token_coef
+
         token_coef = F.softmax(token_coef,dim = 2)
         value = self.conv_value(feature).view(N, self.head, self.CT//self.head , H*W) # N,h,C//h,HW
 
@@ -108,20 +112,17 @@ class Tokenizer(nn.Module):
 
         # compute position encoding
         # if static: pos_encoding: N, Cp, L  else: N,Cp,L_a
-        #pos_encoding = self.pos_encoding(token_coef, (H,W))
+        pos_encoding = self.pos_encoding(token_coef, (H,W))
 
-        #tokens = torch.cat((tokens,pos_encoding),dim = 1)
+        tokens = torch.cat((tokens,pos_encoding),dim = 1)
 
         if not self.dynamic:
             # N, C+Cp , L -> N, CT , L
-            #tokens = self.conv_token(tokens)
-            pass
+            tokens = self.conv_token(tokens)
         else:
             # N, C+Cp , L_a -> N, CT , L_a , then cat to N, CT , (L_a + L_b )
             tokens = torch.cat(( T_b, self.conv_token(tokens)), dim = 2)
 
-        # store token_coef for visualizations
-        self.token_coef = token_coef
         
         """
         print("tokencoef", token_coef.shape)
