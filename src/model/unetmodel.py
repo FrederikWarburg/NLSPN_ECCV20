@@ -99,10 +99,11 @@ class UNETModel(nn.Module):
         # VISUAL TRANSFORMER
         ####
 
-        self.vt1 = VisualTransformer(L=args.num_tokens, CT=args.token_size, C=64, size = 512, num_downsample = 6, head=args.num_heads, groups=args.groups, kqv_groups=args.kqv_groups, dynamic=False)
-        self.vt2 = VisualTransformer(L=args.num_tokens, CT=args.token_size, C=128, size = 256, num_downsample = 5,head=args.num_heads, groups=args.groups, kqv_groups=args.kqv_groups, dynamic=False)
-        self.vt3 = VisualTransformer(L=args.num_tokens, CT=args.token_size, C=256, size = 128, num_downsample = 4,head=args.num_heads, groups=args.groups, kqv_groups=args.kqv_groups, dynamic=False)
-        self.vt4 = VisualTransformer(L=args.num_tokens, CT=args.token_size, C=512, size = 64, num_downsample = 3,head=args.num_heads, groups=args.groups, kqv_groups=args.kqv_groups, dynamic=False)
+        if args.attention_type == 'VT':
+            self.vt1 = VisualTransformer(L=args.num_tokens, CT=args.token_size, C=64, size = 512, num_downsample = 6, head=args.num_heads, groups=args.groups, kqv_groups=args.kqv_groups, dynamic=False)
+            self.vt2 = VisualTransformer(L=args.num_tokens, CT=args.token_size, C=128, size = 256, num_downsample = 5,head=args.num_heads, groups=args.groups, kqv_groups=args.kqv_groups, dynamic=False)
+            self.vt3 = VisualTransformer(L=args.num_tokens, CT=args.token_size, C=256, size = 128, num_downsample = 4,head=args.num_heads, groups=args.groups, kqv_groups=args.kqv_groups, dynamic=False)
+            self.vt4 = VisualTransformer(L=args.num_tokens, CT=args.token_size, C=512, size = 64, num_downsample = 3,head=args.num_heads, groups=args.groups, kqv_groups=args.kqv_groups, dynamic=False)
 
 
     def _make_layer(self, inplanes, planes, blocks=1, stride=1):
@@ -192,27 +193,31 @@ class UNETModel(nn.Module):
         fe1_dep = self.conv1_dep(dep)
         fe2_dep = self.conv2_dep(self._guide(fd1_rgb, fe1_rgb, fe1_dep, guide=self.guide, dim=1))
 
-        # we need first to remove some extra padding which is added in the decoding stage
-        fd2_rgb = self._remove_extra_pad(fd2_rgb, fe2_dep)
-        fe2_dep = self.vt1(fd2_rgb, fe2_dep)
+        if self.args.attention_type == 'VT':
+            # we need first to remove some extra padding which is added in the decoding stage
+            fd2_rgb = self._remove_extra_pad(fd2_rgb, fe2_dep)
+            fe2_dep = self.vt1(fd2_rgb, fe2_dep)
 
         fe3_dep = self.conv3_dep(self._guide(fd2_rgb, fe2_rgb, fe2_dep, guide=self.guide, dim=1))
 
-        # we need first to remove some extra padding which is added in the decoding stage
-        fd3_rgb = self._remove_extra_pad(fd3_rgb, fe3_dep)
-        fe3_dep = self.vt2(fd3_rgb, fe3_dep)
+        if self.args.attention_type == 'VT':
+            # we need first to remove some extra padding which is added in the decoding stage
+            fd3_rgb = self._remove_extra_pad(fd3_rgb, fe3_dep)
+            fe3_dep = self.vt2(fd3_rgb, fe3_dep)
 
         fe4_dep = self.conv4_dep(self._guide(fd3_rgb, fe3_rgb, fe3_dep, guide=self.guide, dim=1))
 
-        # we need first to remove some extra padding which is added in the decoding stage
-        fd4_rgb = self._remove_extra_pad(fd4_rgb, fe4_dep)
-        fe4_dep = self.vt3(fd4_rgb, fe4_dep)
+        if self.args.attention_type == 'VT':
+            # we need first to remove some extra padding which is added in the decoding stage
+            fd4_rgb = self._remove_extra_pad(fd4_rgb, fe4_dep)
+            fe4_dep = self.vt3(fd4_rgb, fe4_dep)
 
         fe5_dep = self.conv5_dep(self._guide(fd4_rgb, fe4_rgb, fe4_dep, guide=self.guide, dim=1))
 
-        # we need first to remove some extra padding which is added in the decoding stage
-        fd5_rgb = self._remove_extra_pad(fd5_rgb, fe5_dep)
-        fe5_dep = self.vt4(fd5_rgb, fe5_dep)
+        if self.args.attention_type == 'VT':
+            # we need first to remove some extra padding which is added in the decoding stage
+            fd5_rgb = self._remove_extra_pad(fd5_rgb, fe5_dep)
+            fe5_dep = self.vt4(fd5_rgb, fe5_dep)
 
         fe6_dep = self.conv6_dep(fe5_dep)
         
@@ -238,7 +243,10 @@ class UNETModel(nn.Module):
         pred = self._remove_extra_pad(pred, dep)
         confidence = self._remove_extra_pad(confidence, dep)
 
-        output = {'pred': pred, 'confidence': confidence, 'vt1': self.vt1, 'vt2': self.vt2, 'vt3':self.vt3, 'vt4':self.vt4}
+        if self.args.attention_type == 'VT':
+            output = {'pred': pred, 'confidence': confidence, 'vt1': self.vt1, 'vt2': self.vt2, 'vt3':self.vt3, 'vt4':self.vt4}
+        else:
+            output = {'pred': pred, 'confidence': confidence}
 
         return output
 
