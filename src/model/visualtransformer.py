@@ -75,6 +75,7 @@ class Tokenizer(nn.Module):
         # feature: N,C,H,W, tokens: N, CT, L
         if not self.dynamic:
             token_coef = self.conv_token_coef(feature)
+
             N, L, H, W = token_coef.shape
             token_coef = token_coef.view(N,1,L,H*W)
             token_coef = token_coef.permute(0,1,3,2) # N,1,HW,L
@@ -87,7 +88,7 @@ class Tokenizer(nn.Module):
             query = self.conv_query(T_a)
             N,C,L_a = query.shape
             #N,h,C//h,L_a
-            query = query.view(N,self.head,C//self.head,L_a)
+            query = query.view(N,token_coef.head,C//self.head,L_a)
             N,C,H,W = feature.shape
             key = self.conv_key(feature).view(N,self.head,C//self.head,H*W) # N,h,C//h,HW
             #Compute token coefficients.
@@ -107,13 +108,14 @@ class Tokenizer(nn.Module):
 
         # compute position encoding
         # if static: pos_encoding: N, Cp, L  else: N,Cp,L_a
-        pos_encoding = self.pos_encoding(token_coef, (H,W))
+        #pos_encoding = self.pos_encoding(token_coef, (H,W))
 
-        tokens = torch.cat((tokens,pos_encoding),dim = 1)
+        #tokens = torch.cat((tokens,pos_encoding),dim = 1)
 
         if not self.dynamic:
             # N, C+Cp , L -> N, CT , L
-            tokens = self.conv_token(tokens)
+            #tokens = self.conv_token(tokens)
+            pass
         else:
             # N, C+Cp , L_a -> N, CT , L_a , then cat to N, CT , (L_a + L_b )
             tokens = torch.cat(( T_b, self.conv_token(tokens)), dim = 2)
@@ -170,84 +172,6 @@ class PosEncoder(nn.Module):
 
         #compress and compute the position encoding.
         return self.pos_conv(token_coef) # N, Cp, L
-
-class PositionEmbeddingSine(nn.Module):
-    """
-    This is a more standard version of the position embedding, very similar to the one
-    used by the Attention is all you need paper, generalized to work on images.
-    """
-    def __init__(self, num_pos_feats=64, temperature=10000, normalize=False, scale=None):
-        super().__init__()
-        self.num_pos_feats = num_pos_feats
-        self.temperature = temperature
-        self.normalize = normalize
-        if scale is not None and normalize is False:
-            raise ValueError("normalize should be True if scale is passed")
-        if scale is None:
-            scale = 2 * math.pi
-        self.scale = scale
-
-    def forward(self, tensor_list: NestedTensor):
-        x = tensor_list.tensors
-        mask = tensor_list.mask
-        assert mask is not None
-        not_mask = ~mask
-        y_embed = not_mask.cumsum(1, dtype=torch.float32)
-        x_embed = not_mask.cumsum(2, dtype=torch.float32)
-        if self.normalize:
-            eps = 1e-6
-            y_embed = y_embed / (y_embed[:, -1:, :] + eps) * self.scale
-            x_embed = x_embed / (x_embed[:, :, -1:] + eps) * self.scale
-
-        dim_t = torch.arange(self.num_pos_feats, dtype=torch.float32, device=x.device)
-        dim_t = self.temperature ** (2 * (dim_t // 2) / self.num_pos_feats)
-
-        pos_x = x_embed[:, :, :, None] / dim_t
-        pos_y = y_embed[:, :, :, None] / dim_t
-        pos_x = torch.stack((pos_x[:, :, :, 0::2].sin(), pos_x[:, :, :, 1::2].cos()), dim=4).flatten(3)
-        pos_y = torch.stack((pos_y[:, :, :, 0::2].sin(), pos_y[:, :, :, 1::2].cos()), dim=4).flatten(3)
-        pos = torch.cat((pos_y, pos_x), dim=3).permute(0, 3, 1, 2)
-        return pos
-
-class PositionEmbeddingLearned(nn.Module):
-    """
-    Absolute pos embedding, learned.
-    """
-    def __init__(self, size, num_downsample, num_pos_feats=256):
-        super().__init__()
-        self.row_embed = nn.Embedding(50, num_pos_feats)
-        self.col_embed = nn.Embedding(50, num_pos_feats)
-        self.pos_dim = 50 * num_pos_feats
-        self.reset_parameters()
-
-    def reset_parameters(self):
-        nn.init.uniform_(self.row_embed.weight)
-        nn.init.uniform_(self.col_embed.weight)
-
-    def forward(self, token_coef, input_size):
-        
-        h,w = input_size # feature size
-        N, head, HW, L = token_coef.shape
-        print("token_coef", token_coef.shape, input_size)
-        i = torch.arange(w, device=token_coef.device)
-        j = torch.arange(h, device=token_coef.device)
-        print(i.shape, w)
-        print(j.shape, h)
-        x_emb = self.col_embed(i)
-        y_emb = self.row_embed(j)
-        print("x_emb", x_emb.shape)
-        print("y_emb", y_emb.shape)
-        pos = torch.cat([
-            x_emb.unsqueeze(0).repeat(h, 1, 1),
-            y_emb.unsqueeze(1).repeat(1, w, 1),
-
-        ], dim=-1)
-        print("pos1", pos.shape)
-        pos = pos.permute(2, 0, 1).unsqueeze(0).repeat(N*L, 1, 1, 1) 
-        print("pos2", pos.shape)
-        pos = pos.view(N, -1, L) # N, Cp, L
-        print("pos3", pos.shape)
-        return pos
 
 
 class Transformer(nn.Module):
