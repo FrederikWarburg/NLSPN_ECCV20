@@ -177,7 +177,7 @@ class UNETModel(nn.Module):
         ####
 
         # Encoder
-        self.conv1_rgb = torch.nn.Sequential(*[net.conv1, net.bn1, net.relu, net.maxpool]) #1/2
+        self.conv1_rgb = torch.nn.Sequential(*[net.conv1, net.bn1, net.relu]) #1/2
         self.conv2_rgb = net.layer1 #1/2
         self.conv3_rgb = net.layer2 #1/4
         self.conv4_rgb = net.layer3 #1/8
@@ -273,29 +273,29 @@ class UNETModel(nn.Module):
         print("2", fe2_dep.shape, fd2_rgb.shape)
         if self.args.attention_type == 'VT':
             # we need first to remove some extra padding which is added in the decoding stage
-            fd2_rgb = _remove_extra_pad(fd2_rgb, fe2_dep)
-            fe2_dep = self.vt1(fd2_rgb, fe2_dep)
+            fd1_rgb = _remove_extra_pad(fd1_rgb, fe2_dep)
+            fe2_dep = self.vt1(fd1_rgb, fe2_dep)
 
         fe3_dep = self.conv3_dep(_guide(fd2_rgb, fe2_rgb, fe2_dep, guide=self.guide, dim=1))
 
         if self.args.attention_type == 'VT':
             # we need first to remove some extra padding which is added in the decoding stage
-            fd3_rgb = _remove_extra_pad(fd3_rgb, fe3_dep)
-            fe3_dep = self.vt2(fd3_rgb, fe3_dep)
+            fd2_rgb = _remove_extra_pad(fd2_rgb, fe3_dep)
+            fe3_dep = self.vt2(fd2_rgb, fe3_dep)
 
         fe4_dep = self.conv4_dep(_guide(fd3_rgb, fe3_rgb, fe3_dep, guide=self.guide, dim=1))
 
         if self.args.attention_type == 'VT':
             # we need first to remove some extra padding which is added in the decoding stage
-            fd4_rgb = _remove_extra_pad(fd4_rgb, fe4_dep)
-            fe4_dep = self.vt3(fd4_rgb, fe4_dep)
+            fd3_rgb = _remove_extra_pad(fd3_rgb, fe4_dep)
+            fe4_dep = self.vt3(fd3_rgb, fe4_dep)
 
         fe5_dep = self.conv5_dep(_guide(fd4_rgb, fe4_rgb, fe4_dep, guide=self.guide, dim=1))
 
         if self.args.attention_type == 'VT':
             # we need first to remove some extra padding which is added in the decoding stage
-            fd5_rgb = _remove_extra_pad(fd5_rgb, fe5_dep)
-            fe5_dep = self.vt4(fd5_rgb, fe5_dep)
+            fd4_rgb = _remove_extra_pad(fd4_rgb, fe5_dep)
+            fe5_dep = self.vt4(fd4_rgb, fe5_dep)
 
         fe6_dep = self.conv6_dep(fe5_dep)
         
