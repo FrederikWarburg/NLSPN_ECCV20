@@ -165,6 +165,8 @@ def train(gpu, args):
                 os.makedirs(args.save_dir + '/val', exist_ok=True)
             except OSError:
                 pass
+    else:
+        print("DEBUG MODE")
 
     if gpu == 0:
         writer_train = summary(args.save_dir, 'train', args,
