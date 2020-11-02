@@ -50,10 +50,10 @@ class UNETModel(nn.Module):
         self.conv3_rgb = net.layer2 #1/4
         self.conv4_rgb = net.layer3 #1/8
         self.conv5_rgb = net.layer4 #1/16
-        self.conv6_rgb = self.conv_bn_relu(512, 512, kernel=3, stride=2, padding=1, bn=True, relu=True) # 1/32
+        self.conv6_rgb = self.conv_bn_relu(512, 1024, kernel=3, stride=2, padding=1, bn=True, relu=True) # 1/32
 
         # Decoder
-        self.dec5_rgb = self.convt_bn_relu(512, 512, kernel=3, stride=2, padding=1, output_padding=1) # 1/16
+        self.dec5_rgb = self.convt_bn_relu(1024, 512, kernel=3, stride=2, padding=1, output_padding=1) # 1/16
         self.dec4_rgb = self.convt_bn_relu(512+self.D_skip * 512, 256, kernel=3, stride=2, padding=1, output_padding=1) # 1/8
         self.dec3_rgb = self.convt_bn_relu(256+self.D_skip * 256, 128, kernel=3, stride=2, padding=1, output_padding=1) # 1/4
         self.dec2_rgb = self.convt_bn_relu(128+self.D_skip * 128, 64, kernel=3, stride=2, padding=1, output_padding=1) # 1/2
@@ -75,10 +75,10 @@ class UNETModel(nn.Module):
             self.conv3_dep = self._make_layer(64 + self.D_guide * 64, 128, stride=2, blocks=2) # 1/4
             self.conv4_dep = self._make_layer(128 + self.D_guide * 128, 256, stride=2, blocks=2) # 1/8
             self.conv5_dep = self._make_layer(256 + self.D_guide * 256, 512, stride=2, blocks=2) # 1/16
-        self.conv6_dep = self.conv_bn_relu(512, 512, kernel=3, stride=2, padding=1, bn=True, relu=True, maxpool=False) # 1/32
+        self.conv6_dep = self.conv_bn_relu(512, 1024, kernel=3, stride=2, padding=1, bn=True, relu=True, maxpool=False) # 1/32
 
         # Decoder
-        self.dec5_dep = self.convt_bn_relu(512, 512, kernel=3, stride=2, padding=1, output_padding=1) # 1/16
+        self.dec5_dep = self.convt_bn_relu(1024, 512, kernel=3, stride=2, padding=1, output_padding=1) # 1/16
         self.dec4_dep = self.convt_bn_relu(512+self.D_skip * 512, 256, kernel=3, stride=2, padding=1, output_padding=1) # 1/8
         self.dec3_dep = self.convt_bn_relu(256+self.D_skip * 256, 128, kernel=3, stride=2, padding=1, output_padding=1) # 1/4
         self.dec2_dep = self.convt_bn_relu(128+self.D_skip * 128, 64, kernel=3, stride=2, padding=1, output_padding=1) # 1/2
