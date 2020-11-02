@@ -257,15 +257,15 @@ class UNETModel(nn.Module):
 
         # Decoding RGB
         print("1", fe6_rgb.shape)
-        fd5_rgb = self.dec5_rgb(fe6_rgb)
-        print("2", fd5_rgb.shape, fe5_rgb.shape)
-        fd4_rgb = self.dec4_rgb(fd5_rgb, fe5_rgb)
+        #fd5_rgb = self.dec5_rgb(fe6_rgb)
+        print("2", fd5_rgb.shape, fe6_rgb.shape)
+        fd4_rgb = self.dec4_rgb(fd5_rgb, fe6_rgb)
         print("3", fd4_rgb.shape, fe4_rgb.shape)
-        fd3_rgb = self.dec3_rgb(fd4_rgb, fe4_rgb)
+        fd3_rgb = self.dec3_rgb(fd4_rgb, fe5_rgb)
         print("4", fd3_rgb.shape, fe3_rgb.shape)
-        fd2_rgb = self.dec2_rgb(fd3_rgb, fe3_rgb)
+        fd2_rgb = self.dec2_rgb(fd3_rgb, fe4_rgb)
         print("5", fd2_rgb.shape, fe2_rgb.shape)
-        fd1_rgb = self.dec1_rgb(fd2_rgb, fe2_rgb)
+        fd1_rgb = self.dec1_rgb(fd2_rgb, fe3_rgb)
         
         ###
         # DEPTH UNET
