@@ -65,7 +65,7 @@ class UNETModel(nn.Module):
         ####
 
         # Encoder
-        self.conv1_dep = self.conv_bn_relu(1, 64, kernel=7, stride=2, padding=3, bn=True, relu=True, maxpool=False) # 1/2
+        self.conv1_dep = self.conv_bn_relu(1, 64, kernel=7, stride=2, padding=3, bn=False, relu=True, maxpool=False) # 1/2
         if self.aggregate == 'sum':
             self.conv2_dep = net.layer1 # 1/2
             self.conv3_dep = net.layer2 # 1/4
@@ -76,21 +76,21 @@ class UNETModel(nn.Module):
             self.conv3_dep = self._make_layer(64 + self.D_guide * 64, 128, stride=2, blocks=2) # 1/4
             self.conv4_dep = self._make_layer(128 + self.D_guide * 128, 256, stride=2, blocks=2) # 1/8
             self.conv5_dep = self._make_layer(256 + self.D_guide * 256, 512, stride=2, blocks=2) # 1/16
-        self.conv6_dep = self.conv_bn_relu(512, 1024, kernel=3, stride=2, padding=1, bn=True, relu=True, maxpool=False) # 1/32
+        self.conv6_dep = self.conv_bn_relu(512, 1024, kernel=3, stride=2, padding=1, bn=False, relu=True, maxpool=False) # 1/32
 
         # Decoder
-        self.dec5_dep = self.convt_bn_relu(1024, 512, kernel=3, stride=2, padding=1, output_padding=1, upsampling=self.upsampling) # 1/16
-        self.dec4_dep = self.convt_bn_relu(512+self.D_skip * 512, 256, kernel=3, stride=2, padding=1, output_padding=1, upsampling=self.upsampling) # 1/8
-        self.dec3_dep = self.convt_bn_relu(256+self.D_skip * 256, 128, kernel=3, stride=2, padding=1, output_padding=1, upsampling=self.upsampling) # 1/4
-        self.dec2_dep = self.convt_bn_relu(128+self.D_skip * 128, 64, kernel=3, stride=2, padding=1, output_padding=1, upsampling=self.upsampling) # 1/2
-        self.dec1_dep = self.convt_bn_relu(64+self.D_skip * 64, 64, kernel=3, stride=2, padding=1, output_padding=1, upsampling=self.upsampling) # 1/1
+        self.dec5_dep = self.convt_bn_relu(1024, 512, kernel=3, stride=2, padding=1, output_padding=1, bn=False, upsampling=self.upsampling) # 1/16
+        self.dec4_dep = self.convt_bn_relu(512+self.D_skip * 512, 256, kernel=3, stride=2, padding=1, output_padding=1, bn=False, upsampling=self.upsampling) # 1/8
+        self.dec3_dep = self.convt_bn_relu(256+self.D_skip * 256, 128, kernel=3, stride=2, padding=1, output_padding=1, bn=False, upsampling=self.upsampling) # 1/4
+        self.dec2_dep = self.convt_bn_relu(128+self.D_skip * 128, 64, kernel=3, stride=2, padding=1, output_padding=1, bn=False, upsampling=self.upsampling) # 1/2
+        self.dec1_dep = self.convt_bn_relu(64+self.D_skip * 64, 64, kernel=3, stride=2, padding=1, output_padding=1, bn=False, upsampling=self.upsampling) # 1/1
 
         # Depth Branch
-        self.id_dec1 = self.conv_bn_relu(64, 64, kernel=3, stride=1, padding=1, bn=True, relu=True, maxpool=False) # 1/1
-        self.id_dec0 = self.conv_bn_relu(64, 1, kernel=3, stride=1, padding=1, bn=True, relu=True, maxpool=False)
+        self.id_dec1 = self.conv_bn_relu(64, 64, kernel=3, stride=1, padding=1, bn=False, relu=True, maxpool=False) # 1/1
+        self.id_dec0 = self.conv_bn_relu(64, 1, kernel=3, stride=1, padding=1, bn=False, relu=True, maxpool=False)
 
         # Confidence Branch
-        self.cf_dec1 = self.conv_bn_relu(64, 64, kernel=3, stride=1, padding=1, bn=True, relu=True, maxpool=False) # 1/1
+        self.cf_dec1 = self.conv_bn_relu(64, 64, kernel=3, stride=1, padding=1, bn=False, relu=True, maxpool=False) # 1/1
         self.cf_dec0 = nn.Sequential(
             nn.Conv2d(64, 1, kernel_size=3, stride=1, padding=1),
             nn.Softplus()
@@ -144,10 +144,15 @@ class UNETModel(nn.Module):
             layers.append(nn.LeakyReLU(0.2, inplace=True))
 
         layers.append(nn.Conv2d(ch_out, ch_out, kernel_size=(3,3), padding=(1,1)))
-        layers.append(nn.BatchNorm2d(ch_out))
+        
+        if bn:
+            layers.append(nn.BatchNorm2d(ch_out))
+        
         layers.append(nn.LeakyReLU(0.2, inplace=True))
         layers.append(nn.Conv2d(ch_out, ch_out, kernel_size=(3,3), padding=(1,1)))
-        layers.append(nn.BatchNorm2d(ch_out))
+
+        if bn:
+            layers.append(nn.BatchNorm2d(ch_out))
         layers.append(nn.LeakyReLU(0.2, inplace=True))
 
         layers = nn.Sequential(*layers)
