@@ -128,10 +128,11 @@ class Upsample(nn.Module):
                 bn=bn, relu=relu)
 
     def forward(self, x, x1 = None):
-        print(x.shape, x1.shape)
+        print("x", x.shape)
         x = self.upsampling(x)
 
         if x1 is not None:
+            print(x.shape, x1.shape)
             x = _concat(x, x1, aggregate=self.aggregate, dim=1)
 
         x = self.conv(x)
