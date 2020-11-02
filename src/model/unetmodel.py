@@ -45,26 +45,26 @@ class UNETModel(nn.Module):
         ####
 
         # Encoder
-        self.conv1_rgb = torch.nn.Sequential(*[net.conv1, net.bn1, net.relu])#1/2
+        self.conv1_rgb = torch.nn.Sequential(*[net.conv1, net.bn1, net.relu, net.maxpool]) #1/2
         self.conv2_rgb = net.layer1 #1/2
         self.conv3_rgb = net.layer2 #1/4
         self.conv4_rgb = net.layer3 #1/8
         self.conv5_rgb = net.layer4 #1/16
-        self.conv6_rgb = conv_bn_relu(512, 512, kernel=3, stride=2, padding=1, bn=False) # 1/32
+        self.conv6_rgb = self.conv_bn_relu(512, 512, kernel=3, stride=2, padding=1, bn=True, relu=True) # 1/32
 
         # Decoder
-        self.dec5_rgb = convt_bn_relu(512, 512, kernel=3, stride=2, padding=1, output_padding=1) # 1/16
-        self.dec4_rgb = convt_bn_relu(512+self.D_skip * 512, 256, kernel=3, stride=2, padding=1, output_padding=1) # 1/8
-        self.dec3_rgb = convt_bn_relu(256+self.D_skip * 256, 128, kernel=3, stride=2, padding=1, output_padding=1) # 1/4
-        self.dec2_rgb = convt_bn_relu(128+self.D_skip * 128, 64, kernel=3, stride=2, padding=1, output_padding=1) # 1/2
-        self.dec1_rgb = conv_bn_relu(64+self.D_skip * 64, 64, kernel=3, stride=1, padding=1) # 1/2
+        self.dec5_rgb = self.convt_bn_relu(512, 512, kernel=3, stride=2, padding=1, output_padding=1) # 1/16
+        self.dec4_rgb = self.convt_bn_relu(512+self.D_skip * 512, 256, kernel=3, stride=2, padding=1, output_padding=1) # 1/8
+        self.dec3_rgb = self.convt_bn_relu(256+self.D_skip * 256, 128, kernel=3, stride=2, padding=1, output_padding=1) # 1/4
+        self.dec2_rgb = self.convt_bn_relu(128+self.D_skip * 128, 64, kernel=3, stride=2, padding=1, output_padding=1) # 1/2
+        self.dec1_rgb = self.conv_bn_relu(64+self.D_skip * 64, 64, kernel=3, stride=1, padding=1) # 1/2
 
         ####
         # Depth Stream
         ####
 
         # Encoder
-        self.conv1_dep = conv_bn_relu(1, 64, kernel=7, stride=2, padding=3, bn=False) # 1/2
+        self.conv1_dep = self.conv_bn_relu(1, 64, kernel=7, stride=2, padding=3, bn=True, relu=True, maxpool=True) # 1/2
         if self.aggregate == 'sum':
             self.conv2_dep = net.layer1 # 1/2
             self.conv3_dep = net.layer2 # 1/4
@@ -75,21 +75,21 @@ class UNETModel(nn.Module):
             self.conv3_dep = self._make_layer(64 + self.D_guide * 64, 128, stride=2, blocks=2) # 1/4
             self.conv4_dep = self._make_layer(128 + self.D_guide * 128, 256, stride=2, blocks=2) # 1/8
             self.conv5_dep = self._make_layer(256 + self.D_guide * 256, 512, stride=2, blocks=2) # 1/16
-        self.conv6_dep = conv_bn_relu(512, 512, kernel=3, stride=2, padding=1, bn=False) # 1/32
+        self.conv6_dep = self.conv_bn_relu(512, 512, kernel=3, stride=2, padding=1, bn=True, relu=True, maxpool=False) # 1/32
 
         # Decoder
-        self.dec5_dep = convt_bn_relu(512, 512, kernel=3, stride=2, padding=1, output_padding=1) # 1/16
-        self.dec4_dep = convt_bn_relu(512+self.D_skip * 512, 256, kernel=3, stride=2, padding=1, output_padding=1) # 1/8
-        self.dec3_dep = convt_bn_relu(256+self.D_skip * 256, 128, kernel=3, stride=2, padding=1, output_padding=1) # 1/4
-        self.dec2_dep = convt_bn_relu(128+self.D_skip * 128, 64, kernel=3, stride=2, padding=1, output_padding=1) # 1/2
-        self.dec1_dep = convt_bn_relu(64+self.D_skip * 64, 64, kernel=3, stride=2, padding=1, output_padding=1) # 1/1
+        self.dec5_dep = self.convt_bn_relu(512, 512, kernel=3, stride=2, padding=1, output_padding=1) # 1/16
+        self.dec4_dep = self.convt_bn_relu(512+self.D_skip * 512, 256, kernel=3, stride=2, padding=1, output_padding=1) # 1/8
+        self.dec3_dep = self.convt_bn_relu(256+self.D_skip * 256, 128, kernel=3, stride=2, padding=1, output_padding=1) # 1/4
+        self.dec2_dep = self.convt_bn_relu(128+self.D_skip * 128, 64, kernel=3, stride=2, padding=1, output_padding=1) # 1/2
+        self.dec1_dep = self.convt_bn_relu(64+self.D_skip * 64, 64, kernel=3, stride=2, padding=1, output_padding=1) # 1/1
 
         # Depth Branch
-        self.id_dec1 = conv_bn_relu(64, 64, kernel=3, stride=1, padding=1) # 1/1
-        self.id_dec0 = conv_bn_relu(64, 1, kernel=3, stride=1, padding=1, bn=False, relu=True)
+        self.id_dec1 = self.conv_bn_relu(64, 64, kernel=3, stride=1, padding=1, bn=True, relu=True, maxpool=False) # 1/1
+        self.id_dec0 = self.conv_bn_relu(64, 1, kernel=3, stride=1, padding=1, bn=True, relu=True, maxpool=False)
 
         # Confidence Branch
-        self.cf_dec1 = conv_bn_relu(64, 64, kernel=3, stride=1, padding=1) # 1/1
+        self.cf_dec1 = self.conv_bn_relu(64, 64, kernel=3, stride=1, padding=1, bn=True, relu=True, maxpool=False) # 1/1
         self.cf_dec0 = nn.Sequential(
             nn.Conv2d(64, 1, kernel_size=3, stride=1, padding=1),
             nn.Softplus()
@@ -124,6 +124,50 @@ class UNETModel(nn.Module):
             layers.append(block(inplanes, planes))
 
         return torch.nn.Sequential(*layers)
+
+    def convt_bn_relu(self, ch_in, ch_out, kernel, stride=1, padding=0, output_padding=0,
+                  bn=True, relu=True):
+        assert (kernel % 2) == 1, \
+            'only odd kernel is supported but kernel = {}'.format(kernel)
+
+        layers = []
+        layers.append(nn.ConvTranspose2d(ch_in, ch_out, kernel, stride, padding,
+                                        output_padding, bias=not bn))
+        
+        if bn:
+            layers.append(nn.BatchNorm2d(ch_out))
+        if relu:
+            layers.append(nn.LeakyReLU(0.2, inplace=True))
+
+        layers.append(nn.Conv2d(ch_out, ch_out, kernel_size=(3,3), padding=(1,1)))
+        layers.append(nn.BatchNorm2d(ch_out))
+        layers.append(nn.LeakyReLU(0.2, inplace=True))
+        layers.append(nn.Conv2d(ch_out, ch_out, kernel_size=(3,3), padding=(1,1)))
+        layers.append(nn.BatchNorm2d(ch_out))
+        layers.append(nn.LeakyReLU(0.2, inplace=True))
+
+        layers = nn.Sequential(*layers)
+
+        return layers
+
+    def conv_bn_relu(self, ch_in, ch_out, kernel, stride=1, padding=0, bn=True,
+                 relu=True, maxpool=False):
+        assert (kernel % 2) == 1, \
+            'only odd kernel is supported but kernel = {}'.format(kernel)
+
+        layers = []
+        layers.append(nn.Conv2d(ch_in, ch_out, kernel, stride, padding, bias=not bn))
+        if bn:
+            layers.append(nn.BatchNorm2d(ch_out))
+        if relu:
+            layers.append(nn.LeakyReLU(0.2, inplace=True))
+        if maxpool:
+            layers.append(nn.MaxPool2d(kernel_size=3, stride=2, padding=1, dilation=1, ceil_mode=False))
+
+        layers = nn.Sequential(*layers)
+
+        return layers
+
 
     def _guide(self, fd_rgb, fe_rgb, fe_dep, guide = 'cat', dim = 1):
 

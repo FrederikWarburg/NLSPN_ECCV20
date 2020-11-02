@@ -43,7 +43,7 @@ def get_resnet34(pretrained=True):
 
 
 def conv_bn_relu(ch_in, ch_out, kernel, stride=1, padding=0, bn=True,
-                 relu=True):
+                 relu=True, maxpool=False):
     assert (kernel % 2) == 1, \
         'only odd kernel is supported but kernel = {}'.format(kernel)
 
@@ -53,6 +53,8 @@ def conv_bn_relu(ch_in, ch_out, kernel, stride=1, padding=0, bn=True,
         layers.append(nn.BatchNorm2d(ch_out))
     if relu:
         layers.append(nn.LeakyReLU(0.2, inplace=True))
+    if maxpool:
+        layers.append(nn.MaxPool2d(kernel_size=3, stride=2, padding=1, dilation=1, ceil_mode=False))
 
     layers = nn.Sequential(*layers)
 
@@ -72,13 +74,6 @@ def convt_bn_relu(ch_in, ch_out, kernel, stride=1, padding=0, output_padding=0,
         layers.append(nn.BatchNorm2d(ch_out))
     if relu:
         layers.append(nn.LeakyReLU(0.2, inplace=True))
-
-    layers.append(nn.Conv2d(ch_out, ch_out, kernel_size=(3,3), padding=(1,1)))
-    layers.append(nn.BatchNorm2d(ch_out))
-    layers.append(nn.LeakyReLU(0.2, inplace=True))
-    layers.append(nn.Conv2d(ch_out, ch_out, kernel_size=(3,3), padding=(1,1)))
-    layers.append(nn.BatchNorm2d(ch_out))
-    layers.append(nn.LeakyReLU(0.2, inplace=True))
 
     layers = nn.Sequential(*layers)
 
