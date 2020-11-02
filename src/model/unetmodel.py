@@ -107,7 +107,7 @@ def double_conv(ch_in, ch_out, kernel, stride=1, padding=0, output_padding=0,
 
     layers = []
 
-    layers.append(conv_bn_relu(ch_out, ch_out, kernel=(3,3), padding=(1,1)))
+    layers.append(conv_bn_relu(ch_in, ch_out, kernel=(3,3), padding=(1,1)))
     layers.append(conv_bn_relu(ch_out, ch_out, kernel=(3,3), padding=(1,1)))
 
     layers = nn.Sequential(*layers)
