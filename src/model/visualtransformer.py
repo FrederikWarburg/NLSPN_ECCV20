@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
+from .unetmodel import _remove_extra_pad
 
 
 def conv1x1_1d(channel_in, channel_out, stride=1, groups = 1):
@@ -31,6 +32,8 @@ class VisualTransformer(nn.Module):
         self.projector = Projector(CT, C, head=head, groups=groups)
 
     def forward(self, src, dst):
+
+        src = _remove_extra_pad(src, dst)
         
         #print(src.shape, dst.shape)
         assert src.shape == dst.shape

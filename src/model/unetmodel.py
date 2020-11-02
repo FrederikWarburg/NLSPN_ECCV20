@@ -257,11 +257,11 @@ class UNETModel(nn.Module):
         bottleneck = self.bottleneck2(bottleneck)
 
         # Decoding RGB
-        fd4_rgb = self.dec4_rgb(bottleneck, fe5_rgb)
-        fd3_rgb = self.dec3_rgb(fd4_rgb, fe4_rgb)
-        fd2_rgb = self.dec2_rgb(fd3_rgb, fe3_rgb)
-        fd1_rgb = self.dec1_rgb(fd2_rgb, fe2_rgb)
-        fd0_rgb = self.dec0_rgb(fd1_rgb)
+        fd5_rgb = self.dec4_rgb(bottleneck, fe5_rgb)
+        fd4_rgb = self.dec3_rgb(fd5_rgb, fe4_rgb)
+        fd3_rgb = self.dec2_rgb(fd4_rgb, fe3_rgb)
+        fd2_rgb = self.dec1_rgb(fd3_rgb, fe2_rgb)
+        fd1_rgb = self.dec0_rgb(fd2_rgb)
         
         ###
         # DEPTH UNET
@@ -270,37 +270,29 @@ class UNETModel(nn.Module):
         
         # Encoding Depth
         fe1_dep = self.conv1_dep(dep)
-        print("1", fd0_rgb.shape, fe1_rgb.shape, fe1_dep.shape)
-        fe2_dep = self.conv2_dep(_guide(fd0_rgb, fe1_rgb, fe1_dep, guide=self.guide, dim=1))
-        print("2", fe2_dep.shape, fd0_rgb.shape)
+        print("1", fd1_rgb.shape, fe1_rgb.shape, fe1_dep.shape)
+        fe2_dep = self.conv2_dep(_guide(fd1_rgb, fe1_rgb, fe1_dep, guide=self.guide, dim=1))
+        print("2", fe2_dep.shape, fd1_rgb.shape)
         if self.args.attention_type == 'VT':
-            # we need first to remove some extra padding which is added in the decoding stage
-            fd0_rgb = _remove_extra_pad(fd0_rgb, fe2_dep)
-            fe2_dep = self.vt1(fd0_rgb, fe2_dep)
+            fe2_dep = self.vt1(fd1_rgb, fe2_dep)
 
-        print("3", fd1_rgb.shape, fe2_rgb.shape, fe2_dep.shape)
-        fe3_dep = self.conv3_dep(_guide(fd1_rgb, fe2_rgb, fe2_dep, guide=self.guide, dim=1))
+        print("3", fd2_rgb.shape, fe2_rgb.shape, fe2_dep.shape)
+        fe3_dep = self.conv3_dep(_guide(fd2_rgb, fe2_rgb, fe2_dep, guide=self.guide, dim=1))
         print("4", fe3_dep.shape, fd3_rgb.shape)
         if self.args.attention_type == 'VT':
-            # we need first to remove some extra padding which is added in the decoding stage
-            fd1_rgb = _remove_extra_pad(fd1_rgb, fe3_dep)
-            fe3_dep = self.vt2(fd1_rgb, fe3_dep)
+            fe3_dep = self.vt2(fd2_rgb, fe3_dep)
 
-        print("5", fd2_rgb.shape, fe3_rgb.shape, fe3_dep.shape)
-        fe4_dep = self.conv4_dep(_guide(fd2_rgb, fe3_rgb, fe3_dep, guide=self.guide, dim=1))
+        print("5", fd3_rgb.shape, fe3_rgb.shape, fe3_dep.shape)
+        fe4_dep = self.conv4_dep(_guide(fd3_rgb, fe3_rgb, fe3_dep, guide=self.guide, dim=1))
 
-        print("6", fe4_dep.shape, fd2_rgb.shape)
+        print("6", fe4_dep.shape, fd3_rgb.shape)
         if self.args.attention_type == 'VT':
-            # we need first to remove some extra padding which is added in the decoding stage
-            fd2_rgb = _remove_extra_pad(fd2_rgb, fe4_dep)
-            fe4_dep = self.vt3(fd2_rgb, fe4_dep)
+            fe4_dep = self.vt3(fd3_rgb, fe4_dep)
 
-        fd3_rgb = self.conv5_dep(_guide(fd3_rgb, fe4_rgb, fe4_dep, guide=self.guide, dim=1))
+        fe5_dep = self.conv5_dep(_guide(fd4_rgb, fe4_rgb, fe4_dep, guide=self.guide, dim=1))
 
         if self.args.attention_type == 'VT':
-            # we need first to remove some extra padding which is added in the decoding stage
-            fd3_rgb = _remove_extra_pad(fd3_rgb, fe5_dep)
-            fe5_dep = self.vt4(bottleneck, fd3_rgb)
+            fe5_dep = self.vt4(fd4_rgb, fe5_dep)
 
         fe6_dep = self.conv6_dep(fe5_dep)
         
