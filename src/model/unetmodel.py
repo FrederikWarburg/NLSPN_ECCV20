@@ -124,7 +124,7 @@ class Upsample(nn.Module):
         
         self.upsampling = _upsampling(ch_in1, ch_out, kernel, stride=stride, padding=padding, output_padding=output_padding,
                 bn=bn, relu=relu, upsampling = upsampling)
-        self.conv = double_conv(ch_out+ch_in2, ch_out, kernel, stride=stride, padding=padding, bn=bn, relu=relu)
+        self.conv = double_conv(ch_in1+ch_in2, ch_out, kernel, stride=stride, padding=padding, bn=bn, relu=relu)
 
 
 
