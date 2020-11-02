@@ -87,8 +87,6 @@ def _upsampling(ch_in, ch_out, kernel, stride=1, padding=0, output_padding=0,
 
 def conv_bn_relu(ch_in, ch_out, kernel, stride=1, padding=0, bn=True,
                 relu=True, maxpool=False):
-    assert (kernel % 2) == 1, \
-        'only odd kernel is supported but kernel = {}'.format(kernel)
 
     layers = []
     layers.append(nn.Conv2d(ch_in, ch_out, kernel, stride, padding, bias=not bn))
