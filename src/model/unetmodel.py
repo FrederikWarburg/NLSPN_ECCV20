@@ -65,7 +65,7 @@ class UNETModel(nn.Module):
         ####
 
         # Encoder
-        self.conv1_dep = self.conv_bn_relu(1, 64, kernel=7, stride=2, padding=3, bn=True, relu=True, maxpool=True) # 1/2
+        self.conv1_dep = self.conv_bn_relu(1, 64, kernel=7, stride=2, padding=3, bn=True, relu=True, maxpool=False) # 1/2
         if self.aggregate == 'sum':
             self.conv2_dep = net.layer1 # 1/2
             self.conv3_dep = net.layer2 # 1/4
