@@ -253,13 +253,14 @@ class UNETModel(nn.Module):
         fe3_rgb = self.conv3_rgb(fe2_rgb)
         fe4_rgb = self.conv4_rgb(fe3_rgb)
         fe5_rgb = self.conv5_rgb(fe4_rgb)
-        fe6_rgb = self.conv6_rgb(fe5_rgb)
+
+        bottleneck = self.conv6_rgb(fe5_rgb)
 
         # Decoding RGB
-        print("1", fe6_rgb.shape)
+        #print("1", fe6_rgb.shape)
         #fd5_rgb = self.dec5_rgb(fe6_rgb)
-        print("2", fd5_rgb.shape, fe6_rgb.shape)
-        fd4_rgb = self.dec4_rgb(fd5_rgb, fe6_rgb)
+        print("2", bottleneck.shape, fe5_rgb.shape)
+        fd4_rgb = self.dec4_rgb(bottleneck, fe5_rgb)
         print("3", fd4_rgb.shape, fe4_rgb.shape)
         fd3_rgb = self.dec3_rgb(fd4_rgb, fe5_rgb)
         print("4", fd3_rgb.shape, fe3_rgb.shape)
