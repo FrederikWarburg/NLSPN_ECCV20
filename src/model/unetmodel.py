@@ -168,8 +168,8 @@ class UNETModel(nn.Module):
 
         # Decoder
         self.dec4_rgb = Upsample(512, self.D_skip * 512, 512, upsampling=self.upsampling, aggregate=self.aggregate) # 1/8
-        self.dec3_rgb = Upsample(256, self.D_skip * 512, 256, upsampling=self.upsampling,aggregate=self.aggregate) # 1/4
-        self.dec2_rgb = Upsample(128, self.D_skip * 256, 128,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/2
+        self.dec3_rgb = Upsample(512, self.D_skip * 512, 256, upsampling=self.upsampling,aggregate=self.aggregate) # 1/4
+        self.dec2_rgb = Upsample(256, self.D_skip * 256, 128,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/2
         self.dec1_rgb = Upsample(128, self.D_skip * 128, 64,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/2
         self.dec0_rgb = conv_bn_relu(64, 64, kernel=3, stride=1, padding=1, bn=True, relu=True, maxpool=False)
 
