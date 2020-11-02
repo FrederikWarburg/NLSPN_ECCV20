@@ -252,6 +252,7 @@ class UNETModel(nn.Module):
         fe4_rgb = self.conv4_rgb(fe3_rgb)
         fe5_rgb = self.conv5_rgb(fe4_rgb)
 
+        # bottlenect
         bottleneck = self.bottleneck1(fe5_rgb)
         bottleneck = self.bottleneck2(bottleneck)
 
@@ -264,11 +265,13 @@ class UNETModel(nn.Module):
         ###
         # DEPTH UNET
         ###
+        print("depth prediction")
         
         # Encoding Depth
         fe1_dep = self.conv1_dep(dep)
+        print("1", fd1_rgb.shape, fe1_rgb.shape, fe1_dep.shape)
         fe2_dep = self.conv2_dep(_guide(fd1_rgb, fe1_rgb, fe1_dep, guide=self.guide, dim=1))
-
+        print("2", fe2_dep.shape, fd2_rgb.shape)
         if self.args.attention_type == 'VT':
             # we need first to remove some extra padding which is added in the decoding stage
             fd2_rgb = _remove_extra_pad(fd2_rgb, fe2_dep)
