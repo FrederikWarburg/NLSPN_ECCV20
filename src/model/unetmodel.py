@@ -66,11 +66,11 @@ def _make_layer(inplanes, planes, blocks=1, stride=1):
     return torch.nn.Sequential(*layers)
 
 
-def _upsampling(ch_in, ch_out, kernel, bn=True, relu=True, upsampling = 'learnable'):
+def _upsampling(ch_in, ch_out, bn=True, relu=True, upsampling = 'learnable'):
 
     layers = []
     if upsampling == 'learnable':
-        layers.append(nn.ConvTranspose2d(ch_in, ch_out, kernel, stride=2, padding=0, output_padding=0))
+        layers.append(nn.ConvTranspose2d(ch_in, ch_out, kernel=3, stride=2, padding=0, output_padding=0))
     else:
         layers.append(nn.Upsample(mode='bilinear', scale_factor=2))
         layers.append(nn.Conv2d(ch_in, ch_out, kernel_size=1, stride=1))
@@ -114,13 +114,13 @@ def double_conv(ch_in, ch_mid, ch_out, bn=True, relu=True):
 
 
 class Upsample(nn.Module):
-    def __init__(self, ch_in1, ch_in2, ch_out, kernel, stride=1, padding=0, output_padding=0, bn=True, relu=True, upsampling = 'learnable', aggregate = 'cat'):
+    def __init__(self, ch_in1, ch_in2, ch_out, bn=True, relu=True, upsampling = 'learnable', aggregate = 'cat'):
         super(Upsample, self).__init__()
 
 
         self.aggregate = aggregate
 
-        self.upsampling = _upsampling(ch_in1, ch_in1, kernel, bn=bn, relu=relu, upsampling = upsampling)
+        self.upsampling = _upsampling(ch_in1, ch_in1, bn=bn, relu=relu, upsampling = upsampling)
         self.conv = double_conv(ch_in1+ch_in2, ch_in1, ch_out, bn=bn, relu=relu)
 
 
@@ -177,7 +177,7 @@ class UNETModel(nn.Module):
         ####
 
         # Encoder
-        self.conv1_rgb = torch.nn.Sequential(*[net.conv1, net.bn1, net.relu]) #1/2
+        self.conv1_rgb = torch.nn.Sequential(*[net.conv1, net.bn1, net.relu, net.maxpool]) #1/2
         self.conv2_rgb = net.layer1 #1/2
         self.conv3_rgb = net.layer2 #1/4
         self.conv4_rgb = net.layer3 #1/8
@@ -187,11 +187,10 @@ class UNETModel(nn.Module):
         self.bottleneck2 = conv_bn_relu(1024, 512, kernel=3, stride=1, padding=1, bn=True, relu=True) # 1/32
 
         # Decoder
-        #self.dec5_rgb = Upsample(1024, 0, 512, kernel=3, stride=2, padding=1, output_padding=1, upsampling=self.upsampling,aggregate=self.aggregate) # 1/16
-        self.dec4_rgb = Upsample(512, self.D_skip * 512, 256, kernel=3, stride=2, padding=1, output_padding=1, upsampling=self.upsampling, aggregate=self.aggregate) # 1/8
-        self.dec3_rgb = Upsample(256, self.D_skip * 256, 128, kernel=3, stride=2, padding=1, output_padding=1, upsampling=self.upsampling,aggregate=self.aggregate) # 1/4
-        self.dec2_rgb = Upsample(128, self.D_skip * 128, 64, kernel=3, stride=2, padding=1, output_padding=1, upsampling=self.upsampling, aggregate=self.aggregate) # 1/2
-        self.dec1_rgb = Upsample(64, self.D_skip * 64, 64, kernel=3, stride=2, padding=1, output_padding=1, upsampling=self.upsampling, aggregate=self.aggregate) # 1/2
+        self.dec4_rgb = Upsample(512, self.D_skip * 512, 256, upsampling=self.upsampling, aggregate=self.aggregate) # 1/8
+        self.dec3_rgb = Upsample(256, self.D_skip * 256, 128, upsampling=self.upsampling,aggregate=self.aggregate) # 1/4
+        self.dec2_rgb = Upsample(128, self.D_skip * 128, 64,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/2
+        self.dec1_rgb = Upsample(64, self.D_skip * 64, 64,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/2
 
         ####
         # Depth Stream
@@ -212,11 +211,11 @@ class UNETModel(nn.Module):
         self.conv6_dep = conv_bn_relu(512, 1024, kernel=3, stride=2, padding=1, bn=True, relu=True, maxpool=False) # 1/32
 
         # Decoder
-        self.dec5_dep = Upsample(1024, 0, 512, kernel=3, stride=2, padding=1, output_padding=1, upsampling=self.upsampling, aggregate=self.aggregate) # 1/16
-        self.dec4_dep = Upsample(512, self.D_skip * 512, 256, kernel=3, stride=2, padding=1, output_padding=1, upsampling=self.upsampling, aggregate=self.aggregate) # 1/8
-        self.dec3_dep = Upsample(256, self.D_skip * 256, 128, kernel=3, stride=2, padding=1, output_padding=1, upsampling=self.upsampling, aggregate=self.aggregate) # 1/4
-        self.dec2_dep = Upsample(128, self.D_skip * 128, 64, kernel=3, stride=2, padding=1, output_padding=1, upsampling=self.upsampling, aggregate=self.aggregate) # 1/2
-        self.dec1_dep = Upsample(64, self.D_skip * 64, 64, kernel=3, stride=2, padding=1, output_padding=1, upsampling=self.upsampling, aggregate=self.aggregate) # 1/1
+        self.dec5_dep = Upsample(1024, 0, 512,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/16
+        self.dec4_dep = Upsample(512, self.D_skip * 512, 256, upsampling=self.upsampling, aggregate=self.aggregate) # 1/8
+        self.dec3_dep = Upsample(256, self.D_skip * 256, 128,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/4
+        self.dec2_dep = Upsample(128, self.D_skip * 128, 64, upsampling=self.upsampling, aggregate=self.aggregate) # 1/2
+        self.dec1_dep = Upsample(64, self.D_skip * 64, 64, upsampling=self.upsampling, aggregate=self.aggregate) # 1/1
 
         # Depth Branch
         self.id_dec1 = conv_bn_relu(64, 64, kernel=3, stride=1, padding=1, bn=False, relu=True) # 1/1
