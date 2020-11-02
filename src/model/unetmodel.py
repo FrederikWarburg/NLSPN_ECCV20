@@ -124,7 +124,7 @@ class Upsample(nn.Module):
 
         self.upsampling = _upsampling(ch_in1, ch_in1, kernel, stride=stride, padding=padding, output_padding=output_padding,
                 bn=bn, relu=relu, upsampling = upsampling)
-        self.conv = double_conv(ch_in1+ch_in2, ch_out, kernel, stride=stride, padding=padding, bn=bn, relu=relu)
+        self.conv = double_conv(ch_in1+ch_in2, ch_out, kernel, stride=3, padding=1, bn=bn, relu=relu)
 
 
 
@@ -137,9 +137,9 @@ class Upsample(nn.Module):
             print(x.shape, x1.shape)
             x = _concat(x, x1, aggregate=self.aggregate, dim=1)
             print("cat x", x.shape)
-            
+        print("out", x.shape)            
         x = self.conv(x)
-
+        print("out", x.shape)
         return x
 
 class UNETModel(nn.Module):
