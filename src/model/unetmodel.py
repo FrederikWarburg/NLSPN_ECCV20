@@ -203,10 +203,10 @@ class UNETModel(nn.Module):
             self.conv4_dep = net.layer3 # 1/8
             self.conv5_dep = net.layer4 # 1/16
         elif self.aggregate == 'cat':
-            self.conv2_dep = self._make_layer(64 + self.D_guide * 64, 64, stride=1, blocks=2) # 1/2
-            self.conv3_dep = self._make_layer(64 + self.D_guide * 64, 128, stride=2, blocks=2) # 1/4
-            self.conv4_dep = self._make_layer(128 + self.D_guide * 128, 256, stride=2, blocks=2) # 1/8
-            self.conv5_dep = self._make_layer(256 + self.D_guide * 256, 512, stride=2, blocks=2) # 1/16
+            self.conv2_dep = _make_layer(64 + self.D_guide * 64, 64, stride=1, blocks=2) # 1/2
+            self.conv3_dep = _make_layer(64 + self.D_guide * 64, 128, stride=2, blocks=2) # 1/4
+            self.conv4_dep = _make_layer(128 + self.D_guide * 128, 256, stride=2, blocks=2) # 1/8
+            self.conv5_dep = _make_layer(256 + self.D_guide * 256, 512, stride=2, blocks=2) # 1/16
         self.conv6_dep = conv_bn_relu(512, 1024, kernel=3, stride=2, padding=1, bn=True, relu=True, maxpool=False) # 1/32
 
         # Decoder
