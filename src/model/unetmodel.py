@@ -46,7 +46,7 @@ class UNETModel(nn.Module):
         ####
 
         # Encoder
-        self.conv1_rgb = torch.nn.Sequential(*[net.conv1, net.bn1, net.relu, net.maxpool]) #1/2
+        self.conv1_rgb = torch.nn.Sequential(*[net.conv1, net.bn1, net.relu]) #1/2
         self.conv2_rgb = net.layer1 #1/2
         self.conv3_rgb = net.layer2 #1/4
         self.conv4_rgb = net.layer3 #1/8
@@ -86,11 +86,11 @@ class UNETModel(nn.Module):
         self.dec1_dep = self.convt_bn_relu(64+self.D_skip * 64, 64, kernel=3, stride=2, padding=1, output_padding=1, upsampling=self.upsampling) # 1/1
 
         # Depth Branch
-        self.id_dec1 = self.convt_bn_relu(64, 64, kernel=3, stride=2, padding=1, bn=False, output_padding=1, upsampling=self.upsampling) # 1/1
+        self.id_dec1 = self.conv_bn_relu(64, 64, kernel=3, stride=1, padding=1, bn=False, relu=True) # 1/1
         self.id_dec0 = self.conv_bn_relu(64, 1, kernel=3, stride=1, padding=1, bn=False, relu=True, maxpool=False)
 
         # Confidence Branch
-        self.cf_dec1 = self.convt_bn_relu(64, 64, kernel=3, stride=2, padding=1, bn=False, output_padding=1, upsampling=self.upsampling) # 1/1
+        self.cf_dec1 = self.conv_bn_relu(64, 64, kernel=3, stride=1, padding=1, bn=False, relu=True) # 1/1
         self.cf_dec0 = nn.Sequential(
             nn.Conv2d(64, 1, kernel_size=3, stride=1, padding=1),
             nn.Softplus()
