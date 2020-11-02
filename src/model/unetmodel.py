@@ -167,11 +167,11 @@ class UNETModel(nn.Module):
         self.bottleneck2 = conv_bn_relu(1024, 512, kernel=3, stride=1, padding=1, bn=True, relu=True) # 1/32
 
         # Decoder
-        self.dec4_rgb = Upsample(512, self.D_skip * 512, 512, upsampling=self.upsampling, aggregate=self.aggregate) # 1/8
-        self.dec3_rgb = Upsample(512, self.D_skip * 512, 256, upsampling=self.upsampling,aggregate=self.aggregate) # 1/4
-        self.dec2_rgb = Upsample(256, self.D_skip * 256, 128,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/2
-        self.dec1_rgb = Upsample(128, self.D_skip * 128, 64,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/2
-        self.dec0_rgb = conv_bn_relu(64, 64, kernel=3, stride=1, padding=1, bn=True, relu=True, maxpool=False)
+        self.dec5_rgb = Upsample(512, self.D_skip * 512, 512, upsampling=self.upsampling, aggregate=self.aggregate) # 1/8
+        self.dec4_rgb = Upsample(512, self.D_skip * 256, 256, upsampling=self.upsampling, aggregate=self.aggregate) # 1/4
+        self.dec3_rgb = Upsample(256, self.D_skip * 256, 128,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/2
+        self.dec2_rgb = Upsample(128, self.D_skip * 128, 64,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/2
+        self.dec1_rgb = conv_bn_relu(64, 64, kernel=3, stride=1, padding=1, bn=True, relu=True, maxpool=False)
 
         ####
         # Depth Stream
@@ -237,11 +237,11 @@ class UNETModel(nn.Module):
         bottleneck = self.bottleneck2(bottleneck)
 
         # Decoding RGB
-        fd5_rgb = self.dec4_rgb(bottleneck, fe5_rgb)
-        fd4_rgb = self.dec3_rgb(fd5_rgb, fe4_rgb)
-        fd3_rgb = self.dec2_rgb(fd4_rgb, fe3_rgb)
-        fd2_rgb = self.dec1_rgb(fd3_rgb, fe2_rgb)
-        fd1_rgb = self.dec0_rgb(fd2_rgb)
+        fd5_rgb = self.dec5_rgb(bottleneck, fe5_rgb)
+        fd4_rgb = self.dec4_rgb(fd5_rgb, fe4_rgb)
+        fd3_rgb = self.dec3_rgb(fd4_rgb, fe3_rgb)
+        fd2_rgb = self.dec2_rgb(fd3_rgb, fe2_rgb)
+        fd1_rgb = self.dec1_rgb(fd2_rgb)
         
         ###
         # DEPTH UNET
