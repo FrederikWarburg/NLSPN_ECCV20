@@ -1,8 +1,8 @@
 
 
 import torch
-#from .visualtransformer import *
-#from .common import get_resnet18, get_resnet34, _remove_extra_pad
+from .visualtransformer import *
+from .common import get_resnet18, get_resnet34, _remove_extra_pad
 from torchvision.models.resnet import BasicBlock
 from torchvision import models
 
@@ -25,35 +25,6 @@ def _concat(fd, fe, aggregate='cat', dim=1):
         f = fd + fe
 
     return f
-
-
-import torch
-import torch.nn as nn
-import torchvision
-
-
-model_path = {
-    'resnet18': 'pretrained/resnet18.pth',
-    'resnet34': 'pretrained/resnet34.pth'
-}
-
-
-def get_resnet18(pretrained=True):
-    net = torchvision.models.resnet18(pretrained=True)
-    if pretrained:
-        state_dict = torch.load(model_path['resnet18'])
-        net.load_state_dict(state_dict)
-
-    return net
-
-
-def get_resnet34(pretrained=True):
-    net = torchvision.models.resnet34(pretrained=True)
-    if pretrained:
-        state_dict = torch.load(model_path['resnet34'])
-        net.load_state_dict(state_dict)
-
-    return net
 
 
 def _make_layer(inplanes, planes, blocks=1, stride=1):
@@ -155,14 +126,16 @@ class Upsample(nn.Module):
 
     def forward(self, x, x1 = None):
 
-        x = self.upsampling(x)
-
         if x1 is not None:
-            x = _concat(x, x1, aggregate=self.aggregate, dim=1)
-    
-        o = self.conv(x)
+            u = self.upsampling(x)
+            x = _concat(u, x1, aggregate=self.aggregate, dim=1)
+            o = self.conv(x)
+        else:
+            u = self.upsampling(x)
+            x = None
+            o = self.conv(u)
 
-        return o, x
+        return o, x, u
 
 class UNETModel(nn.Module):
     def __init__(self, args = None):
@@ -170,11 +143,11 @@ class UNETModel(nn.Module):
 
         self.args = args
 
-        self.network = 'resnet18' #self.args.network
-        self.aggregate = 'cat' #self.args.aggregate
-        self.guide = 'cat' #self.args.guide
+        self.network = self.args.network
+        self.aggregate = self.args.aggregate
+        self.guide = self.args.guide
         self.upsampling = 'not_learnable' #'leanable' # not_learnable
-        self.attention_type = 'none' # args.attention_type
+        self.attention_type = args.attention_type
 
         if self.guide == 'cat':
             self.D_guide = 2
@@ -218,7 +191,6 @@ class UNETModel(nn.Module):
         self.dec4_rgb = Upsample(256, self.D_skip * 256, 128, upsampling=self.upsampling, aggregate=self.aggregate) # 1/4
         self.dec3_rgb = Upsample(128, self.D_skip * 128, 64,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/2
         self.dec2_rgb = Upsample(64, self.D_skip * 64, 64,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/2
-        self.dec1_rgb = conv_bn_relu(64, 64, kernel=3, stride=1, padding=1, bn=True, relu=True, maxpool=False)
 
         ####
         # Depth Stream
@@ -261,13 +233,13 @@ class UNETModel(nn.Module):
         ####
         # VISUAL TRANSFORMER
         ####
-
+        
         if self.attention_type == 'VT':
             self.vt1 = VisualTransformer(L=args.num_tokens, CT=args.token_size, C=64, size = 512, num_downsample = 6, head=args.num_heads, groups=args.groups, kqv_groups=args.kqv_groups, dynamic=False)
             self.vt2 = VisualTransformer(L=args.num_tokens, CT=args.token_size, C=128, size = 256, num_downsample = 5,head=args.num_heads, groups=args.groups, kqv_groups=args.kqv_groups, dynamic=False)
             self.vt3 = VisualTransformer(L=args.num_tokens, CT=args.token_size, C=256, size = 128, num_downsample = 4,head=args.num_heads, groups=args.groups, kqv_groups=args.kqv_groups, dynamic=False)
             self.vt4 = VisualTransformer(L=args.num_tokens, CT=args.token_size, C=512, size = 64, num_downsample = 3,head=args.num_heads, groups=args.groups, kqv_groups=args.kqv_groups, dynamic=False)
-
+        
 
     def forward(self, sample):
 
@@ -276,87 +248,57 @@ class UNETModel(nn.Module):
         
         # Encoding RGB
         fe1_rgb = self.conv1_rgb(rgb)
-        print("rgb1",fe1_rgb.shape)
         fe2_rgb = self.conv2_rgb(fe1_rgb)
-        print("rgb2",fe2_rgb.shape)
         fe3_rgb = self.conv3_rgb(fe2_rgb)
-        print("rgb3",fe3_rgb.shape)
         fe4_rgb = self.conv4_rgb(fe3_rgb)
-        print("rgb4",fe4_rgb.shape)
         fe5_rgb = self.conv5_rgb(fe4_rgb)
-        print("rgb5",fe5_rgb.shape)
 
-        # bottlenect
-        bottleneck = self.bottleneck1(fe5_rgb)
-        bottleneck = self.bottleneck2(bottleneck)
+        # bottleneck
+        bottleneck1_rgb = self.bottleneck1(fe5_rgb)
+        bottleneck2_rgb = self.bottleneck2(bottleneck1_rgb)
 
         # Decoding RGB
-        print("rgb1", bottleneck.shape)
-        fd5_rgb, od5_rgb = self.dec5_rgb(bottleneck, fe5_rgb)
-
-        print("rgb2",fd5_rgb.shape, fe4_rgb.shape)
-        fd4_rgb, od4_rgb = self.dec4_rgb(fd5_rgb, fe4_rgb)
-
-        print("rgb3",fd4_rgb.shape, fe3_rgb.shape)
-        fd3_rgb, od3_rgb = self.dec3_rgb(fd4_rgb, fe3_rgb)
-
-        print("rgb4",fd3_rgb.shape, fe2_rgb.shape)
-        fd2_rgb, od2_rgb = self.dec2_rgb(fd3_rgb, fe2_rgb)
+        fd5_rgb, od5_rgb, ud5_rgb = self.dec5_rgb(bottleneck2_rgb, fe5_rgb)
+        fd4_rgb, od4_rgb, ud4_rgb = self.dec4_rgb(fd5_rgb, fe4_rgb)
+        fd3_rgb, od3_rgb, ud3_rgb = self.dec3_rgb(fd4_rgb, fe3_rgb)
+        fd2_rgb, od2_rgb, ud2_rgb = self.dec2_rgb(fd3_rgb, fe2_rgb)
         
         ###
         # DEPTH UNET
         ###
-        print("depth prediction")
         
         # Encoding Depth
         fe1_dep = self.conv1_dep(dep)
-
-        print("1", fe1_rgb.shape, fe1_dep.shape)
         fe2_dep = self.conv2_dep(_concat(fd2_rgb, fe1_dep, aggregate=self.guide, dim=1))
 
         if self.attention_type == 'VT':
-            print("2", fd1_rgb.shape, fe2_dep.shape)
             fe2_dep = self.vt1(fd1_rgb, fe2_dep)
 
-        print("3", fe2_rgb.shape, fe2_dep.shape)
-        fe3_dep = self.conv3_dep(_concat(od3_rgb, fe2_dep, aggregate=self.guide, dim=1))
-        
+        fe3_dep = self.conv3_dep(_concat(od2_rgb, fe2_dep, aggregate=self.guide, dim=1))
+
         if self.attention_type == 'VT':
-            print("4", fd2_rgb.shape, fe3_dep.shape)
             fe3_dep = self.vt2(fd3_rgb, fe3_dep)
 
-        print("5", fe3_rgb.shape, fe3_dep.shape)
-        fe4_dep = self.conv4_dep(_concat(od4_rgb, fe3_dep, aggregate=self.guide, dim=1))
+        fe4_dep = self.conv4_dep(_concat(od3_rgb, fe3_dep, aggregate=self.guide, dim=1))
 
         if self.attention_type == 'VT':
-            print("6", fe4_dep.shape, fd4_rgb.shape)
             fe4_dep = self.vt3(fd4_rgb, fe4_dep)
 
-        print("7", fe4_rgb.shape, fe4_dep.shape)
-        fe5_dep = self.conv5_dep(_concat(od5_rgb, fe4_dep, aggregate=self.guide, dim=1))
+        fe5_dep = self.conv5_dep(_concat(od4_rgb, fe4_dep, aggregate=self.guide, dim=1))
 
         if self.attention_type == 'VT':
             fe5_dep = self.vt4(fd4_rgb, fe5_dep)
 
-        # bottlenect
-        bottleneck_dep = self.bottleneck1_dep(fe5_dep)
-        bottleneck_dep = self.bottleneck2_dep(bottleneck_dep)
+        # bottleneck
+        bottleneck1_dep = self.bottleneck1_dep(fe5_dep)
+        bottleneck2_dep = self.bottleneck2_dep(bottleneck2_dep)
         
         # Decoding Depth
-        print("dep1", bottleneck_dep.shape)
-        fd5_dep, od5_dep = self.dec5_dep(bottleneck_dep, fe5_dep)
-
-        print("dep2",fd5_dep.shape, fe4_dep.shape)
-        fd4_dep, od4_dep = self.dec4_dep(fd5_dep, fe4_dep)
-
-        print("dep3",fd4_dep.shape, fe3_dep.shape)
-        fd3_dep, od3_dep = self.dec3_dep(fd4_dep, fe3_dep)
-
-        print("dep4",fd3_dep.shape, fe2_dep.shape)
-        fd2_dep, od2_dep = self.dec2_dep(fd3_dep, fe2_dep)
-
-        print("dep5",fd3_dep.shape, fe2_dep.shape)
-        fd1_dep, od1_dep = self.dec1_dep(fd2_dep)
+        fd5_dep, _, _ = self.dec5_dep(bottleneck2_dep, fe5_dep)
+        fd4_dep, _, _ = self.dec4_dep(fd5_dep, fe4_dep)
+        fd3_dep, _, _ = self.dec3_dep(fd4_dep, fe3_dep)
+        fd2_dep, _, _ = self.dec2_dep(fd3_dep, fe2_dep)
+        fd1_dep, _, _ = self.dec1_dep(fd2_dep)
 
         ###
         # PREDICTION HEADS
