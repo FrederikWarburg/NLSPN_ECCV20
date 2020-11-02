@@ -177,7 +177,7 @@ class UNETModel(nn.Module):
         self.attention_type = 'none' # args.attention_type
 
         if self.guide == 'cat':
-            self.D_guide = 1
+            self.D_guide = 2
         elif self.guide == 'sum':
             self.D_guide = 0
         elif self.guide == 'none':
@@ -232,7 +232,7 @@ class UNETModel(nn.Module):
             self.conv4_dep = net.layer3 # 1/8
             self.conv5_dep = net.layer4 # 1/16
         elif self.aggregate == 'cat':
-            self.conv2_dep = _make_layer(64 + self.D_guide * 64, 64, stride=1, blocks=2) # 1/2
+            self.conv2_dep = _make_layer(64 + self.D_skip * 64, 64, stride=1, blocks=2) # 1/2
             self.conv3_dep = _make_layer(64 + self.D_guide * 64, 128, stride=2, blocks=2) # 1/4
             self.conv4_dep = _make_layer(128 + self.D_guide * 128, 256, stride=2, blocks=2) # 1/8
             self.conv5_dep = _make_layer(256 + self.D_guide * 256, 512, stride=2, blocks=2) # 1/16
@@ -311,30 +311,29 @@ class UNETModel(nn.Module):
         # Encoding Depth
         fe1_dep = self.conv1_dep(dep)
 
-
         print("1", fe1_rgb.shape, fe1_dep.shape)
-        fe2_dep = self.conv2_dep(_concat(fe1_rgb, fe1_dep, aggregate=self.guide, dim=1))
+        fe2_dep = self.conv2_dep(_concat(fd2_rgb, fe1_dep, aggregate=self.guide, dim=1))
 
         if self.attention_type == 'VT':
             print("2", fd1_rgb.shape, fe2_dep.shape)
             fe2_dep = self.vt1(fd1_rgb, fe2_dep)
 
         print("3", fe2_rgb.shape, fe2_dep.shape)
-        fe3_dep = self.conv3_dep(_concat(fe2_rgb, fe2_dep, aggregate=self.guide, dim=1))
+        fe3_dep = self.conv3_dep(_concat(od3_rgb, fe2_dep, aggregate=self.guide, dim=1))
         
         if self.attention_type == 'VT':
             print("4", fd2_rgb.shape, fe3_dep.shape)
             fe3_dep = self.vt2(fd3_rgb, fe3_dep)
 
         print("5", fe3_rgb.shape, fe3_dep.shape)
-        fe4_dep = self.conv4_dep(_concat(fe3_rgb, fe3_dep, aggregate=self.guide, dim=1))
+        fe4_dep = self.conv4_dep(_concat(od4_rgb, fe3_dep, aggregate=self.guide, dim=1))
 
         if self.attention_type == 'VT':
             print("6", fe4_dep.shape, fd4_rgb.shape)
             fe4_dep = self.vt3(fd4_rgb, fe4_dep)
 
         print("7", fe4_rgb.shape, fe4_dep.shape)
-        fe5_dep = self.conv5_dep(_concat(fe4_rgb, fe4_dep, aggregate=self.guide, dim=1))
+        fe5_dep = self.conv5_dep(_concat(od5_rgb, fe4_dep, aggregate=self.guide, dim=1))
 
         if self.attention_type == 'VT':
             fe5_dep = self.vt4(fd4_rgb, fe5_dep)
