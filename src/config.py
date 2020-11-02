@@ -298,6 +298,10 @@ parser.add_argument('--save_result_only',
                     action='store_true',
                     default=False,
                     help='save result images only with submission format')
+parser.add_argument('--debug',
+                    action='store_false',
+                    default=True,
+                    help='Debug mode')
 
 
 args = parser.parse_args()

@@ -156,14 +156,15 @@ def train(gpu, args):
     metric = metric(args)
     summary = get_summary(args)
 
-    if gpu == 0:
-        utility.backup_source_code(args.save_dir + '/code')
-        try:
-            os.makedirs(args.save_dir, exist_ok=True)
-            os.makedirs(args.save_dir + '/train', exist_ok=True)
-            os.makedirs(args.save_dir + '/val', exist_ok=True)
-        except OSError:
-            pass
+    if args.debug:
+        if gpu == 0:
+            utility.backup_source_code(args.save_dir + '/code')
+            try:
+                os.makedirs(args.save_dir, exist_ok=True)
+                os.makedirs(args.save_dir + '/train', exist_ok=True)
+                os.makedirs(args.save_dir + '/val', exist_ok=True)
+            except OSError:
+                pass
 
     if gpu == 0:
         writer_train = summary(args.save_dir, 'train', args,
