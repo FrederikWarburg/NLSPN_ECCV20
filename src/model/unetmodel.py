@@ -132,9 +132,11 @@ class Upsample(nn.Module):
         x = self.upsampling(x)
 
         if x1 is not None:
+            print("hello")
             print(x.shape, x1.shape)
             x = _concat(x, x1, aggregate=self.aggregate, dim=1)
-
+            print("cat x", x.shape)
+            
         x = self.conv(x)
 
         return x
