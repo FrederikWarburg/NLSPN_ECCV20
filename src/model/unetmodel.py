@@ -2,7 +2,7 @@
 
 import torch
 from .visualtransformer import *
-from .common import get_resnet18, get_resnet34
+from .common import get_resnet18, get_resnet34, _remove_extra_pad
 from torchvision.models.resnet import BasicBlock
 from torchvision import models
 
@@ -25,26 +25,6 @@ def _concat(fd, fe, aggregate='cat', dim=1):
         f = fd + fe
 
     return f
-
-def _remove_extra_pad(fd, fe, dim=1):
-
-    # Decoder feature may have additional padding
-    _, _, Hd, Wd = fd.shape
-    _, _, He, We = fe.shape
-
-    if abs(Hd - He) > 1 or abs(Wd - We) > 1:
-        print("warning", fd.shape, fe.shape)
-
-    # Remove additional padding
-    if Hd > He:
-        h = Hd - He
-        fd = fd[:, :, :-h, :]
-
-    if Wd > We:
-        w = Wd - We
-        fd = fd[:, :, :, :-w]
-
-    return fd
 
 def _make_layer(inplanes, planes, blocks=1, stride=1):
     downsample = None
@@ -270,6 +250,8 @@ class UNETModel(nn.Module):
         
         # Encoding Depth
         fe1_dep = self.conv1_dep(dep)
+
+
         print("1", fd1_rgb.shape, fe1_rgb.shape, fe1_dep.shape)
         fe2_dep = self.conv2_dep(_guide(fd1_rgb, fe1_rgb, fe1_dep, guide=self.guide, dim=1))
         print("2", fe2_dep.shape, fd1_rgb.shape)

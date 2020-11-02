@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
-from .unetmodel import _remove_extra_pad
+from .common import _remove_extra_pad
 
 
 def conv1x1_1d(channel_in, channel_out, stride=1, groups = 1):

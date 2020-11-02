@@ -79,3 +79,22 @@ def convt_bn_relu(ch_in, ch_out, kernel, stride=1, padding=0, output_padding=0,
 
     return layers
 
+def _remove_extra_pad(fd, fe, dim=1):
+
+    # Decoder feature may have additional padding
+    _, _, Hd, Wd = fd.shape
+    _, _, He, We = fe.shape
+
+    if abs(Hd - He) > 1 or abs(Wd - We) > 1:
+        print("warning", fd.shape, fe.shape)
+
+    # Remove additional padding
+    if Hd > He:
+        h = Hd - He
+        fd = fd[:, :, :-h, :]
+
+    if Wd > We:
+        w = Wd - We
+        fd = fd[:, :, :, :-w]
+
+    return fd
