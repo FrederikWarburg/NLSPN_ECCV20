@@ -102,13 +102,12 @@ def conv_bn_relu(ch_in, ch_out, kernel, stride=1, padding=0, bn=True,
     return layers
 
 
-def double_conv(ch_in, ch_out, kernel, stride=1, padding=0, output_padding=0,
-                bn=True, relu=True, upsampling = 'learnable'):
+def double_conv(ch_in, ch_out, kernel, stride=1, padding=0, bn=True, relu=True):
 
     layers = []
 
-    layers.append(conv_bn_relu(ch_in, ch_out, kernel=(3,3), padding=(1,1)))
-    layers.append(conv_bn_relu(ch_out, ch_out, kernel=(3,3), padding=(1,1)))
+    layers.append(conv_bn_relu(ch_in, ch_out, kernel=kernel, stride=stride, padding=padding, bn=relu, relu=relu))
+    layers.append(conv_bn_relu(ch_out, ch_out, kernel=kernel, stride=stride, padding=padding, bn=relu, relu=relu))
 
     layers = nn.Sequential(*layers)
 
@@ -125,8 +124,7 @@ class Upsample(nn.Module):
         
         self.upsampling = _upsampling(ch_in1, ch_out, kernel, stride=stride, padding=padding, output_padding=output_padding,
                 bn=bn, relu=relu, upsampling = upsampling)
-        self.conv = double_conv(ch_in1+ch_in2, ch_out, kernel, stride=stride, padding=padding, output_padding=output_padding,
-                bn=bn, relu=relu)
+        self.conv = double_conv(ch_out+ch_in2, ch_out, kernel, stride=stride, padding=padding, bn=bn, relu=relu)
 
 
 
