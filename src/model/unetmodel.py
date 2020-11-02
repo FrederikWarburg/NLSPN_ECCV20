@@ -7,6 +7,73 @@ from torchvision.models.resnet import BasicBlock
 from torchvision import models
 
 
+
+
+class Upsample(nn.Module):
+    def __init__(self, ch_in, ch_out, kernel, stride=1, padding=0, output_padding=0,
+                  bn=True, relu=True, upsampling = 'learnable'):
+        super(UNETModel, self).__init__()
+
+        self.upsample = self._upsample(ch_in, ch_out, kernel, stride=stride, padding=padding, output_padding=output_padding, 
+                                        bn=bn, relu=relu, upsampling = 'learnable')
+        self.double_conv = self._double_conv(ch_in, ch_out, kernel, stride=stride, padding=padding, output_padding=output_padding, 
+                                        bn=bn, relu=relu)
+
+        def forward(x, x1= None):
+
+        x = self.upsample(x)
+
+        if x1 is not None:
+            self._guide(x, x1)
+
+        x = self.double_conv(x)
+
+        return x
+
+    def _upsample(self, ch_in, ch_out, kernel, stride=1, padding=0, output_padding=0,
+                  bn=True, relu=True, upsampling = 'learnable'):
+
+        layers = []
+        if upsampling == 'learnable':
+            layers.append(nn.ConvTranspose2d(ch_in, ch_out, kernel, stride, padding, output_padding))
+        else:
+            layers.append(nn.Upsample(mode='bilinear', scale_factor=2))
+            layers.append(nn.Conv2d(ch_in, ch_out, kernel_size=1, stride=1))
+
+        if bn:
+            layers.append(nn.BatchNorm2d(ch_out))
+        if relu:
+            layers.append(nn.LeakyReLU(0.2, inplace=True))
+
+        layers = nn.Sequential(*layers)
+
+        return layers
+
+    def _double_conv(self, ch_in, ch_out, kernel, stride=1, padding=0, output_padding=0,
+                  bn=True, relu=True):
+        assert (kernel % 2) == 1, \
+            'only odd kernel is supported but kernel = {}'.format(kernel)
+
+        layers = []
+
+        # Conv1
+        layers.append(nn.Conv2d(ch_out, ch_out, kernel_size=(3,3), padding=(1,1)))
+        if bn:
+            layers.append(nn.BatchNorm2d(ch_out))
+        if relu:
+            layers.append(nn.LeakyReLU(0.2, inplace=True))
+        
+        # Conv2
+        layers.append(nn.Conv2d(ch_out, ch_out, kernel_size=(3,3), padding=(1,1)))
+        if bn:
+            layers.append(nn.BatchNorm2d(ch_out))
+        if relu:
+            layers.append(nn.LeakyReLU(0.2, inplace=True))
+
+        layers = nn.Sequential(*layers)
+
+        return layers
+
 class UNETModel(nn.Module):
     def __init__(self, args = None):
         super(UNETModel, self).__init__()
@@ -54,18 +121,18 @@ class UNETModel(nn.Module):
         self.conv6_rgb = self.conv_bn_relu(512, 1024, kernel=3, stride=2, padding=1, bn=True, relu=True) # 1/32
 
         # Decoder
-        self.dec5_rgb = self.convt_bn_relu(1024, 512, kernel=3, stride=2, padding=1, output_padding=1, upsampling=self.upsampling) # 1/16
-        self.dec4_rgb = self.convt_bn_relu(512+self.D_skip * 512, 256, kernel=3, stride=2, padding=1, output_padding=1, upsampling=self.upsampling) # 1/8
-        self.dec3_rgb = self.convt_bn_relu(256+self.D_skip * 256, 128, kernel=3, stride=2, padding=1, output_padding=1, upsampling=self.upsampling) # 1/4
-        self.dec2_rgb = self.convt_bn_relu(128+self.D_skip * 128, 64, kernel=3, stride=2, padding=1, output_padding=1, upsampling=self.upsampling) # 1/2
-        self.dec1_rgb = self.conv_bn_relu(64+self.D_skip * 64, 64, kernel=3, stride=1, padding=1) # 1/2
+        self.dec5_rgb = Upsample(1024, 512, kernel=3, stride=2, padding=1, output_padding=1, upsampling=self.upsampling) # 1/16
+        self.dec4_rgb = Upsample(512+self.D_skip * 512, 256, kernel=3, stride=2, padding=1, output_padding=1, upsampling=self.upsampling) # 1/8
+        self.dec3_rgb = Upsample(256+self.D_skip * 256, 128, kernel=3, stride=2, padding=1, output_padding=1, upsampling=self.upsampling) # 1/4
+        self.dec2_rgb = Upsample(128+self.D_skip * 128, 64, kernel=3, stride=2, padding=1, output_padding=1, upsampling=self.upsampling) # 1/2
+        self.dec1_rgb = Upsample(64+self.D_skip * 64, 64, kernel=3, stride=1, padding=1) # 1/2
 
         ####
         # Depth Stream
         ####
 
         # Encoder
-        self.conv1_dep = self.conv_bn_relu(1, 64, kernel=7, stride=2, padding=3, bn=False, relu=True, maxpool=False) # 1/2
+        self.conv1_dep = self.conv_bn_relu(1, 64, kernel=7, stride=2, padding=3, bn=True, relu=True, maxpool=False) # 1/2
         if self.aggregate == 'sum':
             self.conv2_dep = net.layer1 # 1/2
             self.conv3_dep = net.layer2 # 1/4
@@ -76,14 +143,14 @@ class UNETModel(nn.Module):
             self.conv3_dep = self._make_layer(64 + self.D_guide * 64, 128, stride=2, blocks=2) # 1/4
             self.conv4_dep = self._make_layer(128 + self.D_guide * 128, 256, stride=2, blocks=2) # 1/8
             self.conv5_dep = self._make_layer(256 + self.D_guide * 256, 512, stride=2, blocks=2) # 1/16
-        self.conv6_dep = self.conv_bn_relu(512, 1024, kernel=3, stride=2, padding=1, bn=False, relu=True, maxpool=False) # 1/32
+        self.conv6_dep = self.conv_bn_relu(512, 1024, kernel=3, stride=2, padding=1, bn=True, relu=True, maxpool=False) # 1/32
 
         # Decoder
-        self.dec5_dep = self.convt_bn_relu(1024, 512, kernel=3, stride=2, padding=1, output_padding=1, bn=False, upsampling=self.upsampling) # 1/16
-        self.dec4_dep = self.convt_bn_relu(512+self.D_skip * 512, 256, kernel=3, stride=2, padding=1, output_padding=1, bn=False, upsampling=self.upsampling) # 1/8
-        self.dec3_dep = self.convt_bn_relu(256+self.D_skip * 256, 128, kernel=3, stride=2, padding=1, output_padding=1, bn=False, upsampling=self.upsampling) # 1/4
-        self.dec2_dep = self.convt_bn_relu(128+self.D_skip * 128, 64, kernel=3, stride=2, padding=1, output_padding=1, bn=False, upsampling=self.upsampling) # 1/2
-        self.dec1_dep = self.convt_bn_relu(64+self.D_skip * 64, 64, kernel=3, stride=2, padding=1, output_padding=1, bn=False, upsampling=self.upsampling) # 1/1
+        self.dec5_dep = Upsample(1024, 512, kernel=3, stride=2, padding=1, output_padding=1, bn=False, upsampling=self.upsampling) # 1/16
+        self.dec4_dep = Upsample(512+self.D_skip * 512, 256, kernel=3, stride=2, padding=1, output_padding=1, bn=False, upsampling=self.upsampling) # 1/8
+        self.dec3_dep = Upsample(256+self.D_skip * 256, 128, kernel=3, stride=2, padding=1, output_padding=1, bn=False, upsampling=self.upsampling) # 1/4
+        self.dec2_dep = Upsample(128+self.D_skip * 128, 64, kernel=3, stride=2, padding=1, output_padding=1, bn=False, upsampling=self.upsampling) # 1/2
+        self.dec1_dep = Upsample(64+self.D_skip * 64, 64, kernel=3, stride=2, padding=1, output_padding=1, bn=False, upsampling=self.upsampling) # 1/1
 
         # Depth Branch
         self.id_dec1 = self.conv_bn_relu(64, 64, kernel=3, stride=1, padding=1, bn=False, relu=True, maxpool=False) # 1/1
@@ -126,38 +193,7 @@ class UNETModel(nn.Module):
 
         return torch.nn.Sequential(*layers)
 
-    def convt_bn_relu(self, ch_in, ch_out, kernel, stride=1, padding=0, output_padding=0,
-                  bn=True, relu=True, upsampling = 'learnable'):
-        assert (kernel % 2) == 1, \
-            'only odd kernel is supported but kernel = {}'.format(kernel)
 
-        layers = []
-        if upsampling == 'learnable':
-            layers.append(nn.ConvTranspose2d(ch_in, ch_out, kernel, stride, padding, output_padding))
-        else:
-            layers.append(nn.Upsample(mode='bilinear', scale_factor=2))
-            layers.append(nn.Conv2d(ch_in, ch_out, kernel_size=1, stride=1))
-        
-        if bn:
-            layers.append(nn.BatchNorm2d(ch_out))
-        if relu:
-            layers.append(nn.LeakyReLU(0.2, inplace=True))
-
-        layers.append(nn.Conv2d(ch_out, ch_out, kernel_size=(3,3), padding=(1,1)))
-        
-        if bn:
-            layers.append(nn.BatchNorm2d(ch_out))
-        
-        layers.append(nn.LeakyReLU(0.2, inplace=True))
-        layers.append(nn.Conv2d(ch_out, ch_out, kernel_size=(3,3), padding=(1,1)))
-
-        if bn:
-            layers.append(nn.BatchNorm2d(ch_out))
-        layers.append(nn.LeakyReLU(0.2, inplace=True))
-
-        layers = nn.Sequential(*layers)
-
-        return layers
 
     def conv_bn_relu(self, ch_in, ch_out, kernel, stride=1, padding=0, bn=True,
                  relu=True, maxpool=False):
