@@ -184,21 +184,21 @@ class UNETModel(nn.Module):
         self.conv3_rgb = net.layer2 #1/4
         self.conv4_rgb = net.layer3 #1/8
         self.conv5_rgb = net.layer4 #1/16
-        self.conv6_rgb = self.conv_bn_relu(512, 1024, kernel=3, stride=2, padding=1, bn=True, relu=True) # 1/32
+        self.conv6_rgb = conv_bn_relu(512, 1024, kernel=3, stride=2, padding=1, bn=True, relu=True) # 1/32
 
         # Decoder
         self.dec5_rgb = Upsample(1024, 512, kernel=3, stride=2, padding=1, output_padding=1, upsampling=self.upsampling) # 1/16
         self.dec4_rgb = Upsample(512+self.D_skip * 512, 256, kernel=3, stride=2, padding=1, output_padding=1, upsampling=self.upsampling) # 1/8
         self.dec3_rgb = Upsample(256+self.D_skip * 256, 128, kernel=3, stride=2, padding=1, output_padding=1, upsampling=self.upsampling) # 1/4
         self.dec2_rgb = Upsample(128+self.D_skip * 128, 64, kernel=3, stride=2, padding=1, output_padding=1, upsampling=self.upsampling) # 1/2
-        self.dec1_rgb = self.conv_bn_relu(64+self.D_skip * 64, 64, kernel=3, stride=1, padding=1) # 1/2
+        self.dec1_rgb = conv_bn_relu(64+self.D_skip * 64, 64, kernel=3, stride=1, padding=1) # 1/2
 
         ####
         # Depth Stream
         ####
 
         # Encoder
-        self.conv1_dep = self.conv_bn_relu(1, 64, kernel=7, stride=2, padding=3, bn=True, relu=True, maxpool=False) # 1/2
+        self.conv1_dep = conv_bn_relu(1, 64, kernel=7, stride=2, padding=3, bn=True, relu=True, maxpool=False) # 1/2
         if self.aggregate == 'sum':
             self.conv2_dep = net.layer1 # 1/2
             self.conv3_dep = net.layer2 # 1/4
@@ -209,7 +209,7 @@ class UNETModel(nn.Module):
             self.conv3_dep = self._make_layer(64 + self.D_guide * 64, 128, stride=2, blocks=2) # 1/4
             self.conv4_dep = self._make_layer(128 + self.D_guide * 128, 256, stride=2, blocks=2) # 1/8
             self.conv5_dep = self._make_layer(256 + self.D_guide * 256, 512, stride=2, blocks=2) # 1/16
-        self.conv6_dep = self.conv_bn_relu(512, 1024, kernel=3, stride=2, padding=1, bn=True, relu=True, maxpool=False) # 1/32
+        self.conv6_dep = conv_bn_relu(512, 1024, kernel=3, stride=2, padding=1, bn=True, relu=True, maxpool=False) # 1/32
 
         # Decoder
         self.dec5_dep = Upsample(1024, 512, kernel=3, stride=2, padding=1, output_padding=1, upsampling=self.upsampling) # 1/16
@@ -219,11 +219,11 @@ class UNETModel(nn.Module):
         self.dec1_dep = Upsample(64+self.D_skip * 64, 64, kernel=3, stride=2, padding=1, output_padding=1, upsampling=self.upsampling) # 1/1
 
         # Depth Branch
-        self.id_dec1 = self.conv_bn_relu(64, 64, kernel=3, stride=1, padding=1, bn=False, relu=True) # 1/1
-        self.id_dec0 = self.conv_bn_relu(64, 1, kernel=3, stride=1, padding=1, bn=False, relu=True, maxpool=False)
+        self.id_dec1 = conv_bn_relu(64, 64, kernel=3, stride=1, padding=1, bn=False, relu=True) # 1/1
+        self.id_dec0 = conv_bn_relu(64, 1, kernel=3, stride=1, padding=1, bn=False, relu=True, maxpool=False)
 
         # Confidence Branch
-        self.cf_dec1 = self.conv_bn_relu(64, 64, kernel=3, stride=1, padding=1, bn=False, relu=True) # 1/1
+        self.cf_dec1 = conv_bn_relu(64, 64, kernel=3, stride=1, padding=1, bn=False, relu=True) # 1/1
         self.cf_dec0 = nn.Sequential(
             nn.Conv2d(64, 1, kernel_size=3, stride=1, padding=1),
             nn.Softplus()
