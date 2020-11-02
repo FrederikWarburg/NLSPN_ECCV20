@@ -66,12 +66,11 @@ def _make_layer(inplanes, planes, blocks=1, stride=1):
     return torch.nn.Sequential(*layers)
 
 
-def _upsampling(ch_in, ch_out, kernel, stride=1, padding=0, output_padding=0,
-                bn=True, relu=True, upsampling = 'learnable'):
+def _upsampling(ch_in, ch_out, kernel, bn=True, relu=True, upsampling = 'learnable'):
 
     layers = []
     if upsampling == 'learnable':
-        layers.append(nn.ConvTranspose2d(ch_in, ch_out, kernel, stride, padding, output_padding))
+        layers.append(nn.ConvTranspose2d(ch_in, ch_out, kernel, stride=2, padding=0, output_padding=0))
     else:
         layers.append(nn.Upsample(mode='bilinear', scale_factor=2))
         layers.append(nn.Conv2d(ch_in, ch_out, kernel_size=1, stride=1))
@@ -85,8 +84,7 @@ def _upsampling(ch_in, ch_out, kernel, stride=1, padding=0, output_padding=0,
 
     return layers
 
-def conv_bn_relu(ch_in, ch_out, kernel, stride=1, padding=0, bn=True,
-                relu=True, maxpool=False):
+def conv_bn_relu(ch_in, ch_out, kernel, stride=1, padding=0, bn=True, relu=True, maxpool=False):
 
     layers = []
     layers.append(nn.Conv2d(ch_in, ch_out, kernel, stride, padding, bias=not bn))
@@ -102,12 +100,12 @@ def conv_bn_relu(ch_in, ch_out, kernel, stride=1, padding=0, bn=True,
     return layers
 
 
-def double_conv(ch_in, ch_out, kernel, stride=1, padding=0, bn=True, relu=True):
+def double_conv(ch_in, ch_mid, ch_out, bn=True, relu=True):
 
     layers = []
 
-    layers.append(conv_bn_relu(ch_in, ch_out, kernel=kernel, stride=stride, padding=padding, bn=relu, relu=relu))
-    layers.append(conv_bn_relu(ch_out, ch_out, kernel=kernel, stride=stride, padding=padding, bn=relu, relu=relu))
+    layers.append(conv_bn_relu(ch_in, ch_mid, kernel=3, stride=1, padding=1, bn=relu, relu=relu))
+    layers.append(conv_bn_relu(ch_mid, ch_out, kernel=3, stride=1, padding=1, bn=relu, relu=relu))
 
     layers = nn.Sequential(*layers)
 
@@ -122,10 +120,8 @@ class Upsample(nn.Module):
 
         self.aggregate = aggregate
 
-        self.upsampling = _upsampling(ch_in1, ch_in1, kernel, stride=stride, padding=padding, output_padding=output_padding,
-                bn=bn, relu=relu, upsampling = upsampling)
-        self.conv = double_conv(ch_in1+ch_in2, ch_out, kernel, stride=3, padding=1, bn=bn, relu=relu)
-
+        self.upsampling = _upsampling(ch_in1, ch_in1, kernel, bn=bn, relu=relu, upsampling = upsampling)
+        self.conv = double_conv(ch_in1+ch_in2, ch_in1, ch_out, bn=bn, relu=relu)
 
 
     def forward(self, x, x1 = None):
