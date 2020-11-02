@@ -187,10 +187,10 @@ class UNETModel(nn.Module):
         self.conv4_rgb = net.layer3 #1/8
         self.conv5_rgb = net.layer4 #1/16
         
-        self.bottleneck = conv_bn_relu(512, 1024, kernel=3, stride=1, padding=1, bn=True, relu=True) # 1/32
+        self.bottleneck = conv_bn_relu(512, 1024, kernel=3, stride=2, padding=1, bn=True, relu=True) # 1/32
 
         # Decoder
-        self.dec5_rgb = Upsample(1024, self.D_skip * 512, 512, kernel=3, stride=2, padding=1, output_padding=1, upsampling=self.upsampling,aggregate=self.aggregate) # 1/16
+        #self.dec5_rgb = Upsample(1024, 0, 512, kernel=3, stride=2, padding=1, output_padding=1, upsampling=self.upsampling,aggregate=self.aggregate) # 1/16
         self.dec4_rgb = Upsample(512, self.D_skip * 512, 256, kernel=3, stride=2, padding=1, output_padding=1, upsampling=self.upsampling, aggregate=self.aggregate) # 1/8
         self.dec3_rgb = Upsample(256, self.D_skip * 256, 128, kernel=3, stride=2, padding=1, output_padding=1, upsampling=self.upsampling,aggregate=self.aggregate) # 1/4
         self.dec2_rgb = Upsample(128, self.D_skip * 128, 64, kernel=3, stride=2, padding=1, output_padding=1, upsampling=self.upsampling, aggregate=self.aggregate) # 1/2
@@ -260,14 +260,19 @@ class UNETModel(nn.Module):
         # Decoding RGB
         #print("1", fe6_rgb.shape)
         #fd5_rgb = self.dec5_rgb(fe6_rgb)
+
+
         print("2", bottleneck.shape, fe5_rgb.shape)
-        fd4_rgb = self.dec5_rgb(bottleneck, fe5_rgb)
+        fd4_rgb = self.dec4_rgb(bottleneck, fe5_rgb)
+        
         print("3", fd4_rgb.shape, fe4_rgb.shape)
-        fd3_rgb = self.dec4_rgb(fd4_rgb, fe5_rgb)
+        fd3_rgb = self.dec3_rgb(fd4_rgb, fe4_rgb)
+        
         print("4", fd3_rgb.shape, fe3_rgb.shape)
-        fd2_rgb = self.dec3_rgb(fd3_rgb, fe4_rgb)
+        fd2_rgb = self.dec2_rgb(fd3_rgb, fe3_rgb)
+        
         print("5", fd2_rgb.shape, fe2_rgb.shape)
-        fd1_rgb = self.dec2_rgb(fd2_rgb, fe3_rgb)
+        fd1_rgb = self.dec1_rgb(fd2_rgb, fe2_rgb)
         
         ###
         # DEPTH UNET
