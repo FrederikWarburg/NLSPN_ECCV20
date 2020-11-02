@@ -187,7 +187,8 @@ class UNETModel(nn.Module):
         self.conv4_rgb = net.layer3 #1/8
         self.conv5_rgb = net.layer4 #1/16
         
-        self.bottleneck = conv_bn_relu(512, 1024, kernel=3, stride=2, padding=1, bn=True, relu=True) # 1/32
+        self.bottleneck1 = conv_bn_relu(512, 1024, kernel=3, stride=2, padding=1, bn=True, relu=True) # 1/32
+        self.bottleneck2 = conv_bn_relu(1024, 512, kernel=3, stride=1, padding=1, bn=True, relu=True) # 1/32
 
         # Decoder
         #self.dec5_rgb = Upsample(1024, 0, 512, kernel=3, stride=2, padding=1, output_padding=1, upsampling=self.upsampling,aggregate=self.aggregate) # 1/16
@@ -255,7 +256,8 @@ class UNETModel(nn.Module):
         fe4_rgb = self.conv4_rgb(fe3_rgb)
         fe5_rgb = self.conv5_rgb(fe4_rgb)
 
-        bottleneck = self.bottleneck(fe5_rgb)
+        bottleneck = self.bottleneck1(fe5_rgb)
+        bottleneck = self.bottleneck2(bottleneck)
 
         # Decoding RGB
         #print("1", fe6_rgb.shape)
