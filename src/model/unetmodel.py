@@ -57,7 +57,7 @@ class UNETModel(nn.Module):
         self.dec4_rgb = self.convt_bn_relu(512+self.D_skip * 512, 256, kernel=3, stride=2, padding=1, output_padding=1) # 1/8
         self.dec3_rgb = self.convt_bn_relu(256+self.D_skip * 256, 128, kernel=3, stride=2, padding=1, output_padding=1) # 1/4
         self.dec2_rgb = self.convt_bn_relu(128+self.D_skip * 128, 64, kernel=3, stride=2, padding=1, output_padding=1) # 1/2
-        self.dec1_rgb = self.convt_bn_relu(64+self.D_skip * 64, 64, kernel=3, stride=2, padding=1) # 1/2
+        self.dec1_rgb = self.conv_bn_relu(64+self.D_skip * 64, 64, kernel=3, stride=1, padding=1) # 1/2
 
         ####
         # Depth Stream
@@ -85,11 +85,11 @@ class UNETModel(nn.Module):
         self.dec1_dep = self.convt_bn_relu(64+self.D_skip * 64, 64, kernel=3, stride=2, padding=1, output_padding=1) # 1/1
 
         # Depth Branch
-        self.id_dec1 = self.convt_bn_relu(64, 64, kernel=3, stride=2, padding=1, output_padding=1) # 1/1
+        self.id_dec1 = self.convt_bn_relu(64, 64, kernel=3, stride=1, padding=1, output_padding=1) # 1/1
         self.id_dec0 = self.conv_bn_relu(64, 1, kernel=3, stride=1, padding=1, bn=True, relu=True, maxpool=False)
 
         # Confidence Branch
-        self.cf_dec1 = self.convt_bn_relu(64, 64, kernel=3, stride=2, padding=1, output_padding=1) # 1/1
+        self.cf_dec1 = self.convt_bn_relu(64, 64, kernel=3, stride=1, padding=1, output_padding=1) # 1/1
         self.cf_dec0 = nn.Sequential(
             nn.Conv2d(64, 1, kernel_size=3, stride=1, padding=1),
             nn.Softplus()
