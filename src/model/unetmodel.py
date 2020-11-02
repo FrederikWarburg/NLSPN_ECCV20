@@ -1,8 +1,8 @@
 
 
 import torch
-from .visualtransformer import *
-from .common import get_resnet18, get_resnet34, _remove_extra_pad
+#from .visualtransformer import *
+#from .common import get_resnet18, get_resnet34, _remove_extra_pad
 from torchvision.models.resnet import BasicBlock
 from torchvision import models
 
@@ -25,6 +25,36 @@ def _concat(fd, fe, aggregate='cat', dim=1):
         f = fd + fe
 
     return f
+
+
+import torch
+import torch.nn as nn
+import torchvision
+
+
+model_path = {
+    'resnet18': 'pretrained/resnet18.pth',
+    'resnet34': 'pretrained/resnet34.pth'
+}
+
+
+def get_resnet18(pretrained=True):
+    net = torchvision.models.resnet18(pretrained=True)
+    if pretrained:
+        state_dict = torch.load(model_path['resnet18'])
+        net.load_state_dict(state_dict)
+
+    return net
+
+
+def get_resnet34(pretrained=True):
+    net = torchvision.models.resnet34(pretrained=True)
+    if pretrained:
+        state_dict = torch.load(model_path['resnet34'])
+        net.load_state_dict(state_dict)
+
+    return net
+
 
 def _make_layer(inplanes, planes, blocks=1, stride=1):
     downsample = None
@@ -92,6 +122,25 @@ def double_conv(ch_in, ch_mid, ch_out, bn=True, relu=True):
     return layers
 
 
+def _remove_extra_pad(fd, fe, dim=1):
+
+    # Decoder feature may have additional padding
+    _, _, Hd, Wd = fd.shape
+    _, _, He, We = fe.shape
+
+    if abs(Hd - He) > 1 or abs(Wd - We) > 1:
+        print("warning", fd.shape, fe.shape)
+
+    # Remove additional padding
+    if Hd > He:
+        h = Hd - He
+        fd = fd[:, :, :-h, :]
+
+    if Wd > We:
+        w = Wd - We
+        fd = fd[:, :, :, :-w]
+
+    return fd
 
 class Upsample(nn.Module):
     def __init__(self, ch_in1, ch_in2, ch_out, bn=True, relu=True, upsampling = 'learnable', aggregate = 'cat'):
@@ -105,17 +154,13 @@ class Upsample(nn.Module):
 
 
     def forward(self, x, x1 = None):
-        print("x", x.shape)
+
         x = self.upsampling(x)
-        print("x!", x.shape)
+
         if x1 is not None:
-            print("hello")
-            print(x.shape, x1.shape)
             x = _concat(x, x1, aggregate=self.aggregate, dim=1)
-            print("cat x", x.shape)
-        print("out", x.shape)            
+    
         x = self.conv(x)
-        print("out", x.shape)
         return x
 
 class UNETModel(nn.Module):
@@ -124,13 +169,14 @@ class UNETModel(nn.Module):
 
         self.args = args
 
-        self.network = self.args.network
-        self.aggregate = self.args.aggregate
-        self.guide = self.args.guide
+        self.network = 'resnet18' #self.args.network
+        self.aggregate = 'cat' #self.args.aggregate
+        self.guide = 'cat' #self.args.guide
         self.upsampling = 'not_learnable' #'leanable' # not_learnable
+        self.attention_type = 'none' # args.attention_type
 
         if self.guide == 'cat':
-            self.D_guide = 2
+            self.D_guide = 1
         elif self.guide == 'sum':
             self.D_guide = 0
         elif self.guide == 'none':
@@ -146,9 +192,9 @@ class UNETModel(nn.Module):
             raise NotImplementedError       
         
         if self.network == 'resnet18':
-            net = get_resnet18(not self.args.from_scratch)
+            net = get_resnet18(False)
         elif self.network == 'resnet34':
-            net = get_resnet34(not self.args.from_scratch)
+            net = get_resnet34(False)
         else:
             raise NotImplementedError
 
@@ -163,13 +209,13 @@ class UNETModel(nn.Module):
         self.conv4_rgb = net.layer3 #1/8
         self.conv5_rgb = net.layer4 #1/16
         
-        self.bottleneck1 = conv_bn_relu(512, 1024, kernel=3, stride=2, padding=1, bn=True, relu=True) # 1/32
-        self.bottleneck2 = conv_bn_relu(1024, 512, kernel=3, stride=1, padding=1, bn=True, relu=True) # 1/32
+        self.bottleneck1 = conv_bn_relu(512, 512, kernel=3, stride=2, padding=1, bn=True, relu=True) # 1/32
+        self.bottleneck2 = conv_bn_relu(512, 256, kernel=3, stride=1, padding=1, bn=True, relu=True) # 1/32
 
         # Decoder
-        self.dec5_rgb = Upsample(512, self.D_skip * 512, 256, upsampling=self.upsampling, aggregate=self.aggregate) # 1/8
+        self.dec5_rgb = Upsample(512, self.D_skip * 256, 256, upsampling=self.upsampling, aggregate=self.aggregate) # 1/8
         self.dec4_rgb = Upsample(256, self.D_skip * 256, 128, upsampling=self.upsampling, aggregate=self.aggregate) # 1/4
-        self.dec3_rgb = Upsample(128, self.D_skip * 64, 64,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/2
+        self.dec3_rgb = Upsample(128, self.D_skip * 128, 64,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/2
         self.dec2_rgb = Upsample(64, self.D_skip * 64, 64,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/2
         self.dec1_rgb = conv_bn_relu(64, 64, kernel=3, stride=1, padding=1, bn=True, relu=True, maxpool=False)
 
@@ -213,7 +259,7 @@ class UNETModel(nn.Module):
         # VISUAL TRANSFORMER
         ####
 
-        if args.attention_type == 'VT':
+        if self.attention_type == 'VT':
             self.vt1 = VisualTransformer(L=args.num_tokens, CT=args.token_size, C=64, size = 512, num_downsample = 6, head=args.num_heads, groups=args.groups, kqv_groups=args.kqv_groups, dynamic=False)
             self.vt2 = VisualTransformer(L=args.num_tokens, CT=args.token_size, C=128, size = 256, num_downsample = 5,head=args.num_heads, groups=args.groups, kqv_groups=args.kqv_groups, dynamic=False)
             self.vt3 = VisualTransformer(L=args.num_tokens, CT=args.token_size, C=256, size = 128, num_downsample = 4,head=args.num_heads, groups=args.groups, kqv_groups=args.kqv_groups, dynamic=False)
@@ -237,10 +283,19 @@ class UNETModel(nn.Module):
         bottleneck = self.bottleneck2(bottleneck)
 
         # Decoding RGB
+        print("rgb1")
         fd5_rgb = self.dec5_rgb(bottleneck, fe5_rgb)
+
+        print("rgb2",fd5_rgb.shape, fe4_rgb.shape)
         fd4_rgb = self.dec4_rgb(fd5_rgb, fe4_rgb)
+
+        print("rgb3",fd4_rgb.shape, fe3_rgb.shape)
         fd3_rgb = self.dec3_rgb(fd4_rgb, fe3_rgb)
+
+        print("rgb4",fd3_rgb.shape, fe2_rgb.shape)
         fd2_rgb = self.dec2_rgb(fd3_rgb, fe2_rgb)
+
+        print("rgb5",fd2_rgb.shape)
         fd1_rgb = self.dec1_rgb(fd2_rgb)
         
         ###
@@ -252,28 +307,28 @@ class UNETModel(nn.Module):
         fe1_dep = self.conv1_dep(dep)
 
 
-        print("1", fd1_rgb.shape, fe1_rgb.shape, fe1_dep.shape)
-        fe2_dep = self.conv2_dep(_guide(fd1_rgb, fe1_rgb, fe1_dep, guide=self.guide, dim=1))
+        print("1", fd1_rgb.shape, fe1_dep.shape)
+        fe2_dep = self.conv2_dep(_concat(fd1_rgb, fe1_dep, aggregate=self.guide, dim=1))
         print("2", fe2_dep.shape, fd1_rgb.shape)
-        if self.args.attention_type == 'VT':
+        if self.attention_type == 'VT':
             fe2_dep = self.vt1(fd2_rgb, fe2_dep)
 
-        print("3", fd2_rgb.shape, fe2_rgb.shape, fe2_dep.shape)
-        fe3_dep = self.conv3_dep(_guide(fd2_rgb, fe2_rgb, fe2_dep, guide=self.guide, dim=1))
+        print("3", fd2_rgb.shape, fe2_dep.shape)
+        fe3_dep = self.conv3_dep(_concat(fd2_rgb, fe2_dep, aggregate=self.guide, dim=1))
         print("4", fe3_dep.shape, fd3_rgb.shape)
-        if self.args.attention_type == 'VT':
+        if self.attention_type == 'VT':
             fe3_dep = self.vt2(fd3_rgb, fe3_dep)
 
-        print("5", fd3_rgb.shape, fe3_rgb.shape, fe3_dep.shape)
-        fe4_dep = self.conv4_dep(_guide(fd3_rgb, fe3_rgb, fe3_dep, guide=self.guide, dim=1))
+        print("5", fd3_rgb.shape, fe3_dep.shape)
+        fe4_dep = self.conv4_dep(_concat(fd3_rgb, fe3_dep, aggregate=self.guide, dim=1))
 
         print("6", fe4_dep.shape, fd4_rgb.shape)
-        if self.args.attention_type == 'VT':
+        if self.attention_type == 'VT':
             fe4_dep = self.vt3(fd4_rgb, fe4_dep)
 
-        fe5_dep = self.conv5_dep(_guide(fd4_rgb, fe4_rgb, fe4_dep, guide=self.guide, dim=1))
+        fe5_dep = self.conv5_dep(_concat(fd4_rgb, fe4_dep, aggregate=self.guide, dim=1))
 
-        if self.args.attention_type == 'VT':
+        if self.attention_type == 'VT':
             fe5_dep = self.vt4(fd5_rgb, fe5_dep)
 
         fe6_dep = self.conv6_dep(fe5_dep)
@@ -309,8 +364,8 @@ class UNETModel(nn.Module):
 
 if __name__ == "__main__":
     
-    rgb = torch.FloatTensor(torch.randn((1,3, 300,65)))
-    dep = torch.FloatTensor(torch.randn((1,1, 300,65)))
+    rgb = torch.FloatTensor(torch.randn((1,3, 1216,300)))
+    dep = torch.FloatTensor(torch.randn((1,1, 1216,300)))
 
     sample = {'rgb':rgb,'dep':dep}
 
