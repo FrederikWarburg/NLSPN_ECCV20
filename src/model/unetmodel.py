@@ -130,7 +130,7 @@ class Upsample(nn.Module):
     def forward(self, x, x1 = None):
         print("x", x.shape)
         x = self.upsampling(x)
-
+        print("x!", x.shape)
         if x1 is not None:
             print("hello")
             print(x.shape, x1.shape)
