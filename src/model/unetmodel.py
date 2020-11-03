@@ -148,6 +148,7 @@ class UNETModel(nn.Module):
         self.guide = self.args.guide
         self.upsampling = 'not_learnable' #'leanable' # not_learnable
         self.attention_type = args.attention_type
+        self.supervision = args.supervision
 
         if self.guide == 'cat':
             self.D_guide = 2
@@ -193,7 +194,7 @@ class UNETModel(nn.Module):
         self.dec2_rgb = Upsample(64, self.D_skip * 64, 64,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/2
 
         if 'rgb' in self.supervision:
-            self.dec1_rgb = Upsample(64, 0, 64, upsampling=self.upsampling) # 1/1
+            self.dec1_rgb = Upsample(64, 0, 64, upsampling=self.upsampling, bn=False) # 1/1
 
             # Depth Branch
             self.id_dec1_rgb = conv_bn_relu(64, 64, kernel=3, stride=1, padding=1, bn=False, relu=True) # 1/1
