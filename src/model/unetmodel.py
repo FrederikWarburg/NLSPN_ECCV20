@@ -192,6 +192,13 @@ class UNETModel(nn.Module):
         self.dec3_rgb = Upsample(128, self.D_skip * 128, 64,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/2
         self.dec2_rgb = Upsample(64, self.D_skip * 64, 64,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/2
 
+        if 'rgb' in self.supervision:
+            self.dec1_rgb = Upsample(64, 0, 64, upsampling=self.upsampling) # 1/1
+
+            # Depth Branch
+            self.id_dec1_rgb = conv_bn_relu(64, 64, kernel=3, stride=1, padding=1, bn=False, relu=True) # 1/1
+            self.id_dec0_rgb = conv_bn_relu(64, 1, kernel=3, stride=1, padding=1, bn=False, relu=True, maxpool=False)
+
         ####
         # Depth Stream
         ####
@@ -217,18 +224,19 @@ class UNETModel(nn.Module):
         self.dec4_dep = Upsample(256, self.D_skip * 256, 128, upsampling=self.upsampling, aggregate=self.aggregate) # 1/8
         self.dec3_dep = Upsample(128, self.D_skip * 128, 64,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/4
         self.dec2_dep = Upsample(64, self.D_skip * 64, 64, upsampling=self.upsampling, aggregate=self.aggregate) # 1/2
-        self.dec1_dep = Upsample(64, 0, 64, upsampling=self.upsampling, aggregate=self.aggregate) # 1/1
+        self.dec1_dep = Upsample(64, 0, 64, upsampling=self.upsampling, bn=False) # 1/1
 
         # Depth Branch
         self.id_dec1 = conv_bn_relu(64, 64, kernel=3, stride=1, padding=1, bn=False, relu=True) # 1/1
         self.id_dec0 = conv_bn_relu(64, 1, kernel=3, stride=1, padding=1, bn=False, relu=True, maxpool=False)
 
-        # Confidence Branch
-        self.cf_dec1 = conv_bn_relu(64, 64, kernel=3, stride=1, padding=1, bn=False, relu=True) # 1/1
-        self.cf_dec0 = nn.Sequential(
-            nn.Conv2d(64, 1, kernel_size=3, stride=1, padding=1),
-            nn.Softplus()
-        )
+        if 'confidence' in self.supervision:
+            # Confidence Branch
+            self.cf_dec1 = conv_bn_relu(64, 64, kernel=3, stride=1, padding=1, bn=False, relu=True) # 1/1
+            self.cf_dec0 = nn.Sequential(
+                nn.Conv2d(64, 1, kernel_size=3, stride=1, padding=1),
+                nn.Softplus()
+            )
 
         ####
         # VISUAL TRANSFORMER
@@ -262,6 +270,9 @@ class UNETModel(nn.Module):
         fd4_rgb, od4_rgb, ud4_rgb = self.dec4_rgb(fd5_rgb, fe4_rgb)
         fd3_rgb, od3_rgb, ud3_rgb = self.dec3_rgb(fd4_rgb, fe3_rgb)
         fd2_rgb, od2_rgb, ud2_rgb = self.dec2_rgb(fd3_rgb, fe2_rgb)
+
+        if 'rgb' in self.supervision:
+            fd1_rgb, _, _ = self.dec1_rgb(fd2_rgb)
         
         ###
         # DEPTH UNET
@@ -272,25 +283,21 @@ class UNETModel(nn.Module):
         fe2_dep = self.conv2_dep(_concat(fd2_rgb, fe1_dep, aggregate=self.guide, dim=1))
 
         if self.attention_type == 'VT':
-            print(fe2_dep.shape, fd2_rgb.shape, od2_rgb.shape, ud2_rgb.shape)
             fe2_dep = self.vt1(fd2_rgb, fe2_dep)
 
         fe3_dep = self.conv3_dep(_concat(od2_rgb, fe2_dep, aggregate=self.guide, dim=1))
 
         if self.attention_type == 'VT':
-            print(fe3_dep.shape, fd3_rgb.shape, od3_rgb.shape, ud3_rgb.shape)
             fe3_dep = self.vt2(ud3_rgb, fe3_dep)
 
         fe4_dep = self.conv4_dep(_concat(od3_rgb, fe3_dep, aggregate=self.guide, dim=1))
 
         if self.attention_type == 'VT':
-            print(fe4_dep.shape, fd4_rgb.shape, od4_rgb.shape, ud4_rgb.shape)
             fe4_dep = self.vt3(ud4_rgb, fe4_dep)
 
         fe5_dep = self.conv5_dep(_concat(od4_rgb, fe4_dep, aggregate=self.guide, dim=1))
 
         if self.attention_type == 'VT':
-            print(fe5_dep.shape, fd5_rgb.shape, od5_rgb.shape, ud5_rgb.shape)
             fe5_dep = self.vt4(ud5_rgb, fe5_dep)
 
         # bottleneck
@@ -311,19 +318,34 @@ class UNETModel(nn.Module):
         # Depth Decoding
         id_fd1 = self.id_dec1(fd1_dep)
         pred = self.id_dec0(id_fd1)
+        pred = _remove_extra_pad(pred, dep)
 
         # Confidence Decoding
-        cf_fd1 = self.cf_dec1(fd1_dep)
-        confidence = self.cf_dec0(cf_fd1)
+        if  'confidence' in self.supervision:
+            cf_fd1 = self.cf_dec1(fd1_dep)
+            confidence = self.cf_dec0(cf_fd1)
+            confidence = _remove_extra_pad(confidence, dep)
 
-        pred = _remove_extra_pad(pred, dep)
-        confidence = _remove_extra_pad(confidence, dep)
+        # RGB Decoding
+        if  'rgb' in self.supervision:
+            id_fd1_rgb = self.id_dec1_rgb(fd1_rgb)
+            pred_rgb = self.id_dec0_rgb(id_fd1_rgb)
+            pred_rgb = _remove_extra_pad(pred_rgb, dep)
+        
+        output = {'pred': pred}
+
+        if 'confidence' in self.supervision:
+            output['confidence'] = confidence
 
         if self.attention_type == 'VT':
-            output = {'pred': pred, 'confidence': confidence, 'vt1': self.vt1, 'vt2': self.vt2, 'vt3':self.vt3, 'vt4':self.vt4}
-        else:
-            output = {'pred': pred, 'confidence': confidence}
+            output['vt1'] = self.vt1
+            output['vt2'] = self.vt2
+            output['vt3'] = self.vt3
+            output['vt4'] = self.vt4
 
+        if 'rgb' in self.supervision:
+            output['pred_rgb'] = pred_rgb
+            
         return output
 
 if __name__ == "__main__":

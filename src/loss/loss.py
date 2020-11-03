@@ -41,15 +41,32 @@ class Loss(BaseLoss):
 
             if loss_type.lower() in ['l1', 'l2', 'maskedl1', 'maskedl2', 'maskedsmoothl1']:
                 loss_tmp = loss_func(pred, gt)
+                if 'pred_rgb' in  output:
+                    pred_rgb = output['pred_rgb'] 
+                    loss_tmp += loss_func(pred_rgb, gt)
+
             elif loss_type.lower() in ['confl2', 'confl1', 'conf', 'maskedprobexp','maskedprob']:
-                cout = sample['confidence']
+                cout = output['confidence']
                 loss_tmp = loss_func(pred, gt, cout)
+                if 'pred_rgb' in  output:
+                    pred_rgb = output['pred_rgb'] 
+                    cout_rgb = output['confidence_rgb'] 
+                    loss_tmp += loss_func(pred_rgb, gt, cout_rgb)
+
             elif loss_type.lower() in ['confdecay', 'confdecaymse']:
-                cout = sample['confidence']
+                cout = output['confidence']
                 loss_tmp = loss_func(pred, gt, cout, self.epoch_num)
+                if 'pred_rgb' in  output:
+                    pred_rgb = output['pred_rgb'] 
+                    cout_rgb = output['confidence_rgb'] 
+                    loss_tmp += loss_func(pred_rgb, gt, cout_rgb, self.epoch_num)
+
             elif loss_type.lower() in ['inputoutput']:
-                inputs = sample['dep']
+                inputs = output['dep']
                 loss_tmp = loss_func(pred, gt, inputs)
+                if 'pred_rgb' in  output:
+                    pred_rgb = output['pred_rgb'] 
+                    loss_tmp += loss_func(pred_rgb, gt, inputs)
             else:
                 raise NotImplementedError
 

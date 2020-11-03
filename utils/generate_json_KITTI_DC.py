@@ -107,7 +107,7 @@ def generate_json():
 
         dict_json[split] = list_pairs
         print("{} split : Total {} samples".format(split, len(list_pairs)))
-
+        
     # For test split
     split = 'test'
     path_base = args.path_root + '/depth_selection/val_selection_cropped'
