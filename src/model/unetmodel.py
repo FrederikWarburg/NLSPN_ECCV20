@@ -337,6 +337,8 @@ class UNETModel(nn.Module):
 
         if 'confidence' in self.supervision:
             output['confidence'] = confidence
+        else:
+            output['confidence'] = None
 
         if self.attention_type == 'VT':
             output['vt1'] = self.vt1
