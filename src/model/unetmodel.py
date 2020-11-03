@@ -291,7 +291,7 @@ class UNETModel(nn.Module):
 
         # bottleneck
         bottleneck1_dep = self.bottleneck1_dep(fe5_dep)
-        bottleneck2_dep = self.bottleneck2_dep(bottleneck2_dep)
+        bottleneck2_dep = self.bottleneck2_dep(bottleneck1_dep)
         
         # Decoding Depth
         fd5_dep, _, _ = self.dec5_dep(bottleneck2_dep, fe5_dep)
