@@ -279,19 +279,19 @@ class UNETModel(nn.Module):
 
         if self.attention_type == 'VT':
             print(fe3_dep.shape, fd3_rgb.shape, od3_rgb.shape, ud3_rgb.shape)
-            fe3_dep = self.vt2(fd3_rgb, fe3_dep)
+            fe3_dep = self.vt2(ud3_rgb, fe3_dep)
 
         fe4_dep = self.conv4_dep(_concat(od3_rgb, fe3_dep, aggregate=self.guide, dim=1))
 
         if self.attention_type == 'VT':
             print(fe4_dep.shape, fd4_rgb.shape, od4_rgb.shape, ud4_rgb.shape)
-            fe4_dep = self.vt3(fd4_rgb, fe4_dep)
+            fe4_dep = self.vt3(ud4_rgb, fe4_dep)
 
         fe5_dep = self.conv5_dep(_concat(od4_rgb, fe4_dep, aggregate=self.guide, dim=1))
 
         if self.attention_type == 'VT':
             print(fe5_dep.shape, fd5_rgb.shape, od5_rgb.shape, ud5_rgb.shape)
-            fe5_dep = self.vt4(fd5_rgb, fe5_dep)
+            fe5_dep = self.vt4(ud5_rgb, fe5_dep)
 
         # bottleneck
         bottleneck1_dep = self.bottleneck1_dep(fe5_dep)
