@@ -272,7 +272,7 @@ class UNETModel(nn.Module):
         fe2_dep = self.conv2_dep(_concat(fd2_rgb, fe1_dep, aggregate=self.guide, dim=1))
 
         if self.attention_type == 'VT':
-            fe2_dep = self.vt1(fd1_rgb, fe2_dep)
+            fe2_dep = self.vt1(fd2_rgb, fe2_dep)
 
         fe3_dep = self.conv3_dep(_concat(od2_rgb, fe2_dep, aggregate=self.guide, dim=1))
 
@@ -287,7 +287,7 @@ class UNETModel(nn.Module):
         fe5_dep = self.conv5_dep(_concat(od4_rgb, fe4_dep, aggregate=self.guide, dim=1))
 
         if self.attention_type == 'VT':
-            fe5_dep = self.vt4(fd4_rgb, fe5_dep)
+            fe5_dep = self.vt4(fd5_rgb, fe5_dep)
 
         # bottleneck
         bottleneck1_dep = self.bottleneck1_dep(fe5_dep)
