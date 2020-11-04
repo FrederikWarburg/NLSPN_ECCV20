@@ -178,8 +178,8 @@ parser.add_argument('--kqv_groups',
                     help='groups for transformer to use for visual transformer')
 parser.add_argument('--supervision',
                     type=str,
-                    default='none',
-                    help='option to add confidence [confidence], rgb [rgb], or both heads [confidence+rgb] to unet')
+                    default='guided',
+                    help='option to RGB guidance [guided] add confidence [confidence], rgb [rgb], or all three heads [guided+confidence+rgb] to unet')
 
                
 # Training

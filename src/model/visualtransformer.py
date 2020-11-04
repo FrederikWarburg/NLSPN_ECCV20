@@ -327,7 +327,7 @@ class Projector(nn.Module):
 
         #print(proj.shape)        
 
-        feature = feature + self.dropout1(proj).view(N,-1,H,W)
+        #feature = feature + self.dropout1(proj).view(N,-1,H,W)
 
         """
         proj = self.norm1(proj.view(N*h, C, H*W).permute(0,2,1))
@@ -336,4 +336,4 @@ class Projector(nn.Module):
         feature = self.norm2(feature.permute(0,2,3,1)).permute(0,3,1,2)
         """
 
-        return feature
+        return self.dropout1(proj).view(N,-1,H,W)
