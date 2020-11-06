@@ -141,6 +141,8 @@ class UNETModel(nn.Module):
                 self.D_guide = 2
         elif self.guide == 'sum':
             self.D_guide = 1
+        elif self.guide == 'none':
+            self.D_guide = 1 
         else:
             raise NotImplementedError    
 
