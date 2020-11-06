@@ -1,6 +1,7 @@
 
 
 import torch
+from torch import nn
 from .visualtransformer import VisualTransformer
 from .common import get_resnet18, get_resnet34, _remove_extra_pad
 from torchvision.models.resnet import BasicBlock
@@ -124,13 +125,13 @@ class UNETModel(nn.Module):
         self.aggregate = self.args.aggregate
         self.guide = self.args.guide
         self.upsampling = 'not_learnable' #'leanable' # not_learnable
-        self.attention_type = args.attention_type
-        self.supervision = args.supervision
-        self.num_tokens = 8
-        self.token_size = 1024
-        self.num_heads = 16
-        self.groups = 16
-        self.kqv_groups = 8
+        self.attention_type = self.args.attention_type
+        self.supervision = self.args.supervision
+        self.num_tokens = [int(l) for l in self.args.num_tokens.split("+")]
+        self.token_size = [int(l) for l in self.args.token_size.split("+")]
+        self.num_heads = [int(l) for l in self.args.num_heads.split("+")]
+        self.groups = [int(l) for l in self.args.groups.split("+")]
+        self.kqv_groups = [int(l) for l in self.args.kqv_groups.split("+")]
 
 
         if self.guide == 'cat':
@@ -187,10 +188,10 @@ class UNETModel(nn.Module):
                 self.id_dec0_rgb = conv_bn_relu(64, 1, kernel=3, stride=1, padding=1, bn=False, relu=True, maxpool=False)
             
             if self.attention_type == 'VT':
-                vt1 = VisualTransformer(L=self.num_tokens, CT=self.token_size, C=64, size = 512, num_downsample = 6, head=self.num_heads, groups=self.groups, kqv_groups=self.kqv_groups, dynamic=False)
-                vt2 = VisualTransformer(L=self.num_tokens, CT=self.token_size, C=128, size = 256, num_downsample = 5,head=self.num_heads, groups=self.groups, kqv_groups=self.kqv_groups, dynamic=False)
-                vt3 = VisualTransformer(L=self.num_tokens, CT=self.token_size, C=256, size = 128, num_downsample = 4,head=self.num_heads, groups=self.groups, kqv_groups=self.kqv_groups, dynamic=False)
-                vt4 = VisualTransformer(L=self.num_tokens, CT=self.token_size, C=512, size = 64, num_downsample = 3,head=self.num_heads, groups=self.groups, kqv_groups=self.kqv_groups, dynamic=False)
+                vt1 = VisualTransformer(L=self.num_tokens[0], CT=self.token_size[0], C=64, size = 512, num_downsample = 4, head=self.num_heads[0], groups=self.groups[0], kqv_groups=self.kqv_groups[0], dynamic=False)
+                vt2 = VisualTransformer(L=self.num_tokens[1], CT=self.token_size[1], C=128, size = 256, num_downsample = 2,head=self.num_heads[1], groups=self.groups[1], kqv_groups=self.kqv_groups[1], dynamic=False)
+                vt3 = VisualTransformer(L=self.num_tokens[2], CT=self.token_size[2], C=256, size = 128, num_downsample = 2,head=self.num_heads[2], groups=self.groups[2], kqv_groups=self.kqv_groups[2], dynamic=False)
+                vt4 = VisualTransformer(L=self.num_tokens[3], CT=self.token_size[3], C=512, size = 64, num_downsample = 2,head=self.num_heads[3], groups=self.groups[3], kqv_groups=self.kqv_groups[3], dynamic=False)
             else:
                 vt1 = None
                 vt2 = None
@@ -201,7 +202,7 @@ class UNETModel(nn.Module):
             self.guide2 = Guide(64, self.D_guide * 128, 128, vt2, aggregate=self.guide)
             self.guide3 = Guide(128, self.D_guide * 256, 256, vt3, aggregate=self.guide)
             self.guide4 = Guide(256, self.D_guide * 512, 512, vt4, aggregate=self.guide)
-            
+           
 
         ####
         # Depth Stream
