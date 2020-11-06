@@ -7,20 +7,20 @@ from .common import get_resnet18, get_resnet34, _remove_extra_pad
 from torchvision.models.resnet import BasicBlock
 from torchvision import models
 
-def _concat(fd, fe, x=None, aggregate='cat', dim=1):
+def _concat(fd, fe, vt=None, aggregate='cat', dim=1):
     
     fd = _remove_extra_pad(fd, fe)
 
-    if x is None:
+    if vt is None:
         if aggregate == 'cat':
             f = torch.cat((fd, fe), dim=dim)
         elif aggregate == 'sum':
             f = fd + fe
     else:
         if aggregate == 'cat':
-            f = torch.cat((fd, fe, x), dim=dim)
+            f = torch.cat((fd, fe, vt), dim=dim)
         elif aggregate == 'sum':
-            f = fd + fe + x   
+            f = fd + fe + vt 
 
     return f
 
@@ -75,12 +75,10 @@ class Upsample(nn.Module):
     def __init__(self, ch_in1, ch_in2, ch_out, bn=True, relu=True, upsampling = 'learnable', aggregate = 'cat'):
         super(Upsample, self).__init__()
 
-
         self.aggregate = aggregate
 
         self.upsampling = _upsampling(ch_in1, ch_in1, bn=bn, relu=relu, upsampling = upsampling)
         self.conv = double_conv(ch_in1+ch_in2, (ch_in1+ch_in2)//2, ch_out, bn=bn, relu=relu)
-
 
     def forward(self, x, x1 = None):
         
@@ -106,7 +104,10 @@ class Guide(nn.Module):
         fd_rgb = self.conv1(fd_rgb)
         if self.vt is not None:
             proj_ = self.vt(fd_rgb, fe_dep)
-            x = _concat(fd_rgb, fe_dep, proj_, aggregate=self.aggregate)
+            if self.aggregate == 'vt_only':
+                x = _concat(proj_, fe_dep, aggregate='cat') 
+            else:   
+                x = _concat(fd_rgb, fe_dep, proj_, aggregate=self.aggregate)
         else:
             x = _concat(fd_rgb, fe_dep, aggregate=self.aggregate)
 
@@ -114,6 +115,44 @@ class Guide(nn.Module):
 
         return x
 
+"""
+class Attention(nn.Module):
+    def __init__(self, ch_in = 512, heads = 16):
+        super(Attention, self).__init__()
+            
+        self.attention = nn.MultiheadAttention(ch_in, heads)
+
+        # Implementation of Feedforward model
+        dropout = 0.2
+        self.linear1 = nn.Linear(ch_in, ch_in)
+        self.dropout = nn.Dropout(dropout)
+        self.linear2 = nn.Linear(ch_in, ch_in)
+
+        self.norm1 = nn.LayerNorm(ch_in)
+        self.norm2 = nn.LayerNorm(ch_in)
+        self.dropout1 = nn.Dropout(dropout)
+        self.dropout2 = nn.Dropout(dropout)
+        self.activation = nn.ReLU()
+
+    def forward(self, x):
+
+        B, C, W, H = x.shape
+        x = x.view(B, C, W*H)
+
+        query = 
+        key = 
+        value = 
+
+        attn_output, attn_output_weights = multihead_attn(query, key, value)
+
+        x = x + self.dropout1(attn_output)
+        attn_output = self.norm1(x.permute(0,2,1))
+        attn_output = self.linear2(self.dropout(self.activation(self.linear1(attn_output))))
+        x = x + self.dropout2(kqv.permute(0,2,1))
+        x = self.norm2(x.permute(0,2,1)).permute(0,2,1)
+
+        return x.view(B, C, W, H)
+"""
 
 class UNETModel(nn.Module):
     def __init__(self, args = None):
@@ -139,6 +178,8 @@ class UNETModel(nn.Module):
                 self.D_guide = 3
             else:
                 self.D_guide = 2
+        elif self.guide == 'vt_only':
+            self.D_guide = 2
         elif self.guide == 'sum':
             self.D_guide = 1
         elif self.guide == 'none':
@@ -176,34 +217,37 @@ class UNETModel(nn.Module):
             self.bottleneck1 = conv_bn_relu(512, 1024, kernel=3, stride=2, padding=1, bn=True, relu=True) # 1/32
             self.bottleneck2 = conv_bn_relu(1024, 512, kernel=3, stride=1, padding=1, bn=True, relu=True) # 1/32
 
-            # Decoder
-            self.dec5_rgb = Upsample(512, self.D_skip * 512, 256, upsampling=self.upsampling, aggregate=self.aggregate) # 1/8
-            self.dec4_rgb = Upsample(256, self.D_skip * 256, 128, upsampling=self.upsampling, aggregate=self.aggregate) # 1/4
-            self.dec3_rgb = Upsample(128, self.D_skip * 128, 64,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/2
-            self.dec2_rgb = Upsample(64, self.D_skip * 64, 64,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/2
-
-            if 'rgb' in self.supervision:
-                self.dec1_rgb = Upsample(64, 0, 64, upsampling=self.upsampling, bn=False) # 1/1
-
-                # Depth Branch
-                self.id_dec1_rgb = conv_bn_relu(64, 64, kernel=3, stride=1, padding=1, bn=False, relu=True) # 1/1
-                self.id_dec0_rgb = conv_bn_relu(64, 1, kernel=3, stride=1, padding=1, bn=False, relu=True, maxpool=False)
-            
-            if self.attention_type == 'VT':
-                vt1 = VisualTransformer(L=self.num_tokens[0], CT=self.token_size[0], C=64, size = 512, num_downsample = 4, head=self.num_heads[0], groups=self.groups[0], kqv_groups=self.kqv_groups[0], dynamic=False)
-                vt2 = VisualTransformer(L=self.num_tokens[1], CT=self.token_size[1], C=128, size = 256, num_downsample = 2,head=self.num_heads[1], groups=self.groups[1], kqv_groups=self.kqv_groups[1], dynamic=False)
-                vt3 = VisualTransformer(L=self.num_tokens[2], CT=self.token_size[2], C=256, size = 128, num_downsample = 2,head=self.num_heads[2], groups=self.groups[2], kqv_groups=self.kqv_groups[2], dynamic=False)
-                vt4 = VisualTransformer(L=self.num_tokens[3], CT=self.token_size[3], C=512, size = 64, num_downsample = 2,head=self.num_heads[3], groups=self.groups[3], kqv_groups=self.kqv_groups[3], dynamic=False)
+            if self.attention_type == 'attention':
+                self.multihead_attn = Attention(512, 16)
             else:
-                vt1 = None
-                vt2 = None
-                vt3 = None
-                vt4 = None
+                # Decoder
+                self.dec5_rgb = Upsample(512, self.D_skip * 512, 256, upsampling=self.upsampling, aggregate=self.aggregate) # 1/8
+                self.dec4_rgb = Upsample(256, self.D_skip * 256, 128, upsampling=self.upsampling, aggregate=self.aggregate) # 1/4
+                self.dec3_rgb = Upsample(128, self.D_skip * 128, 64,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/2
+                self.dec2_rgb = Upsample(64, self.D_skip * 64, 64,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/2
 
-            self.guide1 = Guide(64, self.D_guide * 64, 64, vt1, aggregate=self.guide)
-            self.guide2 = Guide(64, self.D_guide * 128, 128, vt2, aggregate=self.guide)
-            self.guide3 = Guide(128, self.D_guide * 256, 256, vt3, aggregate=self.guide)
-            self.guide4 = Guide(256, self.D_guide * 512, 512, vt4, aggregate=self.guide)
+                if 'rgb' in self.supervision:
+                    self.dec1_rgb = Upsample(64, 0, 64, upsampling=self.upsampling, bn=False) # 1/1
+
+                    # Depth Branch
+                    self.id_dec1_rgb = conv_bn_relu(64, 64, kernel=3, stride=1, padding=1, bn=False, relu=True) # 1/1
+                    self.id_dec0_rgb = conv_bn_relu(64, 1, kernel=3, stride=1, padding=1, bn=False, relu=True, maxpool=False)
+                
+                if self.attention_type == 'VT':
+                    vt1 = VisualTransformer(L=self.num_tokens[0], CT=self.token_size[0], C=64, size = 512, num_downsample = 4, head=self.num_heads[0], groups=self.groups[0], kqv_groups=self.kqv_groups[0], dynamic=False)
+                    vt2 = VisualTransformer(L=self.num_tokens[1], CT=self.token_size[1], C=128, size = 256, num_downsample = 2,head=self.num_heads[1], groups=self.groups[1], kqv_groups=self.kqv_groups[1], dynamic=False)
+                    vt3 = VisualTransformer(L=self.num_tokens[2], CT=self.token_size[2], C=256, size = 128, num_downsample = 2,head=self.num_heads[2], groups=self.groups[2], kqv_groups=self.kqv_groups[2], dynamic=False)
+                    vt4 = VisualTransformer(L=self.num_tokens[3], CT=self.token_size[3], C=512, size = 64, num_downsample = 2,head=self.num_heads[3], groups=self.groups[3], kqv_groups=self.kqv_groups[3], dynamic=False)
+                else:
+                    vt1 = None
+                    vt2 = None
+                    vt3 = None
+                    vt4 = None
+
+                self.guide1 = Guide(64, self.D_guide * 64, 64, vt1, aggregate=self.guide)
+                self.guide2 = Guide(64, self.D_guide * 128, 128, vt2, aggregate=self.guide)
+                self.guide3 = Guide(128, self.D_guide * 256, 256, vt3, aggregate=self.guide)
+                self.guide4 = Guide(256, self.D_guide * 512, 512, vt4, aggregate=self.guide)
            
 
         ####

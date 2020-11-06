@@ -146,7 +146,7 @@ parser.add_argument('--aggregate',
 parser.add_argument('--guide',
                     type=str,
                     default='cat',
-                    choices=['cat', 'sum', 'none'],
+                    choices=['cat', 'sum', 'vt_only', 'none'],
                     help='how to aggregate information between rgb and depth in unet')
 parser.add_argument('--attention_stage',
                     type=str,
