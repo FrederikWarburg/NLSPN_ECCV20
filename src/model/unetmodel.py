@@ -6,6 +6,8 @@ from .visualtransformer import VisualTransformer
 from .common import get_resnet18, get_resnet34, _remove_extra_pad
 from torchvision.models.resnet import BasicBlock
 from torchvision import models
+import math
+from .attention_module.attention_module import build_attention_module
 
 def _concat(fd, fe, vt=None, aggregate='cat', dim=1):
     
@@ -115,45 +117,6 @@ class Guide(nn.Module):
 
         return x
 
-"""
-class Attention(nn.Module):
-    def __init__(self, ch_in = 512, heads = 16):
-        super(Attention, self).__init__()
-            
-        self.attention = nn.MultiheadAttention(ch_in, heads)
-
-        # Implementation of Feedforward model
-        dropout = 0.2
-        self.linear1 = nn.Linear(ch_in, ch_in)
-        self.dropout = nn.Dropout(dropout)
-        self.linear2 = nn.Linear(ch_in, ch_in)
-
-        self.norm1 = nn.LayerNorm(ch_in)
-        self.norm2 = nn.LayerNorm(ch_in)
-        self.dropout1 = nn.Dropout(dropout)
-        self.dropout2 = nn.Dropout(dropout)
-        self.activation = nn.ReLU()
-
-    def forward(self, x):
-
-        B, C, W, H = x.shape
-        x = x.view(B, C, W*H)
-
-        query = 
-        key = 
-        value = 
-
-        attn_output, attn_output_weights = multihead_attn(query, key, value)
-
-        x = x + self.dropout1(attn_output)
-        attn_output = self.norm1(x.permute(0,2,1))
-        attn_output = self.linear2(self.dropout(self.activation(self.linear1(attn_output))))
-        x = x + self.dropout2(kqv.permute(0,2,1))
-        x = self.norm2(x.permute(0,2,1)).permute(0,2,1)
-
-        return x.view(B, C, W, H)
-"""
-
 class UNETModel(nn.Module):
     def __init__(self, args = None):
         super(UNETModel, self).__init__()
@@ -218,7 +181,7 @@ class UNETModel(nn.Module):
             self.bottleneck2 = conv_bn_relu(1024, 512, kernel=3, stride=1, padding=1, bn=True, relu=True) # 1/32
 
             if self.attention_type == 'attention':
-                self.multihead_attn = Attention(512, 16)
+                self.multihead_attn = build_attention_module(512, 512, 512)
             else:
                 # Decoder
                 self.dec5_rgb = Upsample(512, self.D_skip * 512, 256, upsampling=self.upsampling, aggregate=self.aggregate) # 1/8
@@ -300,14 +263,15 @@ class UNETModel(nn.Module):
             bottleneck1_rgb = self.bottleneck1(fe5_rgb)
             bottleneck2_rgb = self.bottleneck2(bottleneck1_rgb)
 
-            # Decoding RGB
-            fd5_rgb = self.dec5_rgb(bottleneck2_rgb, fe5_rgb)
-            fd4_rgb = self.dec4_rgb(fd5_rgb, fe4_rgb)
-            fd3_rgb = self.dec3_rgb(fd4_rgb, fe3_rgb)
-            fd2_rgb = self.dec2_rgb(fd3_rgb, fe2_rgb)
+            if hasattr(self, "dec5_rgb"):
+                # Decoding RGB
+                fd5_rgb = self.dec5_rgb(bottleneck2_rgb, fe5_rgb)
+                fd4_rgb = self.dec4_rgb(fd5_rgb, fe4_rgb)
+                fd3_rgb = self.dec3_rgb(fd4_rgb, fe3_rgb)
+                fd2_rgb = self.dec2_rgb(fd3_rgb, fe2_rgb)
 
-            if 'rgb' in self.supervision:
-                fd1_rgb = self.dec1_rgb(fd2_rgb)
+                if 'rgb' in self.supervision:
+                    fd1_rgb = self.dec1_rgb(fd2_rgb)
         
         ###
         # DEPTH UNET
@@ -317,24 +281,27 @@ class UNETModel(nn.Module):
         fe1_dep = self.conv1_dep(dep)
         fe2_dep = self.conv2_dep(fe1_dep)
 
-        if 'guided' in self.supervision:
+        if hasattr(self, "guide1"):
             fe2_dep = self.guide1(fe2_dep, fd2_rgb)
 
         fe3_dep = self.conv3_dep(fe2_dep)
-        if 'guided' in self.supervision:
+        if hasattr(self, "guide2"):
             fe3_dep = self.guide2(fe3_dep, fd3_rgb)
  
         fe4_dep = self.conv4_dep(fe3_dep)
-        if 'guided' in self.supervision:
+        if hasattr(self, "guide3"):
             fe4_dep = self.guide3(fe4_dep, fd4_rgb)
 
         fe5_dep = self.conv5_dep(fe4_dep)
-        if 'guided' in self.supervision:
+        if hasattr(self, "guide4"):
             fe5_dep = self.guide4(fe5_dep, fd5_rgb)
 
         # bottleneck
         bottleneck1_dep = self.bottleneck1_dep(fe5_dep)
         bottleneck2_dep = self.bottleneck2_dep(bottleneck1_dep)
+
+        if hasattr(self, "multihead_attn"):
+            bottleneck2_dep = self.multihead_attn(bottleneck2_dep, bottleneck2_rgb)
         
         # Decoding Depth
         fd5_dep = self.dec5_dep(bottleneck2_dep, fe5_dep)
@@ -376,6 +343,12 @@ class UNETModel(nn.Module):
             output['vt2'] = self.guide2.vt
             output['vt3'] = self.guide3.vt
             output['vt4'] = self.guide4.vt
+        elif self.attention_type == 'attention':
+            output['num_layers'] = len(self.multihead_attn.transformer.decoder.layers)
+            output['size'] = bottleneck2_rgb.shape[-2:]
+            for i in range(output['num_layers']):
+                output['self_attn_map_{}'.format(i)] = self.multihead_attn.transformer.decoder.layers[i].attn_map1
+                output['attn_map_{}'.format(i)] = self.multihead_attn.transformer.decoder.layers[i].attn_map2
 
         if 'rgb' in self.supervision:
             output['pred_rgb'] = pred_rgb

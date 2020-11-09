@@ -163,7 +163,6 @@ class Summary(BaseSummary):
             proj_coef_img_list = []
             proj_coef_img_rel_list = []
             kq_img_list = []
-            attm_output_weights_img_list = []
 
             for b in range(0, num_summary):
                 rgb_tmp = rgb[b, :, :, :]
@@ -296,20 +295,6 @@ class Summary(BaseSummary):
                     
                     kq_img_list.append(kq_tmp_img)
 
-            if 'attn_output_weights' in output:
-                attn_output_weights = output['attn_output_weights'].detach().data.cpu().numpy()
-                N, HW, HW = attn_output_weights.shape
-                C, H, W = rgb_tmp.shape
-                Hb, Wb = output['size']
-                attention_maps = [rgb_tmp, pred_tmp]
-
-                for m in range(HW):
-                         
-                    attention_maps.append(visualize(attn_output_weights[b, m, :], (Wb,Hb), (W,H), normalize=False))
-            
-                attm_output_weights_img = np.concatenate(attention_maps, axis=1)
-                attm_output_weights_img_list.append(attm_output_weights_img)
-
             if vt == 'vt1':
                 img_total = np.concatenate(list_img, axis=2)
                 img_total = torch.from_numpy(img_total)
@@ -337,14 +322,55 @@ class Summary(BaseSummary):
                 img_total = torch.from_numpy(img_total)
                 self.add_image(self.mode + '/' + vt + '_kq_coefs', img_total, global_step)
 
-            if 'attn_output_weights' in output:
-                img_total = np.concatenate(attm_output_weights_img_list, axis=2)
-                img_total = torch.from_numpy(img_total)
-                self.add_image(self.mode + '/attm_output', img_total, global_step)
-
             if self.args.model_name.lower() == 'nlspn':
                 self.add_scalar('Etc/gamma', output['gamma'], global_step)
 
+
+
+        attm_output_weights_img_list = []
+        self_attm_output_weights_img_list = []
+
+        if 'num_layers' in output:
+
+            rgb_tmp = np.transpose(rgb_tmp, (1,2,0))
+            rgb_tmp = cv2.resize(rgb_tmp, (300, 65), interpolation=cv2.INTER_LINEAR)
+            rgb_tmp = np.transpose(rgb_tmp, (2,0,1))
+            
+            pred_tmp = np.transpose(pred_tmp, (1,2,0))
+            pred_tmp = cv2.resize(pred_tmp, (300, 65), interpolation=cv2.INTER_LINEAR)
+            pred_tmp = np.transpose(pred_tmp, (2,0,1))
+
+            C, H, W = rgb_tmp.shape
+            Hb, Wb = output['size']
+            attention_maps = [rgb_tmp, pred_tmp]
+            self_attention_maps = [rgb_tmp, pred_tmp]
+
+            for i in range(output['num_layers']):
+                attn_output_weights = output['attn_map_{}'.format(i)].detach().data.cpu().numpy()
+                N, HW, HW = attn_output_weights.shape
+                                    
+                for m in range(HW):      
+                    attention_maps.append(visualize(attn_output_weights[b, m, :], (Wb,Hb), (W,H), normalize=True))
+            
+                self_attn_output_weights = output['self_attn_map_{}'.format(i)].detach().data.cpu().numpy()
+                N, HW, HW = self_attn_output_weights.shape
+
+                for m in range(HW):           
+                    self_attention_maps.append(visualize(self_attn_output_weights[b, m, :], (Wb,Hb), (W,H), normalize=True))
+            
+            attm_output_weights_img = np.concatenate(attention_maps, axis=1)
+            attm_output_weights_img_list.append(attm_output_weights_img)
+
+            self_attm_output_weights_img = np.concatenate(self_attention_maps, axis=1)
+            self_attm_output_weights_img_list.append(self_attm_output_weights_img)
+            
+            img_total = np.concatenate(attm_output_weights_img_list, axis=2)
+            img_total = torch.from_numpy(img_total)
+            self.add_image(self.mode + '/attm_output', img_total, global_step)
+
+            img_total = np.concatenate(self_attm_output_weights_img_list, axis=2)
+            img_total = torch.from_numpy(img_total)
+            self.add_image(self.mode + '/self_attm_output', img_total, global_step)
 
         self.flush()
 
