@@ -60,7 +60,7 @@ def build_attention_module(num_channels, hidden_dim=256, num_queries=100, tempor
             dropout=0.1,
             nhead=8,
             dim_feedforward=2048,
-            num_decoder_layers=6,
+            num_decoder_layers=1,
             normalize_before=False,
             return_intermediate_dec=False,
         )
@@ -69,7 +69,7 @@ def build_attention_module(num_channels, hidden_dim=256, num_queries=100, tempor
         dropout=0.1,
         nhead=8,
         dim_feedforward=2048,
-        num_decoder_layers=6,
+        num_decoder_layers=1,
         normalize_before=False,
         return_intermediate_dec=False,
     )
