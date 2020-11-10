@@ -7,7 +7,7 @@ from .common import get_resnet18, get_resnet34, _remove_extra_pad
 from torchvision.models.resnet import BasicBlock
 from torchvision import models
 import math
-from .attention_module.attention_module import build_attention_module
+from .attention_module.attention_module import build_attention_module, build_simple_attention_module
 
 def _concat(fd, fe, vt=None, aggregate='cat', dim=1):
     
@@ -181,7 +181,7 @@ class UNETModel(nn.Module):
             self.bottleneck2 = conv_bn_relu(1024, 512, kernel=3, stride=1, padding=1, bn=True, relu=True) # 1/32
 
             if self.attention_type == 'attention':
-                self.multihead_attn = build_attention_module(512, 512, 512)
+                self.multihead_attn = build_simple_attention_module(512, 512)
             else:
                 # Decoder
                 self.dec5_rgb = Upsample(512, self.D_skip * 512, 256, upsampling=self.upsampling, aggregate=self.aggregate) # 1/8

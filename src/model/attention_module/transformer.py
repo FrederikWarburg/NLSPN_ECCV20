@@ -112,7 +112,7 @@ class Transformer(nn.Module):
             if p.dim() > 1:
                 nn.init.xavier_uniform_(p)
 
-    def forward(self, src, mask, query_embed, pos_embed):
+    def forward(self, src, dep, mask, query_embed, pos_embed):
         # flatten NxCxHxW to HWxNxC
         bs, c, h, w = src.shape
         src = src.flatten(2).permute(2, 0, 1)
@@ -125,7 +125,7 @@ class Transformer(nn.Module):
 
         tgt = torch.zeros_like(query_embed)
         memory = src
-        hs = self.decoder(tgt, memory, memory_key_padding_mask=mask,
+        hs = self.decoder(tgt, dep, memory, memory_key_padding_mask=mask,
                           pos=pos_embed, query_pos=query_embed)
         return hs.transpose(1, 2), memory.permute(1, 2, 0).view(bs, c, h, w)
 
@@ -138,7 +138,7 @@ class TransformerDecoder(nn.Module):
         self.norm = norm
         self.return_intermediate = return_intermediate
 
-    def forward(self, tgt, memory,
+    def forward(self, tgt, dep, memory,
                 tgt_mask: Optional[Tensor] = None,
                 memory_mask: Optional[Tensor] = None,
                 tgt_key_padding_mask: Optional[Tensor] = None,
@@ -150,7 +150,7 @@ class TransformerDecoder(nn.Module):
         intermediate = []
 
         for layer in self.layers:
-            output = layer(output, memory, tgt_mask=tgt_mask,
+            output = layer(output, dep, memory, tgt_mask=tgt_mask,
                            memory_mask=memory_mask,
                            tgt_key_padding_mask=tgt_key_padding_mask,
                            memory_key_padding_mask=memory_key_padding_mask,
@@ -172,7 +172,7 @@ class TransformerDecoder(nn.Module):
 class TransformerDecoderLayer(nn.Module):
 
     def __init__(self, d_model, nhead, dim_feedforward=2048, dropout=0.1,
-                 activation="relu", normalize_before=False,
+                 activation="relu", normalize_before=True,
                  do_selfattention=True):
         super().__init__()
         self.do_selfattention = do_selfattention
@@ -228,30 +228,32 @@ class TransformerDecoderLayer(nn.Module):
         tgt = self.norm3(tgt)
         return tgt
 
-    def forward_pre(self, tgt, memory,
+    def forward_pre(self, rgb, dep, memory,
                     tgt_mask: Optional[Tensor] = None,
                     memory_mask: Optional[Tensor] = None,
                     tgt_key_padding_mask: Optional[Tensor] = None,
                     memory_key_padding_mask: Optional[Tensor] = None,
                     pos: Optional[Tensor] = None,
                     query_pos: Optional[Tensor] = None):
-        tgt2 = self.norm1(tgt)
-        q = k = self.with_pos_embed(tgt2, query_pos)
-        tgt2, self.attn_map1 = self.self_attn(q, k, value=tgt2, attn_mask=tgt_mask,
+        rgb = self.norm1(rgb)
+        q = k = self.with_pos_embed(rgb, query_pos)
+        dep2, self.attn_map1 = self.self_attn(q, k, value=dep, attn_mask=tgt_mask,
                               key_padding_mask=tgt_key_padding_mask)
-        tgt = tgt + self.dropout1(tgt2)
-        tgt2 = self.norm2(tgt)
-        tgt2, self.attn_map2 = self.multihead_attn(query=self.with_pos_embed(tgt2, query_pos),
-                                   key=self.with_pos_embed(memory, pos),
-                                   value=memory, attn_mask=memory_mask,
-                                   key_padding_mask=memory_key_padding_mask)
-        tgt = tgt + self.dropout2(tgt2)
-        tgt2 = self.norm3(tgt)
-        tgt2 = self.linear2(self.dropout(self.activation(self.linear1(tgt2))))
-        tgt = tgt + self.dropout3(tgt2)
-        return tgt
+        dep = dep + self.dropout1(dep2)
+        
+        #tgt2 = self.norm2(dep)
+        #tgt2, self.attn_map2 = self.multihead_attn(query=self.with_pos_embed(tgt2, query_pos),
+        #                           key=self.with_pos_embed(memory, pos),
+        #                           value=memory, attn_mask=memory_mask,
+        #                           key_padding_mask=memory_key_padding_mask)
+        #tgt = tgt + self.dropout2(tgt2)
 
-    def forward(self, tgt, memory,
+        dep2 = self.norm3(dep)
+        dep2 = self.linear2(self.dropout(self.activation(self.linear1(dep2))))
+        dep = dep + self.dropout3(dep2)
+        return dep
+
+    def forward(self, rgb, dep, memory,
                 tgt_mask: Optional[Tensor] = None,
                 memory_mask: Optional[Tensor] = None,
                 tgt_key_padding_mask: Optional[Tensor] = None,
@@ -259,9 +261,9 @@ class TransformerDecoderLayer(nn.Module):
                 pos: Optional[Tensor] = None,
                 query_pos: Optional[Tensor] = None):
         if self.normalize_before:
-            return self.forward_pre(tgt, memory, tgt_mask, memory_mask,
+            return self.forward_pre(rgb, dep, memory, tgt_mask, memory_mask,
                                     tgt_key_padding_mask, memory_key_padding_mask, pos, query_pos)
-        return self.forward_post(tgt, memory, tgt_mask, memory_mask,
+        return self.forward_post(rgb, dep, memory, tgt_mask, memory_mask,
                                  tgt_key_padding_mask, memory_key_padding_mask, pos, query_pos)
 
 
@@ -305,3 +307,39 @@ def _get_activation_fn(activation):
     if activation == "glu":
         return F.glu
     raise RuntimeError(F"activation should be relu/gelu, not {activation}.")
+
+
+
+class TransformerSimple(nn.Module):
+
+    def __init__(self, d_model, nhead, dim_feedforward=2048, dropout=0.1,
+                 activation="relu"):
+        super().__init__()
+ 
+        self.multihead_attn = nn.MultiheadAttention(d_model, nhead, dropout=dropout)
+        # Implementation of Feedforward model
+        self.linear1 = nn.Linear(d_model, dim_feedforward)
+        self.dropout = nn.Dropout(dropout)
+        self.linear2 = nn.Linear(dim_feedforward, d_model)
+
+        self.norm1 = nn.LayerNorm(d_model)
+        self.norm2 = nn.LayerNorm(d_model)
+        self.dropout1 = nn.Dropout(dropout)
+        self.dropout2 = nn.Dropout(dropout)
+
+        self.activation = _get_activation_fn(activation)
+
+    def with_pos_embed(self, tensor, pos: Optional[Tensor]):
+        return tensor if pos is None else tensor + pos
+
+    def forward(self, rgb, dep, pos):
+
+        rgb = self.norm1(rgb)
+        q = k = self.with_pos_embed(rgb, pos)
+        dep2, self.attn_map1 = self.multihead_attn(q, k, value=dep)
+        dep = dep + self.dropout1(dep2)
+
+        dep2 = self.norm2(dep)
+        dep2 = self.linear2(self.dropout(self.activation(self.linear1(dep2))))
+        dep = dep + self.dropout2(dep2)
+        return dep
