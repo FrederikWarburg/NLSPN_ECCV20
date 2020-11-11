@@ -34,7 +34,6 @@ class AttentionModuleSimple(nn.Module):
         self.transformer = transformer
         self.position_embedding = position_embedding
         self.input_proj = nn.Conv2d(num_channels, hidden_dim, kernel_size=1)
-        self.projector = Projector(hidden_dim)
         self.out_proj = nn.Conv2d(hidden_dim, num_channels, kernel_size=1)
 
     def forward(self, x_rgb, x_dep):
@@ -42,11 +41,11 @@ class AttentionModuleSimple(nn.Module):
         mask = torch.zeros((b, h, w), dtype=torch.bool, device=x_rgb.device)
         pos = self.position_embedding(x_rgb, mask)
         proj_x = self.input_proj(x_rgb)
-        hs, _ = self.transformer(proj_x, x_dep, pos)
+        hs = self.transformer(proj_x, x_dep, pos)
 
         # project back to features
-        new_x = self.projector(proj_x, hs)
-        new_x = x_dep.contiguous() + self.out_proj(new_x)
+        hs = hs.permute(1,2,0).view(b,c,h,w)
+        new_x = x_dep.contiguous() + self.out_proj(hs)
 
         return new_x
 

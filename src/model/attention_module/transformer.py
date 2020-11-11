@@ -334,6 +334,12 @@ class TransformerSimple(nn.Module):
 
     def forward(self, rgb, dep, pos):
 
+        # flatten NxCxHxW to HWxNxC
+        bs, c, h, w = rgb.shape
+        rgb = rgb.flatten(2).permute(2, 0, 1)
+        dep = dep.flatten(2).permute(2, 0, 1)
+        pos = pos.flatten(2).permute(2, 0, 1)
+
         rgb = self.norm1(rgb)
         q = k = self.with_pos_embed(rgb, pos)
         dep2, self.attn_map1 = self.multihead_attn(q, k, value=dep)

@@ -352,11 +352,11 @@ class Summary(BaseSummary):
                 for m in range(HW):      
                     attention_maps.append(visualize(attn_output_weights[b, m, :], (Wb,Hb), (W,H), normalize=True))
             
-                self_attn_output_weights = output['self_attn_map_{}'.format(i)].detach().data.cpu().numpy()
-                N, HW, HW = self_attn_output_weights.shape
+                #self_attn_output_weights = output['self_attn_map_{}'.format(i)].detach().data.cpu().numpy()
+                #N, HW, HW = self_attn_output_weights.shape
 
-                for m in range(HW):           
-                    self_attention_maps.append(visualize(self_attn_output_weights[b, m, :], (Wb,Hb), (W,H), normalize=True))
+                #for m in range(HW):           
+                #    self_attention_maps.append(visualize(self_attn_output_weights[b, m, :], (Wb,Hb), (W,H), normalize=True))
             
             attm_output_weights_img = np.concatenate(attention_maps, axis=1)
             attm_output_weights_img_list.append(attm_output_weights_img)

@@ -344,11 +344,10 @@ class UNETModel(nn.Module):
             output['vt3'] = self.guide3.vt
             output['vt4'] = self.guide4.vt
         elif self.attention_type == 'attention':
-            output['num_layers'] = len(self.multihead_attn.transformer.decoder.layers)
+            output['num_layers'] = 1
             output['size'] = bottleneck2_rgb.shape[-2:]
             for i in range(output['num_layers']):
-                output['self_attn_map_{}'.format(i)] = self.multihead_attn.transformer.decoder.layers[i].attn_map1
-                output['attn_map_{}'.format(i)] = self.multihead_attn.transformer.decoder.layers[i].attn_map2
+                output['attn_map_{}'.format(i)] = self.multihead_attn.transformer.attn_map1
 
         if 'rgb' in self.supervision:
             output['pred_rgb'] = pred_rgb
