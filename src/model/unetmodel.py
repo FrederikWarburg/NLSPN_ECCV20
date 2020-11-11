@@ -7,7 +7,7 @@ from .common import get_resnet18, get_resnet34, _remove_extra_pad
 from torchvision.models.resnet import BasicBlock
 from torchvision import models
 import math
-from .attention_module.attention_module import build_attention_module, build_simple_attention_module
+from .attention_module.simple_attention import build_simple_attention_module
 
 def _concat(fd, fe, vt=None, aggregate='cat', dim=1):
     
@@ -180,9 +180,8 @@ class UNETModel(nn.Module):
             self.bottleneck1 = conv_bn_relu(512, 1024, kernel=3, stride=2, padding=1, bn=True, relu=True) # 1/32
             self.bottleneck2 = conv_bn_relu(1024, 512, kernel=3, stride=1, padding=1, bn=True, relu=True) # 1/32
 
-            if self.attention_type == 'attention':
-                self.multihead_attn = build_simple_attention_module(512, 512)
-            else:
+            if 'rgb' in self.supervision or 'VT' in self.supervision:
+
                 # Decoder
                 self.dec5_rgb = Upsample(512, self.D_skip * 512, 256, upsampling=self.upsampling, aggregate=self.aggregate) # 1/8
                 self.dec4_rgb = Upsample(256, self.D_skip * 256, 128, upsampling=self.upsampling, aggregate=self.aggregate) # 1/4
@@ -195,7 +194,10 @@ class UNETModel(nn.Module):
                     # Depth Branch
                     self.id_dec1_rgb = conv_bn_relu(64, 64, kernel=3, stride=1, padding=1, bn=False, relu=True) # 1/1
                     self.id_dec0_rgb = conv_bn_relu(64, 1, kernel=3, stride=1, padding=1, bn=False, relu=True, maxpool=False)
-                
+
+            if self.attention_type == 'attention':
+                self.multihead_attn = build_simple_attention_module(512, 512)
+            else:  
                 if self.attention_type == 'VT':
                     vt1 = VisualTransformer(L=self.num_tokens[0], CT=self.token_size[0], C=64, size = 512, num_downsample = 4, head=self.num_heads[0], groups=self.groups[0], kqv_groups=self.kqv_groups[0], dynamic=False)
                     vt2 = VisualTransformer(L=self.num_tokens[1], CT=self.token_size[1], C=128, size = 256, num_downsample = 2,head=self.num_heads[1], groups=self.groups[1], kqv_groups=self.kqv_groups[1], dynamic=False)
@@ -216,40 +218,41 @@ class UNETModel(nn.Module):
         ####
         # Depth Stream
         ####
+        if 'depth' in self.supervision:
+            # Encoder
+            self.conv1_dep = conv_bn_relu(1, 64, kernel=7, stride=2, padding=3, bn=True, relu=True, maxpool=False) # 1/2
+            self.conv2_dep = net.layer1 # 1/2
+            self.conv3_dep = net.layer2 # 1/4
+            self.conv4_dep = net.layer3 # 1/8
+            self.conv5_dep = net.layer4 # 1/16
 
-        # Encoder
-        self.conv1_dep = conv_bn_relu(1, 64, kernel=7, stride=2, padding=3, bn=True, relu=True, maxpool=False) # 1/2
-        self.conv2_dep = net.layer1 # 1/2
-        self.conv3_dep = net.layer2 # 1/4
-        self.conv4_dep = net.layer3 # 1/8
-        self.conv5_dep = net.layer4 # 1/16
+            self.bottleneck1_dep = conv_bn_relu(512, 1024, kernel=3, stride=2, padding=1, bn=True, relu=True) # 1/32
+            self.bottleneck2_dep = conv_bn_relu(1024, 512, kernel=3, stride=1, padding=1, bn=True, relu=True) # 1/32
 
-        self.bottleneck1_dep = conv_bn_relu(512, 1024, kernel=3, stride=2, padding=1, bn=True, relu=True) # 1/32
-        self.bottleneck2_dep = conv_bn_relu(1024, 512, kernel=3, stride=1, padding=1, bn=True, relu=True) # 1/32
+            # Decoder
+            self.dec5_dep = Upsample(512, self.D_skip * 512, 256,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/16
+            self.dec4_dep = Upsample(256, self.D_skip * 256, 128, upsampling=self.upsampling, aggregate=self.aggregate) # 1/8
+            self.dec3_dep = Upsample(128, self.D_skip * 128, 64,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/4
+            self.dec2_dep = Upsample(64, self.D_skip * 64, 64, upsampling=self.upsampling, aggregate=self.aggregate) # 1/2
+            self.dec1_dep = Upsample(64, 0, 64, upsampling=self.upsampling, bn=False) # 1/1
 
-        # Decoder
-        self.dec5_dep = Upsample(512, self.D_skip * 512, 256,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/16
-        self.dec4_dep = Upsample(256, self.D_skip * 256, 128, upsampling=self.upsampling, aggregate=self.aggregate) # 1/8
-        self.dec3_dep = Upsample(128, self.D_skip * 128, 64,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/4
-        self.dec2_dep = Upsample(64, self.D_skip * 64, 64, upsampling=self.upsampling, aggregate=self.aggregate) # 1/2
-        self.dec1_dep = Upsample(64, 0, 64, upsampling=self.upsampling, bn=False) # 1/1
+            # Depth Branch
+            self.id_dec1 = conv_bn_relu(64, 64, kernel=3, stride=1, padding=1, bn=False, relu=True) # 1/1
+            self.id_dec0 = conv_bn_relu(64, 1, kernel=3, stride=1, padding=1, bn=False, relu=True, maxpool=False)
 
-        # Depth Branch
-        self.id_dec1 = conv_bn_relu(64, 64, kernel=3, stride=1, padding=1, bn=False, relu=True) # 1/1
-        self.id_dec0 = conv_bn_relu(64, 1, kernel=3, stride=1, padding=1, bn=False, relu=True, maxpool=False)
-
-        if 'confidence' in self.supervision:
-            # Confidence Branch
-            self.cf_dec1 = conv_bn_relu(64, 64, kernel=3, stride=1, padding=1, bn=False, relu=True) # 1/1
-            self.cf_dec0 = nn.Sequential(
-                nn.Conv2d(64, 1, kernel_size=3, stride=1, padding=1),
-                nn.Softplus()
-            )
+            if 'confidence' in self.supervision:
+                # Confidence Branch
+                self.cf_dec1 = conv_bn_relu(64, 64, kernel=3, stride=1, padding=1, bn=False, relu=True) # 1/1
+                self.cf_dec0 = nn.Sequential(
+                    nn.Conv2d(64, 1, kernel_size=3, stride=1, padding=1),
+                    nn.Softplus()
+                )
 
     def forward(self, sample):
 
         rgb = sample['rgb']
         dep = sample['dep']
+        output = {}
         
         if 'guided' in self.supervision:
             # Encoding RGB
@@ -262,6 +265,9 @@ class UNETModel(nn.Module):
             # bottleneck
             bottleneck1_rgb = self.bottleneck1(fe5_rgb)
             bottleneck2_rgb = self.bottleneck2(bottleneck1_rgb)
+
+            if hasattr(self, "multihead_attn"):
+                bottleneck2_rgb = self.multihead_attn(bottleneck2_rgb, bottleneck2_rgb)
 
             if hasattr(self, "dec5_rgb"):
                 # Decoding RGB
@@ -276,54 +282,57 @@ class UNETModel(nn.Module):
         ###
         # DEPTH UNET
         ###
+        if 'depth' in self.supervision:
         
-        # Encoding Depth
-        fe1_dep = self.conv1_dep(dep)
-        fe2_dep = self.conv2_dep(fe1_dep)
+            # Encoding Depth
+            fe1_dep = self.conv1_dep(dep)
+            fe2_dep = self.conv2_dep(fe1_dep)
 
-        if hasattr(self, "guide1"):
-            fe2_dep = self.guide1(fe2_dep, fd2_rgb)
+            if hasattr(self, "guide1"):
+                fe2_dep = self.guide1(fe2_dep, fd2_rgb)
 
-        fe3_dep = self.conv3_dep(fe2_dep)
-        if hasattr(self, "guide2"):
-            fe3_dep = self.guide2(fe3_dep, fd3_rgb)
- 
-        fe4_dep = self.conv4_dep(fe3_dep)
-        if hasattr(self, "guide3"):
-            fe4_dep = self.guide3(fe4_dep, fd4_rgb)
+            fe3_dep = self.conv3_dep(fe2_dep)
+            if hasattr(self, "guide2"):
+                fe3_dep = self.guide2(fe3_dep, fd3_rgb)
 
-        fe5_dep = self.conv5_dep(fe4_dep)
-        if hasattr(self, "guide4"):
-            fe5_dep = self.guide4(fe5_dep, fd5_rgb)
+            fe4_dep = self.conv4_dep(fe3_dep)
+            if hasattr(self, "guide3"):
+                fe4_dep = self.guide3(fe4_dep, fd4_rgb)
 
-        # bottleneck
-        bottleneck1_dep = self.bottleneck1_dep(fe5_dep)
-        bottleneck2_dep = self.bottleneck2_dep(bottleneck1_dep)
+            fe5_dep = self.conv5_dep(fe4_dep)
+            if hasattr(self, "guide4"):
+                fe5_dep = self.guide4(fe5_dep, fd5_rgb)
 
-        if hasattr(self, "multihead_attn"):
-            bottleneck2_dep = self.multihead_attn(bottleneck2_dep, bottleneck2_rgb)
-        
-        # Decoding Depth
-        fd5_dep = self.dec5_dep(bottleneck2_dep, fe5_dep)
-        fd4_dep = self.dec4_dep(fd5_dep, fe4_dep)
-        fd3_dep = self.dec3_dep(fd4_dep, fe3_dep)
-        fd2_dep = self.dec2_dep(fd3_dep, fe2_dep)
-        fd1_dep = self.dec1_dep(fd2_dep)
+            # bottleneck
+            bottleneck1_dep = self.bottleneck1_dep(fe5_dep)
+            bottleneck2_dep = self.bottleneck2_dep(bottleneck1_dep)
 
-        ###
-        # PREDICTION HEADS
-        ###
+            if hasattr(self, "multihead_attn"):
+                bottleneck2_dep = self.multihead_attn(bottleneck2_rgb, bottleneck2_dep)
+            
+            # Decoding Depth
+            fd5_dep = self.dec5_dep(bottleneck2_dep, fe5_dep)
+            fd4_dep = self.dec4_dep(fd5_dep, fe4_dep)
+            fd3_dep = self.dec3_dep(fd4_dep, fe3_dep)
+            fd2_dep = self.dec2_dep(fd3_dep, fe2_dep)
+            fd1_dep = self.dec1_dep(fd2_dep)
 
-        # Depth Decoding
-        id_fd1 = self.id_dec1(fd1_dep)
-        pred = self.id_dec0(id_fd1)
-        pred = _remove_extra_pad(pred, dep)
+            ###
+            # PREDICTION HEADS
+            ###
 
-        # Confidence Decoding
-        if  'confidence' in self.supervision:
-            cf_fd1 = self.cf_dec1(fd1_dep)
-            confidence = self.cf_dec0(cf_fd1)
-            confidence = _remove_extra_pad(confidence, dep)
+            # Depth Decoding
+            id_fd1 = self.id_dec1(fd1_dep)
+            pred = self.id_dec0(id_fd1)
+            pred = _remove_extra_pad(pred, dep)
+
+            # Confidence Decoding
+            if  'confidence' in self.supervision:
+                cf_fd1 = self.cf_dec1(fd1_dep)
+                confidence = self.cf_dec0(cf_fd1)
+                confidence = _remove_extra_pad(confidence, dep)
+
+            output['pred'] = pred
 
         # RGB Decoding
         if  'rgb' in self.supervision:
@@ -331,8 +340,6 @@ class UNETModel(nn.Module):
             pred_rgb = self.id_dec0_rgb(id_fd1_rgb)
             pred_rgb = _remove_extra_pad(pred_rgb, dep)
         
-        output = {'pred': pred}
-
         if 'confidence' in self.supervision:
             output['confidence'] = confidence
         else:
@@ -350,7 +357,11 @@ class UNETModel(nn.Module):
                 output['attn_map_{}'.format(i)] = self.multihead_attn.transformer.attn_map1
 
         if 'rgb' in self.supervision:
-            output['pred_rgb'] = pred_rgb
+
+            if 'depth' in self.supervision:
+                output['pred_rgb'] = pred_rgb
+            else:
+                output['pred'] = pred_rgb
             
         return output
 

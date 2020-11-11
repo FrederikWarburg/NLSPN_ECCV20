@@ -26,42 +26,6 @@ class Projector(nn.Module):
         new_x = self.transformer(hs, x)
         return new_x
 
-
-
-class AttentionModuleSimple(nn.Module):
-    def __init__(self, transformer, position_embedding, num_channels, hidden_dim):
-        super().__init__()
-        self.transformer = transformer
-        self.position_embedding = position_embedding
-        self.input_proj = nn.Conv2d(num_channels, hidden_dim, kernel_size=1)
-        self.out_proj = nn.Conv2d(hidden_dim, num_channels, kernel_size=1)
-
-    def forward(self, x_rgb, x_dep):
-        b, c, h, w = x_rgb.shape
-        mask = torch.zeros((b, h, w), dtype=torch.bool, device=x_rgb.device)
-        pos = self.position_embedding(x_rgb, mask)
-        proj_x = self.input_proj(x_rgb)
-        hs = self.transformer(proj_x, x_dep, pos)
-
-        # project back to features
-        hs = hs.permute(1,2,0).view(b,c,h,w)
-        new_x = x_dep.contiguous() + self.out_proj(hs)
-
-        return new_x
-
-def build_simple_attention_module(num_channels, hidden_dim=256):
-
-    transformer = TransformerSimple(
-        d_model=hidden_dim,
-        dropout=0.1,
-        nhead=8,
-        dim_feedforward=2048
-    )
-    position_embedding = PositionEmbeddingSine(hidden_dim // 2, normalize=True)
-
-    return AttentionModuleSimple(transformer, position_embedding, num_channels, hidden_dim)
-
-
 class AttentionModule(nn.Module):
     def __init__(self, transformer, transformer_temporal, position_embedding, num_queries, num_channels, hidden_dim):
         super().__init__()
@@ -111,3 +75,5 @@ def build_attention_module(num_channels, hidden_dim=256, num_queries=100, tempor
     position_embedding = PositionEmbeddingSine(hidden_dim // 2, normalize=True)
 
     return AttentionModule(transformer, transformer_temporal, position_embedding, num_queries, num_channels, hidden_dim)
+
+
