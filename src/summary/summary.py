@@ -153,8 +153,6 @@ class Summary(BaseSummary):
         abs_err = abs(gt - pred)
         abs_err[gt == 0] = 0
 
-
-        
         for vt in ['vt1', 'vt2', 'vt3', 'vt4']:
 
             list_img = []
@@ -317,7 +315,6 @@ class Summary(BaseSummary):
                 img_total = torch.from_numpy(img_total)
                 self.add_image(self.mode + '/' + vt + '_proj_normalized_coefs', img_total, global_step)
 
-        
                 img_total = np.concatenate(kq_img_list, axis=2)
                 img_total = torch.from_numpy(img_total)
                 self.add_image(self.mode + '/' + vt + '_kq_coefs', img_total, global_step)

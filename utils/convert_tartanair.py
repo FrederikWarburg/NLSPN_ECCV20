@@ -240,24 +240,26 @@ def computeDepthSGBM(imR, imL):
     imgR = cv2.cvtColor(imR,cv2.COLOR_RGB2GRAY)
 
     win_size = 5
-    min_disp = -1
+    min_disp = 1
     max_disp = 16 * 7 -1 #min_disp * 9
     num_disp = max_disp - min_disp # Needs to be divisible by 16
     #Create Block matching object. 
     stereo = cv2.StereoSGBM_create(minDisparity= min_disp,
         numDisparities = num_disp,
-        blockSize = 5,
-        uniquenessRatio = 2,
-        speckleWindowSize = 5,
-        speckleRange = 1,
+        blockSize = 16,
+        uniquenessRatio = 20,
+        speckleWindowSize = 150,                                 
+        preFilterCap=1,                                         
+        speckleRange = 32,
         disp12MaxDiff = 1,
         P1 = 4*3*win_size**2,
         P2 =32*3*win_size**2
     ) 
 
+
     #Compute disparity map
     disparity_map = stereo.compute(imgL, imgR)
-    disparity_map = disparity_map.astype(float) / 16.0
+    disparity_map = disparity_map.astype(np.float32) / 16.0
     #Show disparity map before generating 3D cloud to verify that point cloud will be usable. 
 
     depth = np.zeros_like(disparity_map)
@@ -309,7 +311,7 @@ def main():
                 if not os.path.isdir(join(args.input, split, env, 'Easy', seqpath)): continue
                 if seqpath == '.ipynb_checkpoints': continue
 
-                dirs = create_euroc_filestruct(join(args.output, split, env, 'Easy', seqpath))
+                #dirs = create_euroc_filestruct(join(args.output, split, env, 'Easy', seqpath))
 
                 for im in tqdm(sorted(os.listdir(join(args.input, split, env, 'Easy', seqpath, 'image_right'))), desc="Converting {}".format(seqpath)):
                     im = im.replace('_right.png','')
@@ -318,13 +320,14 @@ def main():
                     imR = np.asarray(Image.open(join(args.input, split, env, 'Easy',seqpath, 'image_right', im + '_right.png')))
                     imL = np.asarray(Image.open(join(args.input, split, env, 'Easy',seqpath, 'image_left', im + '_left.png')))
 
+                    """
                     # estimate feature based sparse depth
                     est_features_and_uncertainties = computeDepthAndUncertaintyFromFeatures(imR, imL, akaze, args.error) 
 
                     # save estimated features and uncertainties
                     fname = join(dirs[2], im + '.csv')
                     np.savetxt(fname, est_features_and_uncertainties, delimiter = ',')
-
+                    """
                     # estimate SGBM based semi-dense depth
                     est_depth_SGBM, est_uncertainties_SGBM = computeDepthSGBM(imR, imL)
 
@@ -332,6 +335,7 @@ def main():
                     np.save(join(dirs[3], im + '_depth.npy'), est_depth_SGBM)
                     np.save(join(dirs[3], im + '_uncertainty.npy'), est_uncertainties_SGBM)
 
+                    """
                     # copy images
                     for i, cam in enumerate(['right', 'left']):
                         src = join(args.input, split, env, 'Easy', seqpath, 'image_' + cam, im + '_' + cam + '.png')
@@ -351,10 +355,13 @@ def main():
                         dst = join(dirs[5][i], im + '.npy')
                         shutil.copy(src, dst)
 
+                    """
                 # copy pose
+                """
                 for i, cam in enumerate(['right', 'left']):
                     poses = np.loadtxt(join(args.input, split, env, 'Easy', seqpath, 'pose_' + cam + '.txt'))
                     np.savetxt(join(dirs[4][i], 'data.csv'), poses, delimiter = ',')
-
+                """
+                
 if __name__ == "__main__":
     main()
