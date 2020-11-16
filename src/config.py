@@ -62,6 +62,11 @@ parser.add_argument('--dep_src',
                     default='slam+sgbm',
                     choices=['slam', 'sgbm', 'sgbm+slam', 'slam+sgbm'],
                     help='source for of input depth map')
+parser.add_argument('--constrain_sgbm',
+                    action='store_true',
+                    default=True,
+                    help='do constraint sgbm')
+
 
 
 # Hardware

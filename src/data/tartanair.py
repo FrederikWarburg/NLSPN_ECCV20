@@ -113,6 +113,7 @@ class TARTANAIR(BaseDataset):
         self.args = args
         self.mode = mode
         self.dep_src = args.dep_src
+        self.constrain_sgbm = args.constrain_sgbm
 
         if mode != 'train' and mode != 'val' and mode != 'test':
             raise NotImplementedError
@@ -389,6 +390,15 @@ class TARTANAIR(BaseDataset):
         return output
 
     def _load_data(self, idx):
+
+
+        path_gt = os.path.join(self.args.dir_data,
+                               self.sample_list[idx]['gt'])
+
+        gt = read_depth(path_gt)
+        gt = Image.fromarray(gt.astype('float32'), mode='F')
+
+
         path_rgb = os.path.join(self.args.dir_data,
                                 self.sample_list[idx]['rgb'])
         if 'slam' in self.dep_src: 
@@ -409,14 +419,13 @@ class TARTANAIR(BaseDataset):
             depth_sgbm = read_depth(path_depth_sgbm)
             confidence_sgbm = read_depth(path_confidence_sgbm)
 
+            if self.constrain_sgbm:
+                depth_sgbm[depth_sgbm > 10] = 0
+                depth_sgbm[depth_sgbm < 0.4] = 0
+                depth_sgbm[abs(depth_sgbm - gt) > 1] = 0
+
             depth_sgbm = Image.fromarray(depth_sgbm.astype('float32'), mode='F')
             confidence_sgbm = Image.fromarray(confidence_sgbm.astype('float32'), mode='F')
-
-        path_gt = os.path.join(self.args.dir_data,
-                               self.sample_list[idx]['gt'])
-
-        gt = read_depth(path_gt)
-        gt = Image.fromarray(gt.astype('float32'), mode='F')
 
         rgb = Image.open(path_rgb)
 
