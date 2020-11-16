@@ -63,31 +63,31 @@ def create_euroc_filestruct(
     for i in range(num_cams):
         # image directories
         fname = join(toplevel_dir, "cam{}".format(i), "data")
-        os.makedirs(fname)
+        #os.makedirs(fname)
         cam_dirs.append(fname)
 
         # depth
         fname = join(toplevel_dir, "ground_truth", "depth{}".format(i), "data")
-        os.makedirs(fname)
+        #os.makedirs(fname)
         depth_dirs.append(fname)
 
         # segmentation
         fname = join(toplevel_dir, "ground_truth", "seg{}".format(i), "data")
-        os.makedirs(fname)
+        #os.makedirs(fname)
         seg_dirs.append(fname)
 
         # pose
         fname = join(toplevel_dir, "ground_truth", "pose{}".format(i))
-        os.makedirs(fname)
+        #os.makedirs(fname)
         poses.append(fname)
 
     # depth from sparse feature directories
     depth_sparse = join(toplevel_dir, "depth_sparse0", "data")
-    os.makedirs(depth_sparse)
+    #os.makedirs(depth_sparse)
 
     # depth from SGBM directories
     depth_SGBM = join(toplevel_dir, "depth_SGBM0", "data")
-    os.makedirs(depth_SGBM)
+    #os.makedirs(depth_SGBM)
 
     return cam_dirs, depth_dirs, depth_sparse, depth_SGBM, poses, seg_dirs
 
