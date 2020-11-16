@@ -56,8 +56,8 @@ def create_euroc_filestruct(
 
     if os.path.isdir(toplevel_dir):
         logger.warning("Removing previously existing directory...")
-        shutil.rmtree(toplevel_dir)
-        os.makedirs(toplevel_dir)
+        #shutil.rmtree(toplevel_dir)
+        #os.makedirs(toplevel_dir)
 
     cam_dirs, depth_dirs, poses, seg_dirs = [], [], [], []
     for i in range(num_cams):
@@ -311,7 +311,7 @@ def main():
                 if not os.path.isdir(join(args.input, split, env, 'Easy', seqpath)): continue
                 if seqpath == '.ipynb_checkpoints': continue
 
-                #dirs = create_euroc_filestruct(join(args.output, split, env, 'Easy', seqpath))
+                dirs = create_euroc_filestruct(join(args.output, split, env, 'Easy', seqpath))
 
                 for im in tqdm(sorted(os.listdir(join(args.input, split, env, 'Easy', seqpath, 'image_right'))), desc="Converting {}".format(seqpath)):
                     im = im.replace('_right.png','')
@@ -362,6 +362,6 @@ def main():
                     poses = np.loadtxt(join(args.input, split, env, 'Easy', seqpath, 'pose_' + cam + '.txt'))
                     np.savetxt(join(dirs[4][i], 'data.csv'), poses, delimiter = ',')
                 """
-                
+
 if __name__ == "__main__":
     main()
