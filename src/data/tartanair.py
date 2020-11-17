@@ -114,6 +114,7 @@ class TARTANAIR(BaseDataset):
         self.mode = mode
         self.dep_src = args.dep_src
         self.constrain_sgbm = args.constrain_sgbm
+        self.input_conf = args.input_conf
 
         if mode != 'train' and mode != 'val' and mode != 'test':
             raise NotImplementedError
