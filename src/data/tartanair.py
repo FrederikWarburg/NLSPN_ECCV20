@@ -427,12 +427,11 @@ class TARTANAIR(BaseDataset):
             if self.constrain_sgbm:
                 depth_sgbm[abs(depth_sgbm - gt) > 1] = 0
 
-            depth_sgbm = Image.fromarray(depth_sgbm.astype('float32'), mode='F')
-
             if self.input_conf == 'binary':
                 confidence_sgbm = np.zeros_like(confidence_sgbm)
                 confidence_sgbm[depth_sgbm > 0] = 1
 
+            depth_sgbm = Image.fromarray(depth_sgbm.astype('float32'), mode='F')
             confidence_sgbm = Image.fromarray(confidence_sgbm.astype('float32'), mode='F')
 
         rgb = Image.open(path_rgb)
