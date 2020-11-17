@@ -141,7 +141,7 @@ parser.add_argument('--no_conf',
 parser.add_argument('--input_conf',
                     type=str,
                     required=True,
-                    choices=['learned', 'input'],
+                    choices=['learned', 'input', 'binary'],
                     help='where the confidence is learned for nconv and pconc')
 parser.add_argument('--aggregate',
                     type=str,
