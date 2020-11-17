@@ -66,6 +66,10 @@ parser.add_argument('--constrain_sgbm',
                     action='store_true',
                     default=True,
                     help='do constraint sgbm')
+parser.add_argument('--no_constrain_sgbm',
+                    action='store_false',
+                    dest='constrain_sgbm',
+                    help='no constraint sgbm')
 
 
 
