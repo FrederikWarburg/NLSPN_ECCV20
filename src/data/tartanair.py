@@ -398,7 +398,6 @@ class TARTANAIR(BaseDataset):
         gt = read_depth(path_gt)
         gt = Image.fromarray(gt.astype('float32'), mode='F')
 
-
         path_rgb = os.path.join(self.args.dir_data,
                                 self.sample_list[idx]['rgb'])
         if 'slam' in self.dep_src: 
@@ -419,12 +418,20 @@ class TARTANAIR(BaseDataset):
             depth_sgbm = read_depth(path_depth_sgbm)
             confidence_sgbm = read_depth(path_confidence_sgbm)
 
+            confidence_sgbm[depth_sgbm > 10] = 100
+            confidence_sgbm[depth_sgbm < 0.4] = 100
+            depth_sgbm[depth_sgbm > 10] = 0
+            depth_sgbm[depth_sgbm < 0.4] = 0
+
             if self.constrain_sgbm:
-                depth_sgbm[depth_sgbm > 10] = 0
-                depth_sgbm[depth_sgbm < 0.4] = 0
                 depth_sgbm[abs(depth_sgbm - gt) > 1] = 0
 
             depth_sgbm = Image.fromarray(depth_sgbm.astype('float32'), mode='F')
+
+            if self.input_conf == 'binary':
+                confidence_sgbm = np.zeros_like(confidence_sgbm)
+                confidence_sgbm[depth_sgbm > 0] = 1
+
             confidence_sgbm = Image.fromarray(confidence_sgbm.astype('float32'), mode='F')
 
         rgb = Image.open(path_rgb)
