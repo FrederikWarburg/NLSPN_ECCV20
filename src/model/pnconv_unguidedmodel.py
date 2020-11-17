@@ -25,6 +25,7 @@ class PNCONV_UNGUIDEDModel(nn.Module):
         if self.args.input_conf == 'learned':
             c0 = self.conf_estimator(x0)
         else:
+            # binary or heuristic
             c0 = sample['confidence']
 
         xout, cout = self.nconv(x0, c0)
