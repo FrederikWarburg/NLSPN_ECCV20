@@ -132,9 +132,9 @@ class Summary(BaseSummary):
             pred_rgb = None
 
         if 'confidence_rgb' in output:
-            conf_rgb = output['confidence_rgb'].data.cpu().numpy()
+            confidence_rgb = output['confidence_rgb'].data.cpu().numpy()
         else:
-            conf_rgb = None
+            confidence_rgb = None
 
         num_summary = rgb.shape[0]
         if num_summary > self.args.num_summary:
@@ -240,9 +240,9 @@ class Summary(BaseSummary):
 
                 list_img.append(img)
 
-            
             img_total = np.concatenate(list_img, axis=2)
             img_total = torch.from_numpy(img_total)
+            print("add image")
             self.add_image(self.mode + '/images', img_total, global_step)
 
         self.flush()
