@@ -30,7 +30,7 @@ parser.add_argument('--data_name',
                     type=str,
                     default='NYU',
                     # default='KITTIDC',
-                    choices=('NYU', 'KITTIDC', 'TARTANAIR'),
+                    choices=('NYU', 'KITTIDC', 'TARTANAIR', 'REALSENSE'),
                     help='dataset name')
 parser.add_argument('--split_json',
                     type=str,
