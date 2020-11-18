@@ -126,248 +126,124 @@ class Summary(BaseSummary):
         else:
             confidence = np.zeros_like(dep)
 
+        if output['pred_rgb'] is not None:
+            pred_rgb = output['pred_rgb'].data.cpu().numpy()
+        else:
+            pred_rgb = None
+
+        if output['confidence_rgb'] is not None:
+            conf_rgb = output['confidence_rgb'].data.cpu().numpy()
+        else:
+            conf_rgb = None
+
         num_summary = rgb.shape[0]
         if num_summary > self.args.num_summary:
             num_summary = self.args.num_summary
 
-            rgb = rgb[0:num_summary, :, :, :]
             if self.args.dep_src in ['slam', 'sgbm']:
                 dep = dep[0:num_summary, :, :, :]
+                dep = np.clip(dep, a_min=0, a_max=self.args.max_depth)
             else:
                 dep0 = dep0[0:num_summary, :, :, :]
                 dep1 = dep1[0:num_summary, :, :, :]
+
+                dep0 = np.clip(dep0, a_min=0, a_max=self.args.max_depth)
+                dep1 = np.clip(dep1, a_min=0, a_max=self.args.max_depth)
+
+            rgb = rgb[0:num_summary, :, :, :]
+            rgb = np.clip(rgb, a_min=0, a_max=1.0)
+
             gt = gt[0:num_summary, :, :, :]
+            gt = np.clip(gt, a_min=0, a_max=self.args.max_depth)
+
             pred = pred[0:num_summary, :, :, :]
+            pred = np.clip(pred, a_min=0, a_max=self.args.max_depth)
+
             confidence = confidence[0:num_summary, :, :, :]
+            confidence = np.clip(confidence, a_min=0, a_max=1.0)
 
-        rgb = np.clip(rgb, a_min=0, a_max=1.0)
-        if self.args.dep_src in ['slam', 'sgbm']:
-            dep = np.clip(dep, a_min=0, a_max=self.args.max_depth)
-        else:
-            dep0 = np.clip(dep0, a_min=0, a_max=self.args.max_depth)
-            dep1 = np.clip(dep1, a_min=0, a_max=self.args.max_depth)
-        gt = np.clip(gt, a_min=0, a_max=self.args.max_depth)
-        pred = np.clip(pred, a_min=0, a_max=self.args.max_depth)
-        confidence = np.clip(confidence, a_min=0, a_max=1.0)
-
-        abs_err = abs(gt - pred)
-        abs_err[gt == 0] = 0
-
-        for vt in ['vt1', 'vt2', 'vt3', 'vt4']:
+            if pred_rgb is not None:
+                pred_rgb = pred_rgb[0:num_summary, :, :, :]
+                pred_rgb = np.clip(pred_rgb, a_min=0, a_max=self.args.max_depth)
+            if pred_rgb is not None:
+                confidence_rgb = confidence_rgb[0:num_summary, :, :, :]
+                confidence_rgb = np.clip(confidence_rgb, a_min=0, a_max=1.0)
+            
+            abs_err = abs(gt - pred)
+            abs_err[gt == 0] = 0
 
             list_img = []
-            token_img_list = []
-            token_img_rel_list = []
-            proj_coef_img_list = []
-            proj_coef_img_rel_list = []
-            kq_img_list = []
-
+        
             for b in range(0, num_summary):
-                rgb_tmp = rgb[b, :, :, :]
+                
                 if self.args.dep_src in ['slam', 'sgbm']:
                     dep_tmp = dep[b, 0, :, :]
+                    dep_tmp = 255.0 * dep_tmp / self.args.max_depth
+                    dep_tmp = cm(dep_tmp.astype('uint8'))
+                    dep_tmp = np.transpose(dep_tmp[:, :, :3], (2, 0, 1))
                 else:
                     dep_tmp0 = dep0[b, 0, :, :]
                     dep_tmp1 = dep1[b, 0, :, :]
-                gt_tmp = gt[b, 0, :, :]
-                pred_tmp = pred[b, 0, :, :]
-                confidence_tmp = confidence[b, 0, :, :]
-                abs_err_tmp = abs_err[b, 0, :, :]
 
-                if self.args.dep_src in ['slam', 'sgbm']:
-                    dep_tmp = 255.0 * dep_tmp / self.args.max_depth
-                else:
                     dep_tmp0 = 255.0 * dep_tmp0 / self.args.max_depth
                     dep_tmp1 = 255.0 * dep_tmp1 / self.args.max_depth
-                gt_tmp = 255.0 * gt_tmp / self.args.max_depth
-                pred_tmp = 255.0 * pred_tmp / self.args.max_depth
-                confidence_tmp = 255.0 * confidence_tmp
-                abs_err_tmp = 255.0 * abs_err_tmp / np.max(abs_err_tmp)
-                            
-                if self.args.dep_src in ['slam', 'sgbm']:
-                    dep_tmp = cm(dep_tmp.astype('uint8'))
-                else:
+
                     dep_tmp0 = cm(dep_tmp0.astype('uint8'))
                     dep_tmp1 = cm(dep_tmp1.astype('uint8'))
-                gt_tmp = cm(gt_tmp.astype('uint8'))
-                pred_tmp = cm(pred_tmp.astype('uint8'))
-                confidence_tmp = cm(confidence_tmp.astype('uint8'))
-                abs_err_tmp = cm(abs_err_tmp.astype('uint8'))
 
-                if self.args.dep_src in ['slam', 'sgbm']:
-                    dep_tmp = np.transpose(dep_tmp[:, :, :3], (2, 0, 1))
-                else:
                     dep_tmp0 = np.transpose(dep_tmp0[:, :, :3], (2, 0, 1))
                     dep_tmp1 = np.transpose(dep_tmp1[:, :, :3], (2, 0, 1))
+
+                rgb_tmp = rgb[b, :, :, :]
+                
+                gt_tmp = gt[b, 0, :, :]
+                gt_tmp = 255.0 * gt_tmp / self.args.max_depth
+                gt_tmp = cm(gt_tmp.astype('uint8'))
                 gt_tmp = np.transpose(gt_tmp[:, :, :3], (2, 0, 1))
+
+                pred_tmp = pred[b, 0, :, :]
+                pred_tmp = 255.0 * pred_tmp / self.args.max_depth
+                pred_tmp = cm(pred_tmp.astype('uint8'))
                 pred_tmp = np.transpose(pred_tmp[:, :, :3], (2, 0, 1))
+
+                confidence_tmp = confidence[b, 0, :, :]
+                confidence_tmp = 255.0 * confidence_tmp
+                confidence_tmp = cm(confidence_tmp.astype('uint8'))
                 confidence_tmp = np.transpose(confidence_tmp[:, :, :3], (2, 0, 1))
+
+                if pred_rgb is not None:
+                    pred_tmp_rgb = pred_rgb[b, 0, :, :]
+                    pred_tmp_rgb = 255.0 * pred_tmp_rgb / self.args.max_depth
+                    pred_tmp_rgb = cm(pred_tmp_rgb.astype('uint8'))
+                    pred_tmp_rgb = np.transpose(pred_tmp_rgb[:, :, :3], (2, 0, 1))
+
+                if confidence_rgb is not None:
+                    confidence_tmp_rgb = confidence_rgb[b, 0, :, :]
+                    confidence_tmp_rgb = 255.0 * confidence_tmp_rgb
+                    confidence_tmp_rgb = cm(confidence_tmp_rgb.astype('uint8'))
+                    confidence_tmp_rgb = np.transpose(confidence_tmp_rgb[:, :, :3], (2, 0, 1))
+
+                abs_err_tmp = abs_err[b, 0, :, :]
+                abs_err_tmp = 255.0 * abs_err_tmp / np.max(abs_err_tmp)
+                abs_err_tmp = cm(abs_err_tmp.astype('uint8'))
                 abs_err_tmp = np.transpose(abs_err_tmp[:, :, :3], (2, 0, 1))
 
                 if self.args.dep_src in ['slam', 'sgbm']:
                     img = np.concatenate((rgb_tmp, dep_tmp, pred_tmp, gt_tmp,
                                     confidence_tmp, abs_err_tmp), axis=1)
+                elif pred_rgb is not None and conf_rgb is not None:
+                    img = np.concatenate((rgb_tmp, dep_tmp, pred_tmp, gt_tmp,
+                                    confidence_tmp, abs_err_tmp, pred_tmp_rgb, confidence_tmp_rgb), axis=1)
                 else:
                     img = np.concatenate((rgb_tmp, dep_tmp0, dep_tmp1, pred_tmp, gt_tmp,
                                     confidence_tmp, abs_err_tmp), axis=1)
 
                 list_img.append(img)
 
-                if vt in output:
-                    token_coef = output[vt].tokenizer.token_coef.detach().data.cpu().numpy()
-                    N, heads, HW, L = token_coef.shape
-
-                    rgb_tmp = np.transpose(rgb_tmp, (1,2,0))
-                    rgb_tmp = cv2.resize(rgb_tmp, (300, 65), interpolation=cv2.INTER_LINEAR)
-                    rgb_tmp = np.transpose(rgb_tmp, (2,0,1))
-                    
-                    pred_tmp = np.transpose(pred_tmp, (1,2,0))
-                    pred_tmp = cv2.resize(pred_tmp, (300, 65), interpolation=cv2.INTER_LINEAR)
-                    pred_tmp = np.transpose(pred_tmp, (2,0,1))
-                    
-                    C, H, W = rgb_tmp.shape
-                    Hb, Wb = output[vt].size
-
-                    attention_maps = [rgb_tmp, pred_tmp]
-                    attention_maps_rel = [rgb_tmp, pred_tmp]
-
-                    for h in range(heads):
-                        for l in range(L):
-                            
-                            attention_maps.append(visualize(token_coef[b, h, :, l], (Wb, Hb), (W,H), normalize = False))
-                            attention_maps_rel.append(visualize(token_coef[b, h, :, l], (Wb, Hb), (W,H), normalize = True))
-
-                            if h*l + l > 10:
-                                break
-                        
-                        if h*l + l > 10:
-                            break
-                    
-                    token_img = np.concatenate(attention_maps, axis=1)
-                    token_img_list.append(token_img)
-
-                    token_img = np.concatenate(attention_maps_rel, axis=1)
-                    token_img_rel_list.append(token_img)
-
-                    proj_coef = output[vt].projector.proj_coef.detach().data.cpu().numpy()
-                    N, heads, HW, L = proj_coef.shape
-                    C, H, W = rgb_tmp.shape
-                    Hb, Wb = output[vt].size
-                    attention_maps = [rgb_tmp, pred_tmp]
-                    attention_maps_rel = [rgb_tmp, pred_tmp]
-
-                    for h in range(heads):
-                        for l in range(L):
-                                                    
-                            attention_maps.append(visualize(proj_coef[b, h, :, l], (Wb, Hb), (W,H), normalize = False))
-                            attention_maps_rel.append(visualize(proj_coef[b, h, :, l], (Wb, Hb), (W,H), normalize = True))
-
-                            if h*l + l > 10:
-                                break
-                        
-                        if h*l + l > 10:
-                            break
-                    proj_coef_img_rel = np.concatenate(attention_maps_rel, axis=1)
-                    proj_coef_img_rel_list.append(proj_coef_img_rel)
-
-                    proj_coef_img = np.concatenate(attention_maps, axis=1)
-                    proj_coef_img_list.append(proj_coef_img)
-
-                    attention_maps = []
-                    kq = output[vt].transformer.kq.detach().data.cpu().numpy()
-                    
-                    N, heads, L, L = kq.shape
-                    for h in range(heads):
-
-                        kq_tmp = kq[b, h, :, :].reshape(L,L)
-                        
-                        kq_tmp = 255.0 * kq_tmp 
-                        kq_tmp = cm(kq_tmp.astype('uint8'))
-                        kq_tmp = np.transpose(kq_tmp[:, :, :3], (2, 0, 1))
-                        attention_maps.append(kq_tmp)
-
-                        if h > 10:
-                            break
-                    
-                    kq_tmp_img = np.concatenate(attention_maps, axis=1)
-                    
-                    kq_img_list.append(kq_tmp_img)
-
-            if vt == 'vt1':
-                img_total = np.concatenate(list_img, axis=2)
-                img_total = torch.from_numpy(img_total)
-                self.add_image(self.mode + '/images', img_total, global_step)
-
-            if vt in output:
-                img_total = np.concatenate(token_img_list, axis=2)
-                img_total = torch.from_numpy(img_total)
-                self.add_image(self.mode + '/' + vt + '_token_coefs', img_total, global_step)
-
-                img_total = np.concatenate(token_img_rel_list, axis=2)
-                img_total = torch.from_numpy(img_total)
-                self.add_image(self.mode + '/' + vt + '_token_normalized_coefs', img_total, global_step)
-
-                img_total = np.concatenate(proj_coef_img_list, axis=2)
-                img_total = torch.from_numpy(img_total)
-                self.add_image(self.mode + '/' + vt + '_proj_coefs', img_total, global_step)
-
-                img_total = np.concatenate(proj_coef_img_rel_list, axis=2)
-                img_total = torch.from_numpy(img_total)
-                self.add_image(self.mode + '/' + vt + '_proj_normalized_coefs', img_total, global_step)
-
-                img_total = np.concatenate(kq_img_list, axis=2)
-                img_total = torch.from_numpy(img_total)
-                self.add_image(self.mode + '/' + vt + '_kq_coefs', img_total, global_step)
-
-            if self.args.model_name.lower() == 'nlspn':
-                self.add_scalar('Etc/gamma', output['gamma'], global_step)
-
-
-
-        attm_output_weights_img_list = []
-        self_attm_output_weights_img_list = []
-
-        if 'num_layers' in output:
-
-            rgb_tmp = np.transpose(rgb_tmp, (1,2,0))
-            rgb_tmp = cv2.resize(rgb_tmp, (300, 65), interpolation=cv2.INTER_LINEAR)
-            rgb_tmp = np.transpose(rgb_tmp, (2,0,1))
             
-            pred_tmp = np.transpose(pred_tmp, (1,2,0))
-            pred_tmp = cv2.resize(pred_tmp, (300, 65), interpolation=cv2.INTER_LINEAR)
-            pred_tmp = np.transpose(pred_tmp, (2,0,1))
-
-            C, H, W = rgb_tmp.shape
-            Hb, Wb = output['size']
-            attention_maps = [rgb_tmp, pred_tmp]
-            self_attention_maps = [rgb_tmp, pred_tmp]
-
-            for i in range(output['num_layers']):
-                attn_output_weights = output['attn_map_{}'.format(i)].detach().data.cpu().numpy()
-                N, HW, HW = attn_output_weights.shape
-                                    
-                for m in range(HW):      
-                    attention_maps.append(visualize(attn_output_weights[b, m, :], (Wb,Hb), (W,H), normalize=True))
-            
-                #self_attn_output_weights = output['self_attn_map_{}'.format(i)].detach().data.cpu().numpy()
-                #N, HW, HW = self_attn_output_weights.shape
-
-                #for m in range(HW):           
-                #    self_attention_maps.append(visualize(self_attn_output_weights[b, m, :], (Wb,Hb), (W,H), normalize=True))
-            
-            attm_output_weights_img = np.concatenate(attention_maps, axis=1)
-            attm_output_weights_img_list.append(attm_output_weights_img)
-
-            self_attm_output_weights_img = np.concatenate(self_attention_maps, axis=1)
-            self_attm_output_weights_img_list.append(self_attm_output_weights_img)
-            
-            img_total = np.concatenate(attm_output_weights_img_list, axis=2)
+            img_total = np.concatenate(list_img, axis=2)
             img_total = torch.from_numpy(img_total)
-            self.add_image(self.mode + '/attm_output', img_total, global_step)
-
-            img_total = np.concatenate(self_attm_output_weights_img_list, axis=2)
-            img_total = torch.from_numpy(img_total)
-            self.add_image(self.mode + '/self_attm_output', img_total, global_step)
+            self.add_image(self.mode + '/images', img_total, global_step)
 
         self.flush()
 

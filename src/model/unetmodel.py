@@ -33,7 +33,7 @@ def _upsampling(ch_in, ch_out, bn=True, relu=True, upsampling = 'learnable'):
     if upsampling == 'learnable':
         layers.append(nn.ConvTranspose2d(ch_in, ch_out, kernel=3, stride=2, padding=0, output_padding=0))
     else:
-        layers.append(nn.Upsample(mode='bilinear', scale_factor=2))
+        layers.append(nn.Upsample(mode='bilinear', scale_factor=2, align_corners=False))
         layers.append(nn.Conv2d(ch_in, ch_out, kernel_size=1, stride=1))
     
     if bn:
