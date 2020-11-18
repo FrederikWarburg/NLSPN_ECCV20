@@ -160,14 +160,14 @@ class Summary(BaseSummary):
             pred = np.clip(pred, a_min=0, a_max=self.args.max_depth)
 
             confidence = confidence[0:num_summary, :, :, :]
-            confidence = np.clip(confidence, a_min=0, a_max=1.0)
+            #confidence = np.clip(confidence, a_min=0, a_max=1.0)
 
             if pred_rgb is not None:
                 pred_rgb = pred_rgb[0:num_summary, :, :, :]
                 pred_rgb = np.clip(pred_rgb, a_min=0, a_max=self.args.max_depth)
             if pred_rgb is not None:
                 confidence_rgb = confidence_rgb[0:num_summary, :, :, :]
-                confidence_rgb = np.clip(confidence_rgb, a_min=0, a_max=1.0)
+                #confidence_rgb = np.clip(confidence_rgb, a_min=0, a_max=1.0)
             
             abs_err = abs(gt - pred)
             abs_err[gt == 0] = 0
@@ -207,7 +207,7 @@ class Summary(BaseSummary):
                 pred_tmp = np.transpose(pred_tmp[:, :, :3], (2, 0, 1))
 
                 confidence_tmp = confidence[b, 0, :, :]
-                confidence_tmp = 255.0 * confidence_tmp
+                confidence_tmp = 255.0 * confidence_tmp  / np.max(confidence_tmp)
                 confidence_tmp = cm(confidence_tmp.astype('uint8'))
                 confidence_tmp = np.transpose(confidence_tmp[:, :, :3], (2, 0, 1))
 
@@ -219,7 +219,7 @@ class Summary(BaseSummary):
 
                 if confidence_rgb is not None:
                     confidence_tmp_rgb = confidence_rgb[b, 0, :, :]
-                    confidence_tmp_rgb = 255.0 * confidence_tmp_rgb
+                    confidence_tmp_rgb = 255.0 * confidence_tmp_rgb / np.max(confidence_tmp)
                     confidence_tmp_rgb = cm(confidence_tmp_rgb.astype('uint8'))
                     confidence_tmp_rgb = np.transpose(confidence_tmp_rgb[:, :, :3], (2, 0, 1))
 
