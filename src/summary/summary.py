@@ -231,7 +231,7 @@ class Summary(BaseSummary):
             if self.args.dep_src in ['slam', 'sgbm']:
                 img = np.concatenate((rgb_tmp, dep_tmp, pred_tmp, gt_tmp,
                                 confidence_tmp, abs_err_tmp), axis=1)
-            elif pred_rgb is not None and conf_rgb is not None:
+            elif pred_rgb is not None and confidence_rgb is not None:
                 img = np.concatenate((rgb_tmp, dep_tmp, pred_tmp, gt_tmp,
                                 confidence_tmp, abs_err_tmp, pred_tmp_rgb, confidence_tmp_rgb), axis=1)
             else:
