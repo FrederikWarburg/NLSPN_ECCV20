@@ -62,7 +62,7 @@ class resnetUnet(nn.Module):
         self.conv4_rgb = net.layer3 #1/8
         self.conv5_rgb = net.layer4 #1/16
         
-        self.bottleneck1 = conv_bn_relu(512, 512, kernel=3, stride=2, padding=1, bn=True, relu=True) # 1/32
+        self.bottleneck1 = conv_bn_relu(512, 512, kernel=3, stride=1, padding=0, bn=True, relu=True) # 1/32
         #self.bottleneck2 = conv_bn_relu(1024, 512, kernel=3, stride=1, padding=1, bn=True, relu=True) # 1/32
 
         # Decoder
@@ -70,7 +70,7 @@ class resnetUnet(nn.Module):
         self.dec4_rgb = Upsample(256, self.D_skip * 256, 128, upsampling=self.upsampling, aggregate=self.aggregate) # 1/4
         self.dec3_rgb = Upsample(128, self.D_skip * 128, 64,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/2
         self.dec2_rgb = Upsample(64, self.D_skip * 64, 64,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/2
-        self.dec1_rgb = Upsample(64, 0, 64, upsampling=self.upsampling, bn=False) # 1/1
+        self.dec1_rgb = Upsample(64, 0, 64,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/1
 
         # Depth Branch
         self.id_dec1_rgb = conv_bn_relu(64, 64, kernel=3, stride=1, padding=1, bn=False, relu=True) # 1/1
