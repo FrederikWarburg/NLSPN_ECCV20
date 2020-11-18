@@ -172,7 +172,7 @@ class UNetWithResnet50Encoder(nn.Module):
             x = block(x, pre_pools[key])
         output_feature_map = x
         pred = self.pred(x)
-        conf = self.conf(x)
+        conf = F.softplus(self.conf(x))
 
         del pre_pools
         if with_output_feature_map:
