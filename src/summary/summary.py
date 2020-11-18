@@ -121,17 +121,17 @@ class Summary(BaseSummary):
         gt = sample['gt'].detach().data.cpu().numpy()
         pred = output['pred'].detach().data.cpu().numpy()
 
-        if output['confidence'] is not None:
+        if 'confidence' in output:
             confidence = output['confidence'].data.cpu().numpy()
         else:
             confidence = np.zeros_like(dep)
 
-        if output['pred_rgb'] is not None:
+        if 'pred_rgb' in output:
             pred_rgb = output['pred_rgb'].data.cpu().numpy()
         else:
             pred_rgb = None
 
-        if output['confidence_rgb'] is not None:
+        if 'confidence_rgb' in output:
             conf_rgb = output['confidence_rgb'].data.cpu().numpy()
         else:
             conf_rgb = None
