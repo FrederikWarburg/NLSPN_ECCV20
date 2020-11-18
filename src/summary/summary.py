@@ -40,6 +40,14 @@ def visualize(im, sizeb, size, normalize = False):
 
     return im 
 
+def norm_cm_transpose(im, cm, max_):
+
+    im = 255.0 * im / max_
+    im = cm(im.astype('uint8'))
+    im = np.transpose(im[:, :, :3], (2, 0, 1))
+
+    return im
+
 class Summary(BaseSummary):
     def __init__(self, log_dir, mode, args, loss_name, metric_name):
         assert mode in ['train', 'val', 'test'], \
@@ -112,6 +120,10 @@ class Summary(BaseSummary):
         rgb.mul_(self.img_std.type_as(rgb)).add_(self.img_mean.type_as(rgb))
         rgb = rgb.data.cpu().numpy()
 
+        num_summary = rgb.shape[0]
+        if num_summary > self.args.num_summary:
+            num_summary = self.args.num_summary
+
         if self.args.dep_src in ['slam', 'sgbm']:
             dep = sample['dep'].detach().data.cpu().numpy()
         else:
@@ -123,22 +135,22 @@ class Summary(BaseSummary):
 
         if 'confidence' in output:
             confidence = output['confidence'].data.cpu().numpy()
+            confidence = confidence[0:num_summary, :, :, :]
         else:
-            confidence = np.zeros_like(dep)
+            confidence = None
 
         if 'pred_rgb' in output:
             pred_rgb = output['pred_rgb'].data.cpu().numpy()
+            pred_rgb = pred_rgb[0:num_summary, :, :, :]
+            pred_rgb = np.clip(pred_rgb, a_min=0, a_max=self.args.max_depth)
         else:
             pred_rgb = None
 
         if 'confidence_rgb' in output:
             confidence_rgb = output['confidence_rgb'].data.cpu().numpy()
+            confidence_rgb = confidence_rgb[0:num_summary, :, :, :]
         else:
             confidence_rgb = None
-
-        num_summary = rgb.shape[0]
-        if num_summary > self.args.num_summary:
-            num_summary = self.args.num_summary
 
         if self.args.dep_src in ['slam', 'sgbm']:
             dep = dep[0:num_summary, :, :, :]
@@ -159,16 +171,6 @@ class Summary(BaseSummary):
         pred = pred[0:num_summary, :, :, :]
         pred = np.clip(pred, a_min=0, a_max=self.args.max_depth)
 
-        confidence = confidence[0:num_summary, :, :, :]
-        #confidence = np.clip(confidence, a_min=0, a_max=1.0)
-
-        if pred_rgb is not None:
-            pred_rgb = pred_rgb[0:num_summary, :, :, :]
-            pred_rgb = np.clip(pred_rgb, a_min=0, a_max=self.args.max_depth)
-        if pred_rgb is not None:
-            confidence_rgb = confidence_rgb[0:num_summary, :, :, :]
-            #confidence_rgb = np.clip(confidence_rgb, a_min=0, a_max=1.0)
-        
         abs_err = abs(gt - pred)
         abs_err[gt == 0] = 0
 
@@ -176,73 +178,32 @@ class Summary(BaseSummary):
     
         for b in range(0, num_summary):
             
+            img = []
+
+            img.append(rgb[b, :, :, :])
             if self.args.dep_src in ['slam', 'sgbm']:
-                dep_tmp = dep[b, 0, :, :]
-                dep_tmp = 255.0 * dep_tmp / self.args.max_depth
-                dep_tmp = cm(dep_tmp.astype('uint8'))
-                dep_tmp = np.transpose(dep_tmp[:, :, :3], (2, 0, 1))
+                img.append(norm_cm_transpose(dep[b, 0, :, :], cm, self.args.max_depth))
             else:
-                dep_tmp0 = dep0[b, 0, :, :]
-                dep_tmp1 = dep1[b, 0, :, :]
+                img.append(norm_cm_transpose(dep0[b, 0, :, :], cm, self.args.max_depth))
+                img.append(norm_cm_transpose(dep1[b, 0, :, :], cm, self.args.max_depth))
 
-                dep_tmp0 = 255.0 * dep_tmp0 / self.args.max_depth
-                dep_tmp1 = 255.0 * dep_tmp1 / self.args.max_depth
-
-                dep_tmp0 = cm(dep_tmp0.astype('uint8'))
-                dep_tmp1 = cm(dep_tmp1.astype('uint8'))
-
-                dep_tmp0 = np.transpose(dep_tmp0[:, :, :3], (2, 0, 1))
-                dep_tmp1 = np.transpose(dep_tmp1[:, :, :3], (2, 0, 1))
-
-            rgb_tmp = rgb[b, :, :, :]
-            
-            gt_tmp = gt[b, 0, :, :]
-            gt_tmp = 255.0 * gt_tmp / self.args.max_depth
-            gt_tmp = cm(gt_tmp.astype('uint8'))
-            gt_tmp = np.transpose(gt_tmp[:, :, :3], (2, 0, 1))
-
-            pred_tmp = pred[b, 0, :, :]
-            pred_tmp = 255.0 * pred_tmp / self.args.max_depth
-            pred_tmp = cm(pred_tmp.astype('uint8'))
-            pred_tmp = np.transpose(pred_tmp[:, :, :3], (2, 0, 1))
-
-            confidence_tmp = confidence[b, 0, :, :]
-            confidence_tmp = 255.0 * confidence_tmp  / np.max(confidence_tmp)
-            confidence_tmp = cm(confidence_tmp.astype('uint8'))
-            confidence_tmp = np.transpose(confidence_tmp[:, :, :3], (2, 0, 1))
+            img.append(norm_cm_transpose(gt[b, 0, :, :], cm, self.args.max_depth))
+            img.append(norm_cm_transpose(pred[b, 0, :, :], cm, self.args.max_depth))
+            img.append(norm_cm_transpose(confidence[b, 0, :, :], cm, np.max(confidence)))
 
             if pred_rgb is not None:
-                pred_tmp_rgb = pred_rgb[b, 0, :, :]
-                pred_tmp_rgb = 255.0 * pred_tmp_rgb / self.args.max_depth
-                pred_tmp_rgb = cm(pred_tmp_rgb.astype('uint8'))
-                pred_tmp_rgb = np.transpose(pred_tmp_rgb[:, :, :3], (2, 0, 1))
+                img.append(norm_cm_transpose(pred_rgb[b, 0, :, :], cm, self.args.max_depth))
 
             if confidence_rgb is not None:
-                confidence_tmp_rgb = confidence_rgb[b, 0, :, :]
-                confidence_tmp_rgb = 255.0 * confidence_tmp_rgb / np.max(confidence_tmp)
-                confidence_tmp_rgb = cm(confidence_tmp_rgb.astype('uint8'))
-                confidence_tmp_rgb = np.transpose(confidence_tmp_rgb[:, :, :3], (2, 0, 1))
+                img.append(norm_cm_transpose(confidence_rgb[b, 0, :, :], cm, np.max(confidence_rgb)))
 
-            abs_err_tmp = abs_err[b, 0, :, :]
-            abs_err_tmp = 255.0 * abs_err_tmp / np.max(abs_err_tmp)
-            abs_err_tmp = cm(abs_err_tmp.astype('uint8'))
-            abs_err_tmp = np.transpose(abs_err_tmp[:, :, :3], (2, 0, 1))
+            img.append(norm_cm_transpose(abs_err[b, 0, :, :], cm, np.max(abs_err)))
 
-            if self.args.dep_src in ['slam', 'sgbm']:
-                img = np.concatenate((rgb_tmp, dep_tmp, pred_tmp, gt_tmp,
-                                confidence_tmp, abs_err_tmp), axis=1)
-            elif pred_rgb is not None and confidence_rgb is not None:
-                img = np.concatenate((rgb_tmp, dep_tmp, pred_tmp, gt_tmp,
-                                confidence_tmp, abs_err_tmp, pred_tmp_rgb, confidence_tmp_rgb), axis=1)
-            else:
-                img = np.concatenate((rgb_tmp, dep_tmp0, dep_tmp1, pred_tmp, gt_tmp,
-                                confidence_tmp, abs_err_tmp), axis=1)
-
+            img = np.concatenate(img, axis=1)
             list_img.append(img)
 
         img_total = np.concatenate(list_img, axis=2)
         img_total = torch.from_numpy(img_total)
-        print("add image")
         self.add_image(self.mode + '/images', img_total, global_step)
 
         self.flush()

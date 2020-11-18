@@ -103,7 +103,7 @@ def train(gpu, args):
         num_workers=args.num_threads, pin_memory=True, sampler=sampler_train,
         drop_last=True)
     loader_val = DataLoader(
-        dataset=data_val, batch_size=1, shuffle=False,
+        dataset=data_val, batch_size=batch_size, shuffle=False,
         num_workers=args.num_threads, pin_memory=True, sampler=sampler_val,
         drop_last=False)
 
@@ -332,7 +332,7 @@ def test(args):
 
     data_test = data(args, 'test')
 
-    loader_test = DataLoader(dataset=data_test, batch_size=1,
+    loader_test = DataLoader(dataset=data_test, batch_size=args.batch_size,
                              shuffle=False, num_workers=args.num_threads)
 
     # Network
