@@ -258,10 +258,8 @@ class Summary(BaseSummary):
                 rgb = np.clip(rgb, 0, 256).astype('uint8')
                 rgb = Image.fromarray(rgb, 'RGB')
                 
-                
                 pred = output['pred'].detach()
                 pred = torch.clamp(pred, min=0)
-                pred = Image.fromarray(pred[:, :, :3], 'RGB')
 
                 gt = sample['gt'].detach()
                 gt = gt[0, 0, :, :].data.cpu().numpy()
@@ -275,6 +273,7 @@ class Summary(BaseSummary):
                 pred = pred[0, 0, :, :].data.cpu().numpy()
                 pred = pred / self.args.max_depth
                 pred = (255.0*cm(pred)).astype('uint8')
+                pred = Image.fromarray(pred[:, :, :3], 'RGB')
 
                 gt = gt / self.args.max_depth
                 gt = (255.0*cm(gt)).astype('uint8')
@@ -313,13 +312,11 @@ class Summary(BaseSummary):
                 path_save_rgb = '{}/01_rgb.png'.format(self.path_output)
                 path_save_init = '{}/03_pred_init.png'.format(self.path_output)
                 path_save_pred = '{}/05_pred_final.png'.format(self.path_output)
-                path_save_pred_gray = '{}/05_pred_final_gray.png'.format(self.path_output)
                 path_save_gt = '{}/06_gt.png'.format(self.path_output)
                 path_save_abs_error = '{}/07_abs_error.png'.format(self.path_output)
 
                 rgb.save(path_save_rgb)
                 pred.save(path_save_pred)
-                pred_gray.save(path_save_pred_gray)
                 gt.save(path_save_gt)
                 abs_err.save(path_save_abs_error)
 
