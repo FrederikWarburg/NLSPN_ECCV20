@@ -77,13 +77,13 @@ def generate_json():
                 list_rgb = os.listdir(os.path.join(path_split,seq,'cam0/data'))
                 list_rgb.sort()
 
-                list_depth = os.listdir(os.path.join(path_split,seq,'depth0/data'))
+                list_depth = os.listdir(os.path.join(path_split,seq,'aligned_depth0/data'))
                 list_depth.sort()
                 list_depth = align_with_rgb(list_rgb, list_depth)
                 
                 for rgb_name, depth_name in zip(list_rgb, list_depth):
                     path_rgb = os.path.join(split, seq, cam, 'data', rgb_name)
-                    path_depth = os.path.join(split, seq, 'depth0', 'data', depth_name)
+                    path_depth = os.path.join(split, seq, 'aligned_depth0', 'data', depth_name)
 
                     dict_sample = {
                         'rgb': path_rgb,

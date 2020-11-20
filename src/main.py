@@ -378,40 +378,41 @@ def test(args):
 
     t_total = 0
 
-    for batch, sample in enumerate(loader_test):
-        sample = {key: val.cuda() for key, val in sample.items()
-                  if val is not None}
+    with torch.no_grad():
+        for batch, sample in enumerate(loader_test):
+            sample = {key: val.cuda() for key, val in sample.items()
+                        if val is not None}
 
-        t0 = time.time()
-        output = net(sample)
-        t1 = time.time()
+            t0 = time.time()
+            output = net(sample)
+            t1 = time.time()
 
-        t_total += (t1 - t0)
+            t_total += (t1 - t0)
 
-        metric_val = metric.evaluate(sample, output, 'train')
+            metric_val = metric.evaluate(sample, output, 'train')
 
-        writer_test.add(None, metric_val)
+            writer_test.add(None, metric_val)
 
-        # Save data for analysis
-        if args.save_image:
-            writer_test.save(args.epochs, batch, sample, output)
+            # Save data for analysis
+            if args.save_image:
+                writer_test.save(args.epochs, batch, sample, output)
 
-        current_time = time.strftime('%y%m%d@%H:%M:%S')
-        error_str = '{} | Test'.format(current_time)
-        pbar.set_description(error_str)
-        pbar.update(loader_test.batch_size)
+            current_time = time.strftime('%y%m%d@%H:%M:%S')
+            error_str = '{} | Test'.format(current_time)
+            pbar.set_description(error_str)
+            pbar.update(loader_test.batch_size)
 
-    pbar.close()
+        pbar.close()
 
-    writer_test.update(args.epochs, sample, output)
+        writer_test.update(args.epochs, sample, output)
 
-    t_avg = t_total / num_sample
-    print('Elapsed time : {} sec, '
-          'Average processing time : {} sec'.format(t_total, t_avg))
-
-    with open(os.path.join(args.save_dir, 'test', 'test_time.txt'), 'w+') as f:
-        f.write('Elapsed time : {} sec, '
+        t_avg = t_total / num_sample
+        print('Elapsed time : {} sec, '
                 'Average processing time : {} sec'.format(t_total, t_avg))
+
+        with open(os.path.join(args.save_dir, 'test', 'test_time.txt'), 'w+') as f:
+            f.write('Elapsed time : {} sec, '
+                    'Average processing time : {} sec'.format(t_total, t_avg))
 
 
 def main(args):

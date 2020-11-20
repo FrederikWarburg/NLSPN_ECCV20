@@ -48,6 +48,32 @@ Reference : https://github.com/XinJCheng/CSPN/blob/master/nyu_dataset_loader.py
 """
 
 
+def backproject_project(depth_im):
+    
+    T_sc_depth = np.asarray([[0.99998779, -0.00044588, 0.00492056, -0.03102],
+                [0.00046182, 0.99999465, -0.00323781, 0.00563841],
+                [-0.00491909, 0.00324004, 0.99998265, 0.01847428],
+                [0.0, 0.0, 0.0, 1.0 ]])
+    T_sc_visible = np.asarray([[0.99999116, -0.00059866, 0.00416182, 0.02802532],
+                [0.00061067, 0.99999565, -0.00288555, 0.00568833],
+                [-0.00416007, 0.00288807, 0.99998718, 0.0181785],
+                [0.0, 0.0, 0.0, 1.0 ]])
+
+    T_sc_depth_inverse = np.linalg.inv(T_sc_depth)
+    
+    im_proj = np.zeros_like(depth_im)
+    for i in range(depth_im.shape[0]):
+        for j in range(depth_im.shape[1]):
+            z = depth_im[i,j]
+            if z == 0: continue
+            q1 = np.asarray([[i,j,z,1]]).T
+            Q = np.matmul(T_sc_depth_inverse,q1)
+            Q /= Q[-1]
+            q2 = np.matmul(T_sc_visible, Q)
+            q2 /= q2[-1]
+            im_proj[i,j] = q2[2]
+            
+    return im_proj
 
 def read_depth(file_name):
     # loads depth map D from 16 bits png file as a numpy array,
@@ -104,6 +130,7 @@ class REALSENSE(BaseDataset):
                                self.sample_list[idx]['depth'])
 
         gt = read_depth(path_gt)
+        gt = backproject_project(gt)
         gt = Image.fromarray(gt.astype('float32'), mode='F')
 
         path_rgb = os.path.join(self.args.dir_data,
@@ -113,6 +140,7 @@ class REALSENSE(BaseDataset):
                                 self.sample_list[idx]['depth'])
 
         depth = read_depth(path_depth)
+        depth = backproject_project(path_depth)
 
         if self.input_conf == 'binary':
             confidence = np.zeros_like(depth)

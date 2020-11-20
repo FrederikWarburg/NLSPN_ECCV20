@@ -222,11 +222,8 @@ class Summary(BaseSummary):
                 path_save_pred = '{}/{:010d}.png'.format(self.path_output, idx)
 
                 pred = output['pred'].detach()
-
                 pred = torch.clamp(pred, min=0)
-
                 pred = pred[0, 0, :, :].data.cpu().numpy()
-
                 pred = (pred*256.0).astype(np.uint16)
                 pred = Image.fromarray(pred)
                 pred.save(path_save_pred)
@@ -239,68 +236,6 @@ class Summary(BaseSummary):
                     gamma = output['gamma'].data.cpu().numpy()
                     feat_init = output['pred_init']
                     list_feat = output['pred_inter']
-
-                rgb = sample['rgb'].detach()
-                if self.args.dep_src in ['slam', 'sgbm']:
-                    dep = sample['dep'].detach()
-                else:
-                    dep0 = sample['dep0'].detach()
-                    dep1 = sample['dep1'].detach()
-                pred = output['pred'].detach()
-                gt = sample['gt'].detach()
-
-                pred = torch.clamp(pred, min=0)
-
-                # Un-normalization
-                rgb.mul_(self.img_std.type_as(rgb)).add_(
-                    self.img_mean.type_as(rgb))
-
-                rgb = rgb[0, :, :, :].data.cpu().numpy()
-                if self.args.dep_src in ['slam', 'sgbm']:
-                    dep = dep[0, 0, :, :].data.cpu().numpy()
-                else:
-                    dep0 = dep0[0, 0, :, :].data.cpu().numpy()
-                    dep1 = dep1[0, 0, :, :].data.cpu().numpy()
-                pred = pred[0, 0, :, :].data.cpu().numpy()
-                gt = gt[0, 0, :, :].data.cpu().numpy()
-
-                rgb = 255.0*np.transpose(rgb, (1, 2, 0))
-                if self.args.dep_src in ['slam', 'sgbm']:
-                    dep = dep / self.args.max_depth
-                else:
-                    dep0 = dep0 / self.args.max_depth
-                    dep1 = dep1 / self.args.max_depth
-                pred = pred / self.args.max_depth
-                pred_gray = pred
-                gt = gt / self.args.max_depth
-
-                #calculate abs error
-                abs_err = abs(gt - pred)
-                abs_err[gt == 0] = 0
-
-                rgb = np.clip(rgb, 0, 256).astype('uint8')
-                if self.args.dep_src in ['slam', 'sgbm']:
-                    dep = (255.0*cm(dep)).astype('uint8')
-                else:
-                    dep0 = (255.0*cm(dep0)).astype('uint8')
-                    dep1 = (255.0*cm(dep1)).astype('uint8')
-                pred = (255.0*cm(pred)).astype('uint8')
-                pred_gray = (255.0*pred_gray).astype('uint8')
-                gt = (255.0*cm(gt)).astype('uint8')
-                abs_err = (255.0*cm(abs_err)).astype('uint8')
-
-                rgb = Image.fromarray(rgb, 'RGB')
-                if self.args.dep_src in ['slam', 'sgbm']:
-                    dep = Image.fromarray(dep[:, :, :3], 'RGB')
-                else:
-                    dep0 = Image.fromarray(dep0[:, :, :3], 'RGB')
-                    dep1 = Image.fromarray(dep1[:, :, :3], 'RGB')
-                pred = Image.fromarray(pred[:, :, :3], 'RGB')
-                pred_gray = Image.fromarray(pred_gray)
-                gt = Image.fromarray(gt[:, :, :3], 'RGB')
-                abs_err = Image.fromarray(abs_err[:, :, :3], 'RGB')
-
-                if self.args.model_name.lower() == 'nlspn':
 
                     feat_init = feat_init[0, 0, :, :].data.cpu().numpy()
                     feat_init = feat_init / self.args.max_depth
@@ -316,17 +251,66 @@ class Summary(BaseSummary):
 
                         list_feat[k] = feat_inter
 
+                rgb = sample['rgb'].detach()
+                rgb.mul_(self.img_std.type_as(rgb)).add_(self.img_mean.type_as(rgb))
+                rgb = rgb[0, :, :, :].data.cpu().numpy()
+                rgb = 255.0*np.transpose(rgb, (1, 2, 0))
+                rgb = np.clip(rgb, 0, 256).astype('uint8')
+                rgb = Image.fromarray(rgb, 'RGB')
+                
+                
+                pred = output['pred'].detach()
+                pred = torch.clamp(pred, min=0)
+                pred = Image.fromarray(pred[:, :, :3], 'RGB')
+
+                gt = sample['gt'].detach()
+                gt = gt[0, 0, :, :].data.cpu().numpy()
+
+                #calculate abs error
+                abs_err = abs(gt - pred)
+                abs_err[gt == 0] = 0
+                abs_err = (255.0*cm(abs_err)).astype('uint8')
+                abs_err = Image.fromarray(abs_err[:, :, :3], 'RGB')
+
+                pred = pred[0, 0, :, :].data.cpu().numpy()
+                pred = pred / self.args.max_depth
+                pred = (255.0*cm(pred)).astype('uint8')
+
+                gt = gt / self.args.max_depth
+                gt = (255.0*cm(gt)).astype('uint8')
+                gt = Image.fromarray(gt[:, :, :3], 'RGB')
+
+                if self.args.dep_src in ['slam', 'sgbm']:
+                    dep = sample['dep'].detach()
+                    dep = dep[0, 0, :, :].data.cpu().numpy()
+                    dep = dep / self.args.max_depth
+                    dep = (255.0*cm(dep)).astype('uint8')
+                    dep = Image.fromarray(dep[:, :, :3], 'RGB')
+                    path_save_dep = '{}/02_dep.png'.format(self.path_output)
+                    dep.save(path_save_dep)
+                else:
+                    dep0 = sample['dep0'].detach()
+                    dep1 = sample['dep1'].detach()
+                    dep0 = dep0[0, 0, :, :].data.cpu().numpy()
+                    dep1 = dep1[0, 0, :, :].data.cpu().numpy()
+                    dep0 = dep0 / self.args.max_depth
+                    dep1 = dep1 / self.args.max_depth
+                    dep0 = (255.0*cm(dep0)).astype('uint8')
+                    dep1 = (255.0*cm(dep1)).astype('uint8')
+                    dep0 = Image.fromarray(dep0[:, :, :3], 'RGB')
+                    dep1 = Image.fromarray(dep1[:, :, :3], 'RGB')
+
+                    path_save_dep0 = '{}/02_dep0.png'.format(self.path_output)
+                    path_save_dep1 = '{}/02_dep1.png'.format(self.path_output)
+                    
+                    dep0.save(path_save_dep0)
+                    dep1.save(path_save_dep1)
+                
                 self.path_output = '{}/{}/epoch{:04d}/{:08d}'.format(
                     self.log_dir, self.mode, epoch, idx)
                 os.makedirs(self.path_output, exist_ok=True)
 
                 path_save_rgb = '{}/01_rgb.png'.format(self.path_output)
-                if self.args.dep_src in ['slam', 'sgbm']:
-                    path_save_dep = '{}/02_dep.png'.format(self.path_output)
-                else:
-                    path_save_dep0 = '{}/02_dep0.png'.format(self.path_output)
-                    path_save_dep1 = '{}/02_dep1.png'.format(self.path_output)
-
                 path_save_init = '{}/03_pred_init.png'.format(self.path_output)
                 path_save_pred = '{}/05_pred_final.png'.format(self.path_output)
                 path_save_pred_gray = '{}/05_pred_final_gray.png'.format(self.path_output)
@@ -334,11 +318,6 @@ class Summary(BaseSummary):
                 path_save_abs_error = '{}/07_abs_error.png'.format(self.path_output)
 
                 rgb.save(path_save_rgb)
-                if self.args.dep_src in ['slam', 'sgbm']:
-                    dep.save(path_save_dep)
-                else:
-                    dep0.save(path_save_dep0)
-                    dep1.save(path_save_dep1)
                 pred.save(path_save_pred)
                 pred_gray.save(path_save_pred_gray)
                 gt.save(path_save_gt)
