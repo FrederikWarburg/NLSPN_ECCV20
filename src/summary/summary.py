@@ -260,6 +260,7 @@ class Summary(BaseSummary):
                 
                 pred = output['pred'].detach()
                 pred = torch.clamp(pred, min=0)
+                pred = pred[0, 0, :, :].data.cpu().numpy()
 
                 gt = sample['gt'].detach()
                 gt = gt[0, 0, :, :].data.cpu().numpy()
@@ -270,7 +271,6 @@ class Summary(BaseSummary):
                 abs_err = (255.0*cm(abs_err)).astype('uint8')
                 abs_err = Image.fromarray(abs_err[:, :, :3], 'RGB')
 
-                pred = pred[0, 0, :, :].data.cpu().numpy()
                 pred = pred / self.args.max_depth
                 pred = (255.0*cm(pred)).astype('uint8')
                 pred = Image.fromarray(pred[:, :, :3], 'RGB')
