@@ -102,7 +102,7 @@ class UpBlockForUNetWithResNet(nn.Module):
 class RESNET18_UNETModel(nn.Module):
     
 
-    def __init__(self, args):
+    def __init__(self, args, activation = 'sigmoid'):
         super().__init__()
         resnet = torchvision.models.resnet.resnet18(pretrained=True)
         down_blocks = []
@@ -126,6 +126,8 @@ class RESNET18_UNETModel(nn.Module):
 
         self.pred = nn.Conv2d(64, 1, kernel_size=1, stride=1)
         self.conf = nn.Conv2d(64, 1, kernel_size=1, stride=1)
+
+        self.activation = activation
 
         self.DEPTH = 6
 
@@ -152,7 +154,12 @@ class RESNET18_UNETModel(nn.Module):
             x = block(x, pre_pools[key])
         output_feature_map = x
         pred = self.pred(x)
-        conf = F.sigmoid(self.conf(x))
+        conf = self.conf(x)
+
+        if self.activation == 'sigmoid':
+            conf = F.sigmoid(conf)
+        elif self.activation == 'softplus':
+            conf = F.softplus(conf)
 
         pred = self.upsample(pred)
         conf = self.upsample(conf)

@@ -28,7 +28,7 @@ from .resnet18_unetmodel import RESNET18_UNETModel
 
 
 
-class PNCONV_UNGUIDEDModel(nn.Module):
+class PNCONV_RESNET18Model(nn.Module):
     def __init__(self, args):
         super().__init__() 
         self.__name__ = 'pncnn'
