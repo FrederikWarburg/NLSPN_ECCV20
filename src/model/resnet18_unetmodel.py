@@ -102,12 +102,21 @@ class UpBlockForUNetWithResNet(nn.Module):
 class RESNET18_UNETModel(nn.Module):
     
 
-    def __init__(self, args, activation = 'sigmoid'):
+    def __init__(self, args, activation = 'sigmoid', input_channels = 3):
         super().__init__()
         resnet = torchvision.models.resnet.resnet18(pretrained=True)
         down_blocks = []
         up_blocks = []
-        self.input_block = nn.Sequential(*list(resnet.children()))[:3]
+        self.input_channels = input_channels
+        if self.input_channels == 3:
+            self.input_block = nn.Sequential(*list(resnet.children()))[:3]
+        else: 
+            layers = []
+            layers.append(nn.Conv2d(input_channels, 64, 7, 1, 1))
+            layers.append(nn.BatchNorm2d(64))
+            layers.append(nn.ReLU())
+            self.input_block = nn.Sequential(*layers)
+
         self.input_pool = list(resnet.children())[3]
         for bottleneck in list(resnet.children()):
             if isinstance(bottleneck, nn.Sequential):
@@ -133,7 +142,10 @@ class RESNET18_UNETModel(nn.Module):
 
     def forward(self, sample, with_output_feature_map=False):
         
-        x = sample['rgb']
+        if self.input_channels == 3:
+            x = sample['rgb']
+        else:
+            x = sample['depth']
         
         pre_pools = dict()
         pre_pools[f"layer_0"] = x
