@@ -41,22 +41,20 @@ class Loss(BaseLoss):
             gt = sample['gt']
 
             if self.log_scale:
-                pred = torch.log(pred[pred > 0])
-                gt = torch.log(gt[gt > 0])
+                pred = torch.log(pred)
+                gt = torch.log(gt)
 
             if loss_type.lower() in ['l1', 'l2', 'maskedl1', 'maskedl2', 'maskedsmoothl1']:
                 loss_tmp = loss_func(pred, gt)
                 if 'pred_rgb' in  output:
-                    pred_rgb = output['pred_rgb']
-                    pred_rgb = torch.log(pred_rgb[pred_rgb > 0]) if self.log_scale else pred_rgb
+                    pred_rgb = torch.log(output['pred_rgb']) if self.log_scale else output['pred_rgb'] 
                     loss_tmp += loss_func(pred_rgb, gt)
 
             elif loss_type.lower() in ['confl2', 'confl1', 'conf', 'maskedprobexp','maskedprob']:
                 cout = output['confidence']
                 loss_tmp = loss_func(pred, gt, cout)
                 if 'pred_rgb' in  output:
-                    pred_rgb = output['pred_rgb']
-                    pred_rgb = torch.log(pred_rgb[pred_rgb > 0]) if self.log_scale else pred_rgb
+                    pred_rgb = torch.log(output['pred_rgb']) if self.log_scale else output['pred_rgb']
                     cout_rgb = output['confidence_rgb'] 
                     loss_tmp += loss_func(pred_rgb, gt, cout_rgb)
 
@@ -64,8 +62,7 @@ class Loss(BaseLoss):
                 cout = output['confidence']
                 loss_tmp = loss_func(pred, gt, cout, self.epoch_num)
                 if 'pred_rgb' in  output:
-                    pred_rgb = output['pred_rgb']
-                    pred_rgb = torch.log(pred_rgb[pred_rgb > 0]) if self.log_scale else pred_rgb
+                    pred_rgb = torch.log(output['pred_rgb']) if self.log_scale else output['pred_rgb']
                     cout_rgb = output['confidence_rgb'] 
                     loss_tmp += loss_func(pred_rgb, gt, cout_rgb, self.epoch_num)
 
@@ -73,8 +70,7 @@ class Loss(BaseLoss):
                 inputs = output['dep']
                 loss_tmp = loss_func(pred, gt, inputs)
                 if 'pred_rgb' in  output:
-                    pred_rgb = output['pred_rgb']
-                    pred_rgb = torch.log(pred_rgb[pred_rgb > 0]) if self.log_scale else pred_rgb
+                    pred_rgb = torch.log(output['pred_rgb']) if log_scale else output['pred_rgb'] 
                     loss_tmp += loss_func(pred_rgb, gt, inputs)
             else:
                 raise NotImplementedError
