@@ -240,7 +240,10 @@ parser.add_argument('--test_crop',
                     action='store_true',
                     default=False,
                     help='crop for test')
-
+parser.add_argument('--log_scale',
+                    action='store_true',
+                    default=False,
+                    help='crop for test')
 
 
 # Summary
