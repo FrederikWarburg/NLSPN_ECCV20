@@ -41,19 +41,19 @@ class Loss(BaseLoss):
             gt = sample['gt']
 
             if self.log_scale:
-                pred[pred <= 0] = 1
-                gt[gt <= 0] = 1
-
-                pred = torch.log(pred)
-                gt = torch.log(gt)
+                pred = torch.clamp(pred,0)
+                pred = torch.log(pred + 1e-6)
+                gt = torch.clamp(gt,0)
+                gt = torch.log(gt + 1e-6)
+ 
 
             if loss_type.lower() in ['l1', 'l2', 'maskedl1', 'maskedl2', 'maskedsmoothl1']:
                 loss_tmp = loss_func(pred, gt)
                 if 'pred_rgb' in  output:
                     pred_rgb = output['pred_rgb']
                     if self.log_scale:
-                        pred_rgb[pred_rgb <= 0] = 1
-                        pred_rgb = torch.log(pred_rgb) 
+                        pred_rgb = torch.clamp(pred_rgb,0)
+                        pred_rgb = torch.log(pred_rgb + 1e-6) 
                     loss_tmp += loss_func(pred_rgb, gt)
 
             elif loss_type.lower() in ['confl2', 'confl1', 'conf', 'maskedprobexp','maskedprob']:
@@ -62,8 +62,8 @@ class Loss(BaseLoss):
                 if 'pred_rgb' in  output:
                     pred_rgb = output['pred_rgb']
                     if self.log_scale:
-                        pred_rgb[pred_rgb <= 0] = 1
-                        pred_rgb = torch.log(pred_rgb) 
+                        pred_rgb = torch.clamp(pred_rgb,0)
+                        pred_rgb = torch.log(pred_rgb + 1e-6) 
                     cout_rgb = output['confidence_rgb'] 
                     loss_tmp += loss_func(pred_rgb, gt, cout_rgb)
 
@@ -73,8 +73,8 @@ class Loss(BaseLoss):
                 if 'pred_rgb' in  output:
                     pred_rgb = output['pred_rgb']
                     if self.log_scale:
-                        pred_rgb[pred_rgb <= 0] = 1
-                        pred_rgb = torch.log(pred_rgb) 
+                        pred_rgb = torch.clamp(pred_rgb,0)
+                        pred_rgb = torch.log(pred_rgb + 1e-6) 
                     cout_rgb = output['confidence_rgb'] 
                     loss_tmp += loss_func(pred_rgb, gt, cout_rgb, self.epoch_num)
 
@@ -84,8 +84,8 @@ class Loss(BaseLoss):
                 if 'pred_rgb' in  output:
                     pred_rgb = output['pred_rgb']
                     if self.log_scale:
-                        pred_rgb[pred_rgb <= 0] = 1
-                        pred_rgb = torch.log(pred_rgb) 
+                        pred_rgb = torch.clamp(pred_rgb,0)
+                        pred_rgb = torch.log(pred_rgb + 1e-6) 
                     loss_tmp += loss_func(pred_rgb, gt, inputs)
             else:
                 raise NotImplementedError
