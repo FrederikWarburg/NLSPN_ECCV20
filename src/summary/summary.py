@@ -279,6 +279,10 @@ class Summary(BaseSummary):
                 gt = (255.0*cm(gt)).astype('uint8')
                 gt = Image.fromarray(gt[:, :, :3], 'RGB')
 
+                self.path_output = '{}/{}/epoch{:04d}/{:08d}'.format(
+                    self.log_dir, self.mode, epoch, idx)
+                os.makedirs(self.path_output, exist_ok=True)
+
                 if self.args.dep_src in ['slam', 'sgbm']:
                     dep = sample['dep'].detach()
                     dep = dep[0, 0, :, :].data.cpu().numpy()
@@ -305,10 +309,6 @@ class Summary(BaseSummary):
                     dep0.save(path_save_dep0)
                     dep1.save(path_save_dep1)
                 
-                self.path_output = '{}/{}/epoch{:04d}/{:08d}'.format(
-                    self.log_dir, self.mode, epoch, idx)
-                os.makedirs(self.path_output, exist_ok=True)
-
                 path_save_rgb = '{}/01_rgb.png'.format(self.path_output)
                 path_save_init = '{}/03_pred_init.png'.format(self.path_output)
                 path_save_pred = '{}/05_pred_final.png'.format(self.path_output)
