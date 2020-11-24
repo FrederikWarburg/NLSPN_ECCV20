@@ -189,7 +189,8 @@ class Summary(BaseSummary):
 
             img.append(norm_cm_transpose(gt[b, 0, :, :], cm, self.args.max_depth))
             img.append(norm_cm_transpose(pred[b, 0, :, :], cm, self.args.max_depth))
-            img.append(norm_cm_transpose(confidence[b, 0, :, :], cm, np.max(confidence)))
+            if confidence is not None:
+                img.append(norm_cm_transpose(confidence[b, 0, :, :], cm, np.max(confidence)))
 
             if pred_rgb is not None:
                 img.append(norm_cm_transpose(pred_rgb[b, 0, :, :], cm, self.args.max_depth))

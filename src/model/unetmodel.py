@@ -137,11 +137,6 @@ class UNETModel(nn.Module):
 
 
         if self.guide == 'cat':
-            if self.attention_type == "VT":
-                self.D_guide = 3
-            else:
-                self.D_guide = 2
-        elif self.guide == 'vt_only':
             self.D_guide = 2
         elif self.guide == 'sum':
             self.D_guide = 1
@@ -168,85 +163,60 @@ class UNETModel(nn.Module):
         # RGB Stream
         ####
 
-        if 'guided' in self.supervision:
 
-            # Encoder
-            self.conv1_rgb = torch.nn.Sequential(*[net.conv1, net.bn1, net.relu]) #1/2
-            self.conv2_rgb = net.layer1 #1/2
-            self.conv3_rgb = net.layer2 #1/4
-            self.conv4_rgb = net.layer3 #1/8
-            self.conv5_rgb = net.layer4 #1/16
-            
-            self.bottleneck1 = conv_bn_relu(512, 1024, kernel=3, stride=2, padding=1, bn=True, relu=True) # 1/32
-            self.bottleneck2 = conv_bn_relu(1024, 512, kernel=3, stride=1, padding=1, bn=True, relu=True) # 1/32
+        # Encoder
+        self.conv1_rgb = torch.nn.Sequential(*[net.conv1, net.bn1, net.relu]) #1/2
+        self.conv2_rgb = net.layer1 #1/2
+        self.conv3_rgb = net.layer2 #1/4
+        self.conv4_rgb = net.layer3 #1/8
+        self.conv5_rgb = net.layer4 #1/16
+        
+        self.bottleneck1 = conv_bn_relu(512, 1024, kernel=3, stride=2, padding=1, bn=True, relu=True) # 1/32
+        self.bottleneck2 = conv_bn_relu(1024, 512, kernel=3, stride=1, padding=1, bn=True, relu=True) # 1/32
 
-            if 'rgb' in self.supervision or 'VT' in self.supervision:
+        # Decoder
+        self.dec5_rgb = Upsample(512, self.D_skip * 512, 256, upsampling=self.upsampling, aggregate=self.aggregate) # 1/8
+        self.dec4_rgb = Upsample(256, self.D_skip * 256, 128, upsampling=self.upsampling, aggregate=self.aggregate) # 1/4
+        self.dec3_rgb = Upsample(128, self.D_skip * 128, 64,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/2
+        self.dec2_rgb = Upsample(64, self.D_skip * 64, 64,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/2
 
-                # Decoder
-                self.dec5_rgb = Upsample(512, self.D_skip * 512, 256, upsampling=self.upsampling, aggregate=self.aggregate) # 1/8
-                self.dec4_rgb = Upsample(256, self.D_skip * 256, 128, upsampling=self.upsampling, aggregate=self.aggregate) # 1/4
-                self.dec3_rgb = Upsample(128, self.D_skip * 128, 64,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/2
-                self.dec2_rgb = Upsample(64, self.D_skip * 64, 64,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/2
-
-                if 'rgb' in self.supervision:
-                    self.dec1_rgb = Upsample(64, 0, 64, upsampling=self.upsampling, bn=False) # 1/1
-
-                    # Depth Branch
-                    self.id_dec1_rgb = conv_bn_relu(64, 64, kernel=3, stride=1, padding=1, bn=False, relu=True) # 1/1
-                    self.id_dec0_rgb = conv_bn_relu(64, 1, kernel=3, stride=1, padding=1, bn=False, relu=True, maxpool=False)
-
-            if self.attention_type == 'attention':
-                self.multihead_attn = build_simple_attention_module(512, 512)
-            else:  
-                if self.attention_type == 'VT':
-                    vt1 = VisualTransformer(L=self.num_tokens[0], CT=self.token_size[0], C=64, size = 512, num_downsample = 4, head=self.num_heads[0], groups=self.groups[0], kqv_groups=self.kqv_groups[0], dynamic=False)
-                    vt2 = VisualTransformer(L=self.num_tokens[1], CT=self.token_size[1], C=128, size = 256, num_downsample = 2,head=self.num_heads[1], groups=self.groups[1], kqv_groups=self.kqv_groups[1], dynamic=False)
-                    vt3 = VisualTransformer(L=self.num_tokens[2], CT=self.token_size[2], C=256, size = 128, num_downsample = 2,head=self.num_heads[2], groups=self.groups[2], kqv_groups=self.kqv_groups[2], dynamic=False)
-                    vt4 = VisualTransformer(L=self.num_tokens[3], CT=self.token_size[3], C=512, size = 64, num_downsample = 2,head=self.num_heads[3], groups=self.groups[3], kqv_groups=self.kqv_groups[3], dynamic=False)
-                else:
-                    vt1 = None
-                    vt2 = None
-                    vt3 = None
-                    vt4 = None
-
-                self.guide1 = Guide(64, self.D_guide * 64, 64, vt1, aggregate=self.guide)
-                self.guide2 = Guide(64, self.D_guide * 128, 128, vt2, aggregate=self.guide)
-                self.guide3 = Guide(128, self.D_guide * 256, 256, vt3, aggregate=self.guide)
-                self.guide4 = Guide(256, self.D_guide * 512, 512, vt4, aggregate=self.guide)
+        self.guide1 = Guide(64, self.D_guide * 64, 64, None, aggregate=self.guide)
+        self.guide2 = Guide(64, self.D_guide * 128, 128, None, aggregate=self.guide)
+        self.guide3 = Guide(128, self.D_guide * 256, 256, None, aggregate=self.guide)
+        self.guide4 = Guide(256, self.D_guide * 512, 512, None, aggregate=self.guide)
            
-
         ####
         # Depth Stream
         ####
-        if 'depth' in self.supervision:
-            # Encoder
-            self.conv1_dep = conv_bn_relu(1, 64, kernel=7, stride=2, padding=3, bn=True, relu=True, maxpool=False) # 1/2
-            self.conv2_dep = net.layer1 # 1/2
-            self.conv3_dep = net.layer2 # 1/4
-            self.conv4_dep = net.layer3 # 1/8
-            self.conv5_dep = net.layer4 # 1/16
+       
+        # Encoder
+        self.conv1_dep = conv_bn_relu(1, 64, kernel=7, stride=2, padding=3, bn=True, relu=True, maxpool=False) # 1/2
+        self.conv2_dep = net.layer1 # 1/2
+        self.conv3_dep = net.layer2 # 1/4
+        self.conv4_dep = net.layer3 # 1/8
+        self.conv5_dep = net.layer4 # 1/16
 
-            self.bottleneck1_dep = conv_bn_relu(512, 1024, kernel=3, stride=2, padding=1, bn=True, relu=True) # 1/32
-            self.bottleneck2_dep = conv_bn_relu(1024, 512, kernel=3, stride=1, padding=1, bn=True, relu=True) # 1/32
+        self.bottleneck1_dep = conv_bn_relu(512, 1024, kernel=3, stride=2, padding=1, bn=True, relu=True) # 1/32
+        self.bottleneck2_dep = conv_bn_relu(1024, 512, kernel=3, stride=1, padding=1, bn=True, relu=True) # 1/32
 
-            # Decoder
-            self.dec5_dep = Upsample(512, self.D_skip * 512, 256,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/16
-            self.dec4_dep = Upsample(256, self.D_skip * 256, 128, upsampling=self.upsampling, aggregate=self.aggregate) # 1/8
-            self.dec3_dep = Upsample(128, self.D_skip * 128, 64,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/4
-            self.dec2_dep = Upsample(64, self.D_skip * 64, 64, upsampling=self.upsampling, aggregate=self.aggregate) # 1/2
-            self.dec1_dep = Upsample(64, 0, 64, upsampling=self.upsampling, bn=False) # 1/1
+        # Decoder
+        self.dec5_dep = Upsample(512, self.D_skip * 512, 256,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/16
+        self.dec4_dep = Upsample(256, self.D_skip * 256, 128, upsampling=self.upsampling, aggregate=self.aggregate) # 1/8
+        self.dec3_dep = Upsample(128, self.D_skip * 128, 64,  upsampling=self.upsampling, aggregate=self.aggregate) # 1/4
+        self.dec2_dep = Upsample(64, self.D_skip * 64, 64, upsampling=self.upsampling, aggregate=self.aggregate) # 1/2
+        self.dec1_dep = Upsample(64, 0, 64, upsampling=self.upsampling, bn=False) # 1/1
 
-            # Depth Branch
-            self.id_dec1 = conv_bn_relu(64, 64, kernel=3, stride=1, padding=1, bn=False, relu=True) # 1/1
-            self.id_dec0 = conv_bn_relu(64, 1, kernel=3, stride=1, padding=1, bn=False, relu=True, maxpool=False)
+        # Depth Branch
+        self.id_dec1 = conv_bn_relu(64, 64, kernel=3, stride=1, padding=1, bn=False, relu=True) # 1/1
+        self.id_dec0 = conv_bn_relu(64, 1, kernel=3, stride=1, padding=1, bn=False, relu=True, maxpool=False)
 
-            if 'confidence' in self.supervision:
-                # Confidence Branch
-                self.cf_dec1 = conv_bn_relu(64, 64, kernel=3, stride=1, padding=1, bn=False, relu=True) # 1/1
-                self.cf_dec0 = nn.Sequential(
-                    nn.Conv2d(64, 1, kernel_size=3, stride=1, padding=1),
-                    nn.Softplus()
-                )
+        if 'confidence' in self.supervision:
+            # Confidence Branch
+            self.cf_dec1 = conv_bn_relu(64, 64, kernel=3, stride=1, padding=1, bn=False, relu=True) # 1/1
+            self.cf_dec0 = nn.Sequential(
+                nn.Conv2d(64, 1, kernel_size=3, stride=1, padding=1),
+                nn.Softplus()
+            )
 
     def forward(self, sample):
 
@@ -254,115 +224,70 @@ class UNETModel(nn.Module):
         dep = sample['dep']
         output = {}
         
-        if 'guided' in self.supervision:
-            # Encoding RGB
-            fe1_rgb = self.conv1_rgb(rgb)
-            fe2_rgb = self.conv2_rgb(fe1_rgb)
-            fe3_rgb = self.conv3_rgb(fe2_rgb)
-            fe4_rgb = self.conv4_rgb(fe3_rgb)
-            fe5_rgb = self.conv5_rgb(fe4_rgb)
+        # Encoding RGB
+        fe1_rgb = self.conv1_rgb(rgb)
+        fe2_rgb = self.conv2_rgb(fe1_rgb)
+        fe3_rgb = self.conv3_rgb(fe2_rgb)
+        fe4_rgb = self.conv4_rgb(fe3_rgb)
+        fe5_rgb = self.conv5_rgb(fe4_rgb)
 
-            # bottleneck
-            bottleneck1_rgb = self.bottleneck1(fe5_rgb)
-            bottleneck2_rgb = self.bottleneck2(bottleneck1_rgb)
+        # bottleneck
+        bottleneck1_rgb = self.bottleneck1(fe5_rgb)
+        bottleneck2_rgb = self.bottleneck2(bottleneck1_rgb)
 
-            if hasattr(self, "multihead_attn"):
-                bottleneck2_rgb = self.multihead_attn(bottleneck2_rgb, bottleneck2_rgb)
+        # Decoding RGB
+        fd5_rgb = self.dec5_rgb(bottleneck2_rgb, fe5_rgb)
+        fd4_rgb = self.dec4_rgb(fd5_rgb, fe4_rgb)
+        fd3_rgb = self.dec3_rgb(fd4_rgb, fe3_rgb)
+        fd2_rgb = self.dec2_rgb(fd3_rgb, fe2_rgb)
 
-            if hasattr(self, "dec5_rgb"):
-                # Decoding RGB
-                fd5_rgb = self.dec5_rgb(bottleneck2_rgb, fe5_rgb)
-                fd4_rgb = self.dec4_rgb(fd5_rgb, fe4_rgb)
-                fd3_rgb = self.dec3_rgb(fd4_rgb, fe3_rgb)
-                fd2_rgb = self.dec2_rgb(fd3_rgb, fe2_rgb)
-
-                if 'rgb' in self.supervision:
-                    fd1_rgb = self.dec1_rgb(fd2_rgb)
-        
         ###
         # DEPTH UNET
         ###
-        if 'depth' in self.supervision:
-        
-            # Encoding Depth
-            fe1_dep = self.conv1_dep(dep)
-            fe2_dep = self.conv2_dep(fe1_dep)
+    
+        # Encoding Depth
+        fe1_dep = self.conv1_dep(dep)
 
-            if hasattr(self, "guide1"):
-                fe2_dep = self.guide1(fe2_dep, fd2_rgb)
+        fe2_dep = self.conv2_dep(fe1_dep)
+        fe2_dep = self.guide1(fe2_dep, fd2_rgb)
 
-            fe3_dep = self.conv3_dep(fe2_dep)
-            if hasattr(self, "guide2"):
-                fe3_dep = self.guide2(fe3_dep, fd3_rgb)
+        fe3_dep = self.conv3_dep(fe2_dep)
+        fe3_dep = self.guide2(fe3_dep, fd3_rgb)
 
-            fe4_dep = self.conv4_dep(fe3_dep)
-            if hasattr(self, "guide3"):
-                fe4_dep = self.guide3(fe4_dep, fd4_rgb)
+        fe4_dep = self.conv4_dep(fe3_dep)
+        fe4_dep = self.guide3(fe4_dep, fd4_rgb)
 
-            fe5_dep = self.conv5_dep(fe4_dep)
-            if hasattr(self, "guide4"):
-                fe5_dep = self.guide4(fe5_dep, fd5_rgb)
+        fe5_dep = self.conv5_dep(fe4_dep)
+        fe5_dep = self.guide4(fe5_dep, fd5_rgb)
 
-            # bottleneck
-            bottleneck1_dep = self.bottleneck1_dep(fe5_dep)
-            bottleneck2_dep = self.bottleneck2_dep(bottleneck1_dep)
+        # bottleneck
+        bottleneck1_dep = self.bottleneck1_dep(fe5_dep)
+        bottleneck2_dep = self.bottleneck2_dep(bottleneck1_dep)
 
-            if hasattr(self, "multihead_attn"):
-                bottleneck2_dep = self.multihead_attn(bottleneck2_rgb, bottleneck2_dep)
-            
-            # Decoding Depth
-            fd5_dep = self.dec5_dep(bottleneck2_dep, fe5_dep)
-            fd4_dep = self.dec4_dep(fd5_dep, fe4_dep)
-            fd3_dep = self.dec3_dep(fd4_dep, fe3_dep)
-            fd2_dep = self.dec2_dep(fd3_dep, fe2_dep)
-            fd1_dep = self.dec1_dep(fd2_dep)
+        # Decoding Depth
+        fd5_dep = self.dec5_dep(bottleneck2_dep, fe5_dep)
+        fd4_dep = self.dec4_dep(fd5_dep, fe4_dep)
+        fd3_dep = self.dec3_dep(fd4_dep, fe3_dep)
+        fd2_dep = self.dec2_dep(fd3_dep, fe2_dep)
+        fd1_dep = self.dec1_dep(fd2_dep)
 
-            ###
-            # PREDICTION HEADS
-            ###
+        ###
+        # PREDICTION HEADS
+        ###
 
-            # Depth Decoding
-            id_fd1 = self.id_dec1(fd1_dep)
-            pred = self.id_dec0(id_fd1)
-            pred = _remove_extra_pad(pred, dep)
+        # Depth Decoding
+        id_fd1 = self.id_dec1(fd1_dep)
+        pred = self.id_dec0(id_fd1)
+        pred = _remove_extra_pad(pred, dep)
+        output['pred'] = pred
 
-            # Confidence Decoding
-            if  'confidence' in self.supervision:
-                cf_fd1 = self.cf_dec1(fd1_dep)
-                confidence = self.cf_dec0(cf_fd1)
-                confidence = _remove_extra_pad(confidence, dep)
-
-            output['pred'] = pred
-
-        # RGB Decoding
-        if  'rgb' in self.supervision:
-            id_fd1_rgb = self.id_dec1_rgb(fd1_rgb)
-            pred_rgb = self.id_dec0_rgb(id_fd1_rgb)
-            pred_rgb = _remove_extra_pad(pred_rgb, dep)
-        
-        if 'confidence' in self.supervision:
+        # Confidence Decoding
+        if  'confidence' in self.supervision:
+            cf_fd1 = self.cf_dec1(fd1_dep)
+            confidence = self.cf_dec0(cf_fd1)
+            confidence = _remove_extra_pad(confidence, dep)
             output['confidence'] = confidence
-        else:
-            output['confidence'] = None
 
-        if self.attention_type == 'VT':
-            output['vt1'] = self.guide1.vt
-            output['vt2'] = self.guide2.vt
-            output['vt3'] = self.guide3.vt
-            output['vt4'] = self.guide4.vt
-        elif self.attention_type == 'attention':
-            output['num_layers'] = 1
-            output['size'] = bottleneck2_rgb.shape[-2:]
-            for i in range(output['num_layers']):
-                output['attn_map_{}'.format(i)] = self.multihead_attn.transformer.attn_map1
-
-        if 'rgb' in self.supervision:
-
-            if 'depth' in self.supervision:
-                output['pred_rgb'] = pred_rgb
-            else:
-                output['pred'] = pred_rgb
-            
         return output
 
 if __name__ == "__main__":
