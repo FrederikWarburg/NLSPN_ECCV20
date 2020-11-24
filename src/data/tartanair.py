@@ -132,13 +132,15 @@ class TARTANAIR(BaseDataset):
         return len(self.sample_list)
 
     def __getitem__(self, idx):
-        rgb, depth_features, confidence_features, depth_sgbm, confidence_sgbm, gt, K = self._load_data(idx)
+        rgb, seg, depth_features, confidence_features, depth_sgbm, confidence_sgbm, gt, K = self._load_data(idx)
 
         if self.augment and self.mode == 'train':
             # Top crop if needed
             if self.args.top_crop > 0:
                 width, height = rgb.size
                 rgb = TF.crop(rgb, self.args.top_crop, 0,
+                              height - self.args.top_crop, width)
+                seg = TF.crop(seg, self.args.top_crop, 0,
                               height - self.args.top_crop, width)
                 if depth_features is not None:
                     depth_features = TF.crop(depth_features, self.args.top_crop, 0,
@@ -158,6 +160,7 @@ class TARTANAIR(BaseDataset):
             if self.args.left_crop > 0:
                 width, height = rgb.size
                 rgb = TF.crop(rgb, 0, self.args.left_crop, height, width - self.args.left_crop)
+                seg = TF.crop(seg, 0, self.args.left_crop, height, width - self.args.left_crop)
                 if depth_features is not None:
                     depth_features = TF.crop(depth_features, 0, self.args.left_crop, height, width - self.args.left_crop)
                     confidence_features = TF.crop(confidence_features, 0, self.args.left_crop, height, width - self.args.left_crop)
@@ -177,6 +180,7 @@ class TARTANAIR(BaseDataset):
             # Horizontal flip
             if flip > 0.5:
                 rgb = TF.hflip(rgb)
+                seg = TF.hflip(seg)
                 if depth_features is not None:
                     depth_features = TF.hflip(depth_features)
                     confidence_features = TF.hflip(confidence_features)
@@ -188,6 +192,7 @@ class TARTANAIR(BaseDataset):
 
             # Rotation
             rgb = TF.rotate(rgb, angle=degree, resample=Image.BICUBIC)
+            seg = TF.rotate(seg, angle=degree, resample=Image.NEAREST)
             if depth_features is not None:
                 depth_features = TF.rotate(depth_features, angle=degree, resample=Image.NEAREST)
                 confidence_features = TF.rotate(confidence_features, angle=degree, resample=Image.NEAREST)
@@ -207,6 +212,7 @@ class TARTANAIR(BaseDataset):
 
             # Resize
             rgb = TF.resize(rgb, scale, Image.BICUBIC)
+            seg = TF.resize(seg, scale, Image.NEAREST)
             if depth_features is not None:
                 depth_features = TF.resize(depth_features, scale, Image.NEAREST)
                 confidence_features = TF.resize(confidence_features, scale, Image.NEAREST)
@@ -230,6 +236,7 @@ class TARTANAIR(BaseDataset):
             w_start = random.randint(0, width - self.width)
 
             rgb = TF.crop(rgb, h_start, w_start, self.height, self.width)
+            seg = TF.crop(seg, h_start, w_start, self.height, self.width)
             if depth_features is not None:
                 depth_features = TF.crop(depth_features, h_start, w_start, self.height, self.width)
                 confidence_features = TF.crop(confidence_features, h_start, w_start, self.height, self.width)
@@ -242,6 +249,7 @@ class TARTANAIR(BaseDataset):
             K[3] = K[3] - h_start
 
             rgb = TF.to_tensor(rgb)
+            seg = TF.to_tensor(seg)
             rgb = TF.normalize(rgb, (0.485, 0.456, 0.406),
                                (0.229, 0.224, 0.225), inplace=True)
 
@@ -266,6 +274,8 @@ class TARTANAIR(BaseDataset):
                 width, height = rgb.size
                 rgb = TF.crop(rgb, self.args.top_crop, 0,
                               height - self.args.top_crop, width)
+                seg = TF.crop(seg, self.args.top_crop, 0,
+                              height - self.args.top_crop, width)
                 if depth_features is not None:
                     depth_features = TF.crop(depth_features, self.args.top_crop, 0,
                                     height - self.args.top_crop, width)
@@ -284,6 +294,7 @@ class TARTANAIR(BaseDataset):
             if self.args.left_crop > 0:
                 width, height = rgb.size
                 rgb = TF.crop(rgb, 0, self.args.left_crop, height, width - self.args.left_crop)
+                seg = TF.crop(seg, 0, self.args.left_crop, height, width - self.args.left_crop)
                 if depth_features is not None:
                     depth_features = TF.crop(depth_features, 0, self.args.left_crop, height, width - self.args.left_crop)
                     confidence_features = TF.crop(confidence_features, 0, self.args.left_crop, height, width - self.args.left_crop)
@@ -303,6 +314,7 @@ class TARTANAIR(BaseDataset):
             w_start = random.randint(0, width - self.width)
 
             rgb = TF.crop(rgb, h_start, w_start, self.height, self.width)
+            seg = TF.crop(seg, h_start, w_start, self.height, self.width)
             if depth_features is not None:
                 depth_features = TF.crop(depth_features, h_start, w_start, self.height, self.width)
                 confidence_features = TF.crop(confidence_features, h_start, w_start, self.height, self.width)
@@ -315,6 +327,7 @@ class TARTANAIR(BaseDataset):
             K[3] = K[3] - h_start
 
             rgb = TF.to_tensor(rgb)
+            seg = TF.to_tensor(seg)
             rgb = TF.normalize(rgb, (0.485, 0.456, 0.406),
                                (0.229, 0.224, 0.225), inplace=True)
 
@@ -331,6 +344,8 @@ class TARTANAIR(BaseDataset):
             if self.args.top_crop > 0 and self.args.test_crop:
                 width, height = rgb.size
                 rgb = TF.crop(rgb, self.args.top_crop, 0,
+                              height - self.args.top_crop, width)
+                seg = TF.crop(seg, self.args.top_crop, 0,
                               height - self.args.top_crop, width)
                 if depth_features is not None:
                     depth_features = TF.crop(depth_features, self.args.top_crop, 0,
@@ -350,6 +365,7 @@ class TARTANAIR(BaseDataset):
             if self.args.left_crop > 0 and self.args.test_crop:
                 width, height = rgb.size
                 rgb = TF.crop(rgb, 0, self.args.left_crop, height, width - self.args.left_crop)
+                seg = TF.crop(seg, 0, self.args.left_crop, height, width - self.args.left_crop)
                 if depth_features is not None:
                     depth_features = TF.crop(depth_features, 0, self.args.left_crop, height, width - self.args.left_crop)
                     confidence_features = TF.crop(confidence_features, 0, self.args.left_crop, height, width - self.args.left_crop)
@@ -362,6 +378,7 @@ class TARTANAIR(BaseDataset):
             width, height = rgb.size
 
             rgb = TF.to_tensor(rgb)
+            seg = TF.to_tensor(seg)
             rgb = TF.normalize(rgb, (0.485, 0.456, 0.406),
                                (0.229, 0.224, 0.225), inplace=True)
 
@@ -379,11 +396,11 @@ class TARTANAIR(BaseDataset):
             depth_sgbm, confidence_sgbm = self.get_sparse_depth(depth_sgbm, confidence_sgbm, self.args.num_sample)
 
         if self.args.dep_src == 'slam':
-            output = {'rgb': rgb, 'dep': depth_features, 'confidence': confidence_features, 'gt': gt, 'K': torch.Tensor(K)}
+            output = {'rgb': rgb, 'seg': seg, 'dep': depth_features, 'confidence': confidence_features, 'gt': gt, 'K': torch.Tensor(K)}
         elif self.args.dep_src == 'sgbm':
-            output = {'rgb': rgb, 'dep': depth_sgbm, 'confidence': confidence_sgbm,  'gt': gt, 'K': torch.Tensor(K)}
+            output = {'rgb': rgb, 'seg': seg, 'dep': depth_sgbm, 'confidence': confidence_sgbm,  'gt': gt, 'K': torch.Tensor(K)}
         elif self.args.dep_src == 'slam+sgbm' or self.args.dep_src == 'sgbm+slam':
-            output = {'rgb': rgb, 'dep0': depth_features, 'dep1': depth_sgbm, 'confidence0': confidence_features,
+            output = {'rgb': rgb, 'seg': seg, 'dep0': depth_features, 'dep1': depth_sgbm, 'confidence0': confidence_features,
              'confidence1': confidence_sgbm, 'gt': gt, 'K': torch.Tensor(K)}
         else:
             raise NotImplementedError
@@ -401,6 +418,10 @@ class TARTANAIR(BaseDataset):
 
         path_rgb = os.path.join(self.args.dir_data,
                                 self.sample_list[idx]['rgb'])
+
+        path_seg = os.path.join(self.args.dir_data,
+                                self.sample_list[idx]['seg'])
+
         if 'slam' in self.dep_src: 
             path_depth_features = os.path.join(self.args.dir_data,
                                     self.sample_list[idx]['depth_features'])
@@ -435,6 +456,8 @@ class TARTANAIR(BaseDataset):
             confidence_sgbm = Image.fromarray(confidence_sgbm.astype('float32'), mode='F')
 
         rgb = Image.open(path_rgb)
+        seg = np.load(path_seg)
+        seg = Image.fromarray(seg)
 
         w1, h1 = rgb.size
         if w1 == 640 and h1 == 480:
@@ -455,7 +478,7 @@ class TARTANAIR(BaseDataset):
 
             assert w1 == w2 and w1 == w3 and h1 == h2 and h1 == h3 and w1 == w4 and h1 == h4
 
-            return rgb, depth_features, confidence_features, depth_sgbm, confidence_sgbm, gt, K
+            return rgb, seg, depth_features, confidence_features, depth_sgbm, confidence_sgbm, gt, K
 
         elif 'slam' == self.dep_src:
 
@@ -465,7 +488,7 @@ class TARTANAIR(BaseDataset):
 
             assert w1 == w2 and w1 == w3 and h1 == h2 and h1 == h3
 
-            return rgb, depth_features, confidence_features, None, None, gt, K
+            return rgb, seg, depth_features, confidence_features, None, None, gt, K
 
         elif 'sgbm' == self.dep_src:
 
@@ -475,7 +498,7 @@ class TARTANAIR(BaseDataset):
 
             assert w1 == w2 and w1 == w3 and h1 == h2 and h1 == h3
 
-            return rgb, None, None, depth_sgbm, confidence_sgbm, gt, K
+            return rgb, seg, None, None, depth_sgbm, confidence_sgbm, gt, K
 
     def get_sparse_depth(self, dep, num_sample):
         channel, height, width = dep.shape
