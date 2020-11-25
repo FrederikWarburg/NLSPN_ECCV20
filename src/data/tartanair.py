@@ -32,51 +32,60 @@ import matplotlib.pyplot as plt
 from scipy.stats import multivariate_normal
 from math import *
 
+import math
 
-def sph2cart(rthetaphi):
-    #takes list rthetaphi (single coord)
-    r       = rthetaphi[0]
-    theta   = rthetaphi[1]* pi/180 # to radian
-    phi     = rthetaphi[2]* pi/180
-    x = r * sin( theta ) * cos( phi )
-    y = r * sin( theta ) * sin( phi )
-    z = r * cos( theta )
-    return [x,y,z]
+def roundup(xs):
+    return np.asarray([int(math.ceil(x / 30.0)) * 30 for x in xs])
 
-def cart2sph(xyz):
+def cart2sph_vec(xyz):
+    
+    H,W,C = xyz.shape
+    xyz = xyz.reshape(H*W,C)
+
     #takes list xyz (single coord)
-    x       = xyz[0]
-    y       = xyz[1]
-    z       = xyz[2]
-    r       =  np.linalg.norm(xyz, axis=-1)
-    theta   =  acos(z/r)*180.0/ pi #to degrees
-    phi     =  atan2(y,x)*180.0/ pi
-    
-    x = np.arange(-90,90, 30)
-    y = np.arange(-180, 180, 30)
+    x       = xyz[:,0]
+    y       = xyz[:,1]
+    z       = xyz[:,2]
+    r       =  (x**2 + y**2+z**2)**0.5#np.linalg.norm(xyz, axis=-1)
+
+    theta   =  np.arccos(z/r)*180.0/ pi #to degrees
+    phi     =  np.arctan2(y,x)*180.0/ pi
     
     #print(theta, phi)
-    theta = x[np.argmin(abs(x - theta))]
-    phi = y[np.argmin(abs(y - phi))]
+    theta = roundup(theta)
+    phi = roundup(phi)
     
-    #print(theta, phi)
+    out = np.stack([np.ones_like(theta),theta,phi])
+    out = np.transpose(out,(1,0))
+    out = out.reshape(H,W,C)
     
-    return [1,theta,phi]
+    return out
 
 
+def _calc_norm_masks(depth):
 
-def cart2cmap(xyz, cmap):
+    normal = calc_normals(depth)
+    
     """
-        converts xyz coordinates to spherical coordinates and then displays in a specified colormap 
+    normal_spherical = np.zeros_like(normal)
+    for x in range(normal.shape[0]):
+        for y in range(normal.shape[1]):
+            normal_spherical[x,y,:] = cart2sph(normal[x,y,:])
+    print(time.time() - t1)
     """
     
-    rthetaphi = cart2sph(xyz)
-    phi = rthetaphi[1]
-    theta = rthetaphi[2] + 180.0
-    rgb = cmap[int(phi), int(theta)]
+    normal_spherical = cart2sph_vec(normal)
+    H,W,C = normal_spherical.shape
+    seg = np.zeros((H,W), dtype=np.uint8)
+    i = 1
+    for val in np.unique(normal_spherical.reshape(H*W,C), axis=0):
+        #if np.sum(np.sum(normal_spherical == val, axis=2) == 3) < 1e4:
+        #    continue
+        mask = np.sum(normal_spherical == val, axis=2) == 3
+        seg[mask] = i
+        i += 1
 
-    return rgb
-    
+    return seg
 
 def create_custom_colormap():
     """
@@ -494,27 +503,6 @@ class TARTANAIR(BaseDataset):
 
         return output
 
-    def _calc_norm_masks(self, depth):
-
-        normal = calc_normals(depth)
-
-        normal_spherical = np.zeros_like(normal)
-        for x in range(normal.shape[0]):
-            for y in range(normal.shape[1]):
-                normal_spherical[x,y,:] = cart2sph(normal[x,y,:])
-
-        H,W,C = normal_spherical.shape
-        seg = np.zeros((H,W), dtype=np.uint8)
-        i = 1
-        for val in np.unique(normal_spherical.reshape(H*W,C), axis=0):
-            #if np.sum(np.sum(normal_spherical == val, axis=2) == 3) < 1e4:
-            #    continue
-            mask = np.sum(normal_spherical == val, axis=2) == 3
-            seg[mask] = i
-            i += 1
-
-        return seg
-
     def _load_data(self, idx):
 
 
@@ -522,7 +510,7 @@ class TARTANAIR(BaseDataset):
                                self.sample_list[idx]['gt'])
 
         gt = read_depth(path_gt)
-        seg = self._calc_norm_masks(gt)
+        seg = _calc_norm_masks(gt)
         gt = Image.fromarray(gt.astype('float32'), mode='F')
 
         path_rgb = os.path.join(self.args.dir_data,
