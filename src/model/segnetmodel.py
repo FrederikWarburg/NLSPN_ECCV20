@@ -113,23 +113,61 @@ class Guide(nn.Module):
         seg = seg.to(fe_dep.device)
         seg = F.interpolate(seg, size=(H,W), mode="bilinear")
 
+        # sum acroos all classes (masks)
         val = torch.zeros_like(fe_dep)
         for i in range(classes):
-            mask = seg[:, i:(i+1), :, :]
+            mask = seg[:, i, :, :]
 
             num_pixel = torch.sum(mask)
+            tmp = fe_dep * mask[:,None,:,:]
+            a = torch.sum(tmp, dim=(2,3)) 
+            a = 1.0/num_pixel * a[:,:,None,None] * mask[:,None,:,:]
 
-            mask2 = mask.repeat(1,C,1,1)
-            pool = num_pixel * torch.sum(fe_dep * mask2, dim=(2,3), keepdim=True)
-            pool = pool.repeat(1,1,H,W)
+            val = val + a
 
-            val = val + mask * pool
+        # skip connection
+        fe_dep = fe_dep + val
+
+        x = self.conv(fe_dep)
+        
+        return x
+"""
+
+class Guide(nn.Module):
+    def __init__(self, ch_in,  ch_out):
+        super(Guide, self).__init__()
+
+        self.conv = conv_bn_relu(ch_in, ch_out, kernel=1, stride=1, padding=0, bn=True, relu=True, maxpool=False)
+
+
+    def forward(self, fe_dep, seg):
+
+        N, C, H, W = fe_dep.shape
+        N, classes, _, _ = seg.shape
+
+        seg = seg.to(fe_dep.device)
+        seg = F.interpolate(seg, size=(H,W), mode="bilinear")
+        seg = seg.view(N, classes, H*W)
+        feat = fe_dep.view(N, C, H*W)
+
+        val = torch.zeros_like(feat)
+        for i in range(classes):
+            mask = seg[:, i:(i+1), :]
+
+            a = torch.matmul(mask.permute(0,2,1), mask) 
+            print(a.shape)
+            a = a / float(torch.sum(a))
+            tmp = torch.matmul(a, feat.permute(0,2,1))
+            print(tmp.shape)
+            val = val + tmp
 
         fe_dep = fe_dep + val
 
         x = self.conv(fe_dep)
         
         return x
+"""
+
 
 class SEGNETModel(nn.Module):
     def __init__(self, args = None):
@@ -221,12 +259,11 @@ class SEGNETModel(nn.Module):
 
         rgb = sample['rgb']
         seg = sample['seg']
-        seg = seg[:,0,:,:]
 
         classes = torch.unique(seg)
 
-        masks = [(seg == c)*1 for c in classes]
-        masks = torch.stack(masks) # C, N, H, W
+        masks = [(seg == c)*1 for c in classes if c != 0]
+        masks = torch.stack(masks) # num_masks, N, H, W
         masks = masks.permute(1,0,2,3)
         masks = masks.type(torch.FloatTensor)
  
@@ -272,6 +309,8 @@ class SEGNETModel(nn.Module):
         pred = self.id_dec0(id_fd1)
         pred = _remove_extra_pad(pred, dep)
         output['pred'] = pred
+
+        output['seg'] = seg
 
         # Confidence Decoding
         if  'confidence' in self.supervision:

@@ -14,6 +14,93 @@ import torch
 import torchvision.transforms.functional as TF
 
 
+def calc_normals(depth):
+    zy, zx = np.gradient(depth)  
+    normal = np.dstack((-zx, -zy, np.ones_like(depth)))
+    n = np.linalg.norm(normal, axis=2)
+    normal[:, :, 0] /= n
+    normal[:, :, 1] /= n
+    normal[:, :, 2] /= n
+    return normal
+
+import matplotlib.pyplot as plt
+import numpy as np
+from os.path import join
+from PIL import Image
+
+import matplotlib.pyplot as plt
+from scipy.stats import multivariate_normal
+from math import *
+
+
+def sph2cart(rthetaphi):
+    #takes list rthetaphi (single coord)
+    r       = rthetaphi[0]
+    theta   = rthetaphi[1]* pi/180 # to radian
+    phi     = rthetaphi[2]* pi/180
+    x = r * sin( theta ) * cos( phi )
+    y = r * sin( theta ) * sin( phi )
+    z = r * cos( theta )
+    return [x,y,z]
+
+def cart2sph(xyz):
+    #takes list xyz (single coord)
+    x       = xyz[0]
+    y       = xyz[1]
+    z       = xyz[2]
+    r       =  np.linalg.norm(xyz, axis=-1)
+    theta   =  acos(z/r)*180.0/ pi #to degrees
+    phi     =  atan2(y,x)*180.0/ pi
+    
+    x = np.arange(-90,90, 30)
+    y = np.arange(-180, 180, 30)
+    
+    #print(theta, phi)
+    theta = x[np.argmin(abs(x - theta))]
+    phi = y[np.argmin(abs(y - phi))]
+    
+    #print(theta, phi)
+    
+    return [1,theta,phi]
+
+
+
+def cart2cmap(xyz, cmap):
+    """
+        converts xyz coordinates to spherical coordinates and then displays in a specified colormap 
+    """
+    
+    rthetaphi = cart2sph(xyz)
+    phi = rthetaphi[1]
+    theta = rthetaphi[2] + 180.0
+    rgb = cmap[int(phi), int(theta)]
+
+    return rgb
+    
+
+def create_custom_colormap():
+    """
+    Creates a 2D colormap similar to 
+    """
+
+    cmap = np.zeros((180,360,3))
+
+    x, y = np.mgrid[0:180:1, 0:360:1]
+    pos = np.dstack((x, y))
+    rv = multivariate_normal([0, 0], 10000* np.asarray([[2.0, 0.], [0., 0.5]])).pdf(pos)
+    rv += multivariate_normal([0, 360], 10000* np.asarray([[2.0, -0.], [-0., 0.50]])).pdf(pos)
+    cmap[:,:,2] = rv / np.max(rv)
+
+    rv = multivariate_normal([0, 120], 10000* np.asarray([[2.5, 0.], [0., 0.5]])).pdf(pos)
+    cmap[:,:,1] = rv / np.max(rv)
+
+    rv = multivariate_normal([180, 120], 10000* np.asarray([[0.5, 0.], [0., 40]])).pdf(pos)
+    cmap[:,:,0] = rv / np.max(rv)
+
+    return cmap
+
+
+
 """
 TartanAir Depth Completion json file has a following format:
 
@@ -407,6 +494,27 @@ class TARTANAIR(BaseDataset):
 
         return output
 
+    def _calc_norm_masks(self, depth):
+
+        normal = calc_normals(depth)
+
+        normal_spherical = np.zeros_like(normal)
+        for x in range(normal.shape[0]):
+            for y in range(normal.shape[1]):
+                normal_spherical[x,y,:] = cart2sph(normal[x,y,:])
+
+        H,W,C = normal_spherical.shape
+        seg = np.zeros((H,W), dtype=np.uint8)
+        i = 1
+        for val in np.unique(normal_spherical.reshape(H*W,C), axis=0):
+            #if np.sum(np.sum(normal_spherical == val, axis=2) == 3) < 1e4:
+            #    continue
+            mask = np.sum(normal_spherical == val, axis=2) == 3
+            seg[mask] = i
+            i += 1
+
+        return seg
+
     def _load_data(self, idx):
 
 
@@ -414,6 +522,7 @@ class TARTANAIR(BaseDataset):
                                self.sample_list[idx]['gt'])
 
         gt = read_depth(path_gt)
+        seg = self._calc_norm_masks(gt)
         gt = Image.fromarray(gt.astype('float32'), mode='F')
 
         path_rgb = os.path.join(self.args.dir_data,
@@ -456,7 +565,12 @@ class TARTANAIR(BaseDataset):
             confidence_sgbm = Image.fromarray(confidence_sgbm.astype('float32'), mode='F')
 
         rgb = Image.open(path_rgb)
-        seg = np.load(path_seg)
+        #seg = np.load(path_seg)
+        plt.imshow(seg / np.max(seg))
+        plt.show()
+
+        plt.imshow(rgb)
+        plt.show()
         seg = Image.fromarray(seg)
 
         w1, h1 = rgb.size

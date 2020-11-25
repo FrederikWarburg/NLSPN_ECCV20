@@ -139,6 +139,13 @@ class Summary(BaseSummary):
         else:
             confidence = None
 
+
+        if 'seg' in output:
+            seg = output['seg'].data.cpu().numpy()
+            seg = seg[0:num_summary, :, :, :]
+        else:
+            seg = None
+
         if 'pred_rgb' in output:
             pred_rgb = output['pred_rgb'].data.cpu().numpy()
             pred_rgb = pred_rgb[0:num_summary, :, :, :]
@@ -191,6 +198,9 @@ class Summary(BaseSummary):
             img.append(norm_cm_transpose(pred[b, 0, :, :], cm, self.args.max_depth))
             if confidence is not None:
                 img.append(norm_cm_transpose(confidence[b, 0, :, :], cm, np.max(confidence)))
+
+            if seg is not None:
+                img.append(norm_cm_transpose(seg[b, 0, :, :], cm, np.max(seg)))
 
             if pred_rgb is not None:
                 img.append(norm_cm_transpose(pred_rgb[b, 0, :, :], cm, self.args.max_depth))
