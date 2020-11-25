@@ -35,7 +35,9 @@ from math import *
 import math
 
 def roundup(xs):
-    return np.asarray([int(math.ceil(x / 30.0)) * 30 for x in xs])
+    # TODO: Implement vectorized version
+    xs = np.round(xs / 30.0) * 30.0
+    return xs #np.asarray([int(math.ceil(x / 30.0)) * 30 for x in xs])
 
 def cart2sph_vec(xyz):
     
