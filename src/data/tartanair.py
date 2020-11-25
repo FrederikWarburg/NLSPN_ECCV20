@@ -566,11 +566,6 @@ class TARTANAIR(BaseDataset):
 
         rgb = Image.open(path_rgb)
         #seg = np.load(path_seg)
-        plt.imshow(seg / np.max(seg))
-        plt.show()
-
-        plt.imshow(rgb)
-        plt.show()
         seg = Image.fromarray(seg)
 
         w1, h1 = rgb.size

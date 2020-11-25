@@ -259,6 +259,7 @@ class SEGNETModel(nn.Module):
 
         rgb = sample['rgb']
         seg = sample['seg']
+        seg = seg[:,0,:,:]
 
         classes = torch.unique(seg)
 
@@ -310,7 +311,7 @@ class SEGNETModel(nn.Module):
         pred = _remove_extra_pad(pred, dep)
         output['pred'] = pred
 
-        output['seg'] = seg
+        output['seg'] = sample['seg']
 
         # Confidence Decoding
         if  'confidence' in self.supervision:
