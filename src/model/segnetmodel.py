@@ -259,12 +259,6 @@ class SEGNETModel(nn.Module):
         seg = sample['seg']
         seg = seg[:,0,:,:]
 
-        plt.subplot(1,2,1)
-        plt.imshow(rgb[0].cpu().permute(1,2,0).numpy())
-        plt.subplot(1,2,2)
-        plt.imshow(seg[0].cpu().numpy())
-        plt.show()
-
         classes = torch.unique(seg)
 
         masks = [(seg == c)*1 for c in classes if c != 0]
