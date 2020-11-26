@@ -116,11 +116,13 @@ class Guide(nn.Module):
         val = torch.zeros_like(fe_dep)
         for i in range(classes):
             mask = seg[:, i, :, :]
-
+            plt.imshow(mask.cpu().numpy())
+            plt.show()
             num_pixel = torch.sum(mask)
             tmp = fe_dep * mask[:,None,:,:]
-            a = torch.sum(tmp, dim=(2,3)) 
-            a = 1.0/num_pixel * a[:,:,None,None] * mask[:,None,:,:]
+            a = 1.0/num_pixel * torch.sum(tmp, dim=(2,3)) 
+            a = a[:,:,None,None] * mask[:,None,:,:]
+            # accumulate over all classes
             val = val + a
 
         # skip connection
