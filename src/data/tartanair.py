@@ -8,6 +8,7 @@ import numpy as np
 import json
 import random
 from . import BaseDataset
+import cv2
 
 from PIL import Image
 import torch
@@ -57,12 +58,11 @@ def cart2sph_vec(xyz):
     theta = roundup(theta)
     phi = roundup(phi)
     
-    out = np.stack([np.ones_like(theta),theta,phi])
+    out = np.stack([theta,phi])
     out = np.transpose(out,(1,0))
-    out = out.reshape(H,W,C)
+    out = out.reshape(H,W,2)
     
     return out
-
 
 def _calc_norm_masks(depth):
 
@@ -79,14 +79,19 @@ def _calc_norm_masks(depth):
     normal_spherical = cart2sph_vec(normal)
     H,W,C = normal_spherical.shape
     seg = np.zeros((H,W), dtype=np.uint8)
+    
     i = 1
     for val in np.unique(normal_spherical.reshape(H*W,C), axis=0):
-        #if np.sum(np.sum(normal_spherical == val, axis=2) == 3) < 1e4:
-        #    continue
-        mask = np.sum(normal_spherical == val, axis=2) == 3
-        seg[mask] = i
+        mask = np.sum(normal_spherical == val, axis=2) == 2
+        
+        # remove lines and noisy surfaces
+        mask = cv2.morphologyEx(mask*1.0, cv2.MORPH_OPEN, np.ones((30,30)))
+        if np.sum(mask) < 1e3:
+            continue
+        
+        seg[np.where(mask)] = i
         i += 1
-
+        
     return seg
 
 def create_custom_colormap():

@@ -43,8 +43,12 @@ def visualize(im, sizeb, size, normalize = False):
 def norm_cm_transpose(im, cm, max_):
 
     im = 255.0 * im / max_
-    im = cm(im.astype('uint8'))
-    im = np.transpose(im[:, :, :3], (2, 0, 1))
+
+    if cm is None:
+        im = np.stack([im,im,im]).astype('uint8')
+    else:
+        im = cm(im.astype('uint8'))
+        im = np.transpose(im[:, :, :3], (2, 0, 1))
 
     return im
 
@@ -200,7 +204,7 @@ class Summary(BaseSummary):
                 img.append(norm_cm_transpose(confidence[b, 0, :, :], cm, np.max(confidence)))
 
             if seg is not None:
-                img.append(norm_cm_transpose(seg[b, 0, :, :], cm, np.max(seg)))
+                img.append(norm_cm_transpose(seg[b, 0, :, :], None, np.max(seg)))
 
             if pred_rgb is not None:
                 img.append(norm_cm_transpose(pred_rgb[b, 0, :, :], cm, self.args.max_depth))
