@@ -102,7 +102,7 @@ class Guide(nn.Module):
     def __init__(self, ch_in,  ch_out):
         super(Guide, self).__init__()
 
-        self.conv = conv_bn_relu(ch_in, ch_out, kernel=1, stride=1, padding=0, bn=True, relu=True, maxpool=False)
+        self.conv = conv_bn_relu(ch_in, ch_out, kernel=1, stride=1, padding=0, bn=False, relu=True, maxpool=False)
 
 
     def forward(self, fe_dep, seg):
@@ -116,11 +116,9 @@ class Guide(nn.Module):
         val = torch.zeros_like(fe_dep)
         for i in range(classes):
             mask = seg[:, i, :, :]
-            plt.imshow(mask.cpu().numpy())
-            plt.show()
-            num_pixel = torch.sum(mask)
+            num_pixel = torch.sum(mask, dim=(1,2))
             tmp = fe_dep * mask[:,None,:,:]
-            a = 1.0/num_pixel * torch.sum(tmp, dim=(2,3)) 
+            a = 1.0/num_pixel[:, None] * torch.sum(tmp, dim=(2,3))
             a = a[:,:,None,None] * mask[:,None,:,:]
             # accumulate over all classes
             val = val + a
@@ -261,13 +259,15 @@ class SEGNETModel(nn.Module):
         seg = sample['seg']
         seg = seg[:,0,:,:]
 
-        classes = torch.unique(seg)
+        N, H, W = seg.shape
 
+        classes = torch.unique(seg)
         masks = [(seg == c)*1 for c in classes if c != 0]
         masks = torch.stack(masks) # num_masks, N, H, W
         masks = masks.permute(1,0,2,3)
         masks = masks.type(torch.FloatTensor)
  
+
         dep = sample['dep']
         output = {}
 

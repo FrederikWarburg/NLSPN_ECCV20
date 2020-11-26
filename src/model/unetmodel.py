@@ -281,6 +281,8 @@ class UNETModel(nn.Module):
         pred = _remove_extra_pad(pred, dep)
         output['pred'] = pred
 
+        plt.imshow(pred[0].cpu().permute(1,2,0).numpy()); plt.show()
+
         # Confidence Decoding
         if  'confidence' in self.supervision:
             cf_fd1 = self.cf_dec1(fd1_dep)

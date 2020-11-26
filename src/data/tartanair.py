@@ -35,9 +35,9 @@ from math import *
 
 import math
 
-def roundup(xs):
+def roundup(xs, n=30.0):
     # TODO: Implement vectorized version
-    xs = np.round(xs / 30.0) * 30.0
+    xs = (xs // n) * n
     return xs #np.asarray([int(math.ceil(x / 30.0)) * 30 for x in xs])
 
 def cart2sph_vec(xyz):
@@ -55,8 +55,8 @@ def cart2sph_vec(xyz):
     phi     =  np.arctan2(y,x)*180.0/ pi
     
     #print(theta, phi)
-    theta = roundup(theta)
-    phi = roundup(phi)
+    theta = roundup(theta, 10.0)
+    phi = roundup(phi, 40.0)
     
     out = np.stack([theta,phi])
     out = np.transpose(out,(1,0))
@@ -85,8 +85,9 @@ def _calc_norm_masks(depth):
         mask = np.sum(normal_spherical == val, axis=2) == 2
         
         # remove lines and noisy surfaces
-        mask = cv2.morphologyEx(mask*1.0, cv2.MORPH_OPEN, np.ones((30,30)))
-        if np.sum(mask) < 1e3:
+        #mask = cv2.morphologyEx(mask*1.0, cv2.MORPH_OPEN, np.ones((30,30)))
+        mask = mask*1.0
+        if np.sum(mask) < 1e4:
             continue
         
         seg[np.where(mask)] = i
