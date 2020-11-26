@@ -112,7 +112,6 @@ class Guide(nn.Module):
 
         seg = seg.to(fe_dep.device)
         seg = F.interpolate(seg, size=(H,W), mode="bilinear")
-        print(seg.shape, fe_dep.shape)
         # sum acroos all classes (masks)
         val = torch.zeros_like(fe_dep)
         for i in range(classes):
@@ -120,10 +119,8 @@ class Guide(nn.Module):
 
             num_pixel = torch.sum(mask)
             tmp = fe_dep * mask[:,None,:,:]
-            print("tmp", tmp.shape)
             a = torch.sum(tmp, dim=(2,3)) 
             a = 1.0/num_pixel * a[:,:,None,None] * mask[:,None,:,:]
-            print("a", a.shape)
             val = val + a
 
         # skip connection
