@@ -122,7 +122,7 @@ class Guide(nn.Module):
             a = a[:,:,None,None] * mask[:,None,:,:]
             # accumulate over all classes
             val = val + a
-        import pdb; pdb.set_trace()
+        #import pdb; pdb.set_trace()
         # skip connection
         fe_dep = fe_dep + val
 
