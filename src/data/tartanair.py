@@ -13,16 +13,8 @@ import cv2
 from PIL import Image
 import torch
 import torchvision.transforms.functional as TF
+from scipy.cluster.vq import kmeans2
 
-
-def calc_normals(depth):
-    zy, zx = np.gradient(depth)  
-    normal = np.dstack((-zx, -zy, np.ones_like(depth)))
-    n = np.linalg.norm(normal, axis=2)
-    normal[:, :, 0] /= n
-    normal[:, :, 1] /= n
-    normal[:, :, 2] /= n
-    return normal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -35,10 +27,20 @@ from math import *
 
 import math
 
-def roundup(xs, n=30.0):
-    # TODO: Implement vectorized version
-    xs = (xs // n) * n
-    return xs #np.asarray([int(math.ceil(x / 30.0)) * 30 for x in xs])
+
+def calc_normals(depth):
+
+    n = 5
+    depth = cv2.GaussianBlur(depth,(n,n),0)
+
+    zy, zx = np.gradient(depth)  
+    normal = np.dstack((-zx, -zy, np.ones_like(depth)))
+    n = np.linalg.norm(normal, axis=2)
+    normal[:, :, 0] /= n
+    normal[:, :, 1] /= n
+    normal[:, :, 2] /= n
+
+    return normal
 
 def cart2sph_vec(xyz):
     
@@ -55,14 +57,35 @@ def cart2sph_vec(xyz):
     phi     =  np.arctan2(y,x)*180.0/ pi
     
     #print(theta, phi)
-    theta = roundup(theta, 10.0)
-    phi = roundup(phi, 40.0)
+    #theta = roundup(theta, 10.0)
+    #phi = roundup(phi, 40.0)
     
     out = np.stack([theta,phi])
     out = np.transpose(out,(1,0))
     out = out.reshape(H,W,2)
     
+    n = 5
+    out[:,:,0] = cv2.GaussianBlur(out[:,:,0],(n,n),0)
+    out[:,:,1] = cv2.GaussianBlur(out[:,:,1],(n,n),0)
+
     return out
+
+def cart2cmap_vec(xyz, cmap):
+    """
+        converts xyz coordinates to spherical coordinates and then displays in a specified colormap 
+    """
+    
+    rthetaphi = cart2sph_vec(xyz)
+    H,W,C = rthetaphi.shape
+    rthetaphi = rthetaphi.reshape(H*W,C)
+    
+    phi = rthetaphi[:, 0].astype(int)
+    theta = (rthetaphi[:, 1] + 179.0).astype(int)
+
+    rgb = cmap[phi, theta]
+    rgb = rgb.reshape(H,W,3)
+
+    return rgb
 
 def _calc_norm_masks(depth):
 
@@ -75,24 +98,15 @@ def _calc_norm_masks(depth):
             normal_spherical[x,y,:] = cart2sph(normal[x,y,:])
     print(time.time() - t1)
     """
+
+    cmap = create_custom_colormap()
+    normal_spherical = cart2cmap_vec(normal, cmap)
     
-    normal_spherical = cart2sph_vec(normal)
     H,W,C = normal_spherical.shape
-    seg = np.zeros((H,W), dtype=np.uint8)
-    
-    i = 1
-    for val in np.unique(normal_spherical.reshape(H*W,C), axis=0):
-        mask = np.sum(normal_spherical == val, axis=2) == 2
-        
-        # remove lines and noisy surfaces
-        #mask = cv2.morphologyEx(mask*1.0, cv2.MORPH_OPEN, np.ones((30,30)))
-        mask = mask*1.0
-        if np.sum(mask) < 1e4:
-            continue
-        
-        seg[np.where(mask)] = i
-        i += 1
-        
+    normal_spherical = normal_spherical.reshape(H*W,C)
+    centroid, label = kmeans2(normal_spherical, 15, minit='random')
+    seg = label.reshape(H,W)
+
     return seg
 
 def create_custom_colormap():
