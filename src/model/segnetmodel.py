@@ -118,7 +118,7 @@ class Guide(nn.Module):
             mask = seg[:, i, :, :]
             num_pixel = torch.sum(mask, dim=(1,2))
             tmp = fe_dep * mask[:,None,:,:]
-            a = 1.0/num_pixel[:, None] * torch.sum(tmp, dim=(2,3))
+            a = 1.0/(num_pixel[:, None] + 1e-6) * torch.sum(tmp, dim=(2,3))
             a = a[:,:,None,None] * mask[:,None,:,:]
             # accumulate over all classes
             val = val + a
