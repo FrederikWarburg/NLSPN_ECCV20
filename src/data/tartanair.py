@@ -104,7 +104,10 @@ def _calc_norm_masks(depth):
     
     H,W,C = normal_spherical.shape
     normal_spherical = normal_spherical.reshape(H*W,C)
-    centroid, label = kmeans2(normal_spherical, 15, minit='random')
+    try:
+        centroid, label = kmeans2(normal_spherical, 15, minit='random')
+    except:
+        label = np.zeros(H,W)
     seg = label.reshape(H,W)
 
     return seg

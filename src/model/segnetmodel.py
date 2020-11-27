@@ -262,7 +262,7 @@ class SEGNETModel(nn.Module):
         N, H, W = seg.shape
 
         classes = torch.unique(seg)
-        masks = [(seg == c)*1 for c in classes if c != 0]
+        masks = [(seg == c)*1 for c in classes]
         masks = torch.stack(masks) # num_masks, N, H, W
         masks = masks.permute(1,0,2,3)
         masks = masks.type(torch.FloatTensor)
