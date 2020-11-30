@@ -104,11 +104,11 @@ if __name__ == "__main__":
                 seqpath = os.path.join(args.basepath, split, env, 'Easy', seq)
 
                 uniq_seg_ids = {}
-                for i in tqdm(sorted(os.listdir(os.path.join(seqpath," ground_truth/seg0/data/")))):
+                for i in tqdm(sorted(os.listdir(os.path.join(seqpath,"ground_truth/seg0/data/")))):
                     
                     i = i.replace(".npy", "")
-                    impath = os.path.join(seqpath," ground_truth/seg0/data/", i + ".png")
-                    segpath = os.path.join(seqpath," ground_truth/seg0/data/", i + ".npy")
+                    impath = os.path.join(seqpath,"ground_truth/seg0/data/", i + ".png")
+                    segpath = os.path.join(seqpath,"ground_truth/seg0/data/", i + ".npy")
                     
                     im = np.asarray(Image.open(impath))
                     seg = np.load(segpath)
@@ -117,15 +117,15 @@ if __name__ == "__main__":
                     uniq_seg_ids = aggregate_seg(copy.deepcopy(seg), panoptic_seg.clone(), uniq_seg_ids,
                                             segments_info, id_to_stuff, id_to_thing)
                     
-                tmp = os.path.join(seqpath," ground_truth/new_seg0/data/")
+                tmp = os.path.join(seqpath,"ground_truth/new_seg0/data/")
                 if not os.path.isdir(tmp): 
                     os.makedirs(tmp)
                 
-                for i in tqdm(sorted(os.listdir(os.path.join(seqpath," ground_truth/seg0/data/")))):
+                for i in tqdm(sorted(os.listdir(os.path.join(seqpath,"ground_truth/seg0/data/")))):
                     
                     i = i.replace(".npy", "")
-                    segpath = os.path.join(seqpath," ground_truth/seg0/data/", i + ".npy")
-                    new_segpath = os.path.join(seqpath," ground_truth/new_seg0/data/", i + ".npy")
+                    segpath = os.path.join(seqpath,"ground_truth/seg0/data/", i + ".npy")
+                    new_segpath = os.path.join(seqpath,"ground_truth/new_seg0/data/", i + ".npy")
                     
                     seg = np.load(segpath)
                     new_seg, new_seg_color = remap_seg(copy.deepcopy(seg), uniq_seg_ids, id_to_color)
