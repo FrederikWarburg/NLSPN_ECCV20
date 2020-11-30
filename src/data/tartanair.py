@@ -107,10 +107,8 @@ def _calc_norm_masks(depth):
     try:
         centroid, label = kmeans2(normal_spherical, 15, minit='random')
     except:
-        print("except")
-        label = np.zeros((H,W), dtype=np.uint8)
-    print(label, type(label))
-    print(np.zeros((H,W), dtype=np.uint8))
+        label = np.zeros((H,W), dtype=np.int32)
+
     seg = label.reshape(H,W)
 
     return seg
@@ -256,7 +254,6 @@ class TARTANAIR(BaseDataset):
         return len(self.sample_list)
 
     def __getitem__(self, idx):
-        print(idx)
         rgb, seg, depth_features, confidence_features, depth_sgbm, confidence_sgbm, gt, K = self._load_data(idx)
 
         if self.augment and self.mode == 'train':
