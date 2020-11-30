@@ -107,7 +107,7 @@ if __name__ == "__main__":
                 for i in tqdm(sorted(os.listdir(os.path.join(seqpath,"ground_truth/seg0/data/")))):
                     
                     i = i.replace(".npy", "")
-                    impath = os.path.join(seqpath,"ground_truth/seg0/data/", i + ".png")
+                    impath = os.path.join(seqpath,"cam0/data/", i + ".png")
                     segpath = os.path.join(seqpath,"ground_truth/seg0/data/", i + ".npy")
                     
                     im = np.asarray(Image.open(impath))
