@@ -107,6 +107,7 @@ def _calc_norm_masks(depth):
     try:
         centroid, label = kmeans2(normal_spherical, 15, minit='random')
     except:
+        print("except")
         label = np.zeros((H,W), dtype=np.uint8)
     seg = label.reshape(H,W)
 
