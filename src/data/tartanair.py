@@ -253,6 +253,7 @@ class TARTANAIR(BaseDataset):
         return len(self.sample_list)
 
     def __getitem__(self, idx):
+        print(idx)
         rgb, seg, depth_features, confidence_features, depth_sgbm, confidence_sgbm, gt, K = self._load_data(idx)
 
         if self.augment and self.mode == 'train':
