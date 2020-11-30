@@ -109,6 +109,8 @@ def _calc_norm_masks(depth):
     except:
         print("except")
         label = np.zeros((H,W), dtype=np.uint8)
+    print(label, type(label))
+    print(np.zeros((H,W), dtype=np.uint8))
     seg = label.reshape(H,W)
 
     return seg
