@@ -536,7 +536,7 @@ class TARTANAIR(BaseDataset):
                                self.sample_list[idx]['gt'])
 
         gt = read_depth(path_gt)
-        seg = _calc_norm_masks(gt)
+        #seg = _calc_norm_masks(gt)
         gt = Image.fromarray(gt.astype('float32'), mode='F')
 
         path_rgb = os.path.join(self.args.dir_data,
@@ -579,7 +579,7 @@ class TARTANAIR(BaseDataset):
             confidence_sgbm = Image.fromarray(confidence_sgbm.astype('float32'), mode='F')
 
         rgb = Image.open(path_rgb)
-        #seg = np.load(path_seg)
+        seg = np.load(path_seg.replace("seg0", "new_seg0"))
         seg = Image.fromarray(seg)
 
         w1, h1 = rgb.size
